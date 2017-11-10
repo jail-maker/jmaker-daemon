@@ -1,0 +1,23 @@
+{
+  "name": "jmaker-daemon",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jail-maker/jmaker-daemon.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jail-maker/jmaker-daemon/issues"
+  },
+  "homepage": "https://github.com/jail-maker/jmaker-daemon#readme",
+  "dependencies": {
+    "express": "^4.16.2",
+    "js-yaml": "^3.10.0"
+  }
+}
