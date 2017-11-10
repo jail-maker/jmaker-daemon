@@ -18,6 +18,8 @@
   "homepage": "https://github.com/jail-maker/jmaker-daemon#readme",
   "dependencies": {
     "express": "^4.16.2",
-    "js-yaml": "^3.10.0"
+    "js-yaml": "^3.10.0",
+    "minimist": "^1.2.0",
+    "tar": "^4.0.2"
   }
 }
