@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 const { spawn, spawnSync } = require('child_process')
+const path = require('path');
+const os = require('os');
 const yaml = require('js-yaml');
 const tar = require('tar');
 const fs = require('fs');
@@ -8,9 +10,14 @@ const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const jailsDir = __dirname + '/jails';
-const port = 3346;
-const host = '127.0.0.1';
+const jailsDir = path.resolve(__dirname + '/jails');
+const ARGV = minimist(process.argv.slice(2));
+
+const {
+    port = 3346,
+    host = '127.0.0.1',
+} = ARGV;
+
 const app = express();
 
 app.use(bodyParser.json());
@@ -52,11 +59,20 @@ app.post('/jails', (req, res) => {
     //     .pipe(ip6)
     //     .pipe(jailPipe.finish)
 
-    let result = spawnSync('jail', [
-        '-c', ...agv
+    let a = [
         `path=${jailDir}`,
+        'mount.devfs',
         `name=${configData.name}`,
-        `exec.start=${configData['exec.start']}`,
+        `host.hostname=${configData.name}`,
+        'exec.start=/bin/sh /etc/rc',
+        'exec.stop=/bin/sh /etc/rc.shutdown',
+        'allow.raw_sockets',
+        'allow.socket_af',
+    ];
+
+    let result = spawnSync('jail', [
+        '-c',
+        ... a
     ]);
 
     console.log(result.output[1].toString());
