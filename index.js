@@ -10,6 +10,8 @@ const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const ConfigFile = require('./config-file.js');
+
 const jailsDir = path.resolve(__dirname + '/jails');
 const ARGV = minimist(process.argv.slice(2));
 
@@ -28,6 +30,7 @@ app.post('/jails', (req, res) => {
 
     let configData = req.body;
     let jailDir = `${jailsDir}/${configData.name}`;
+    configData.path = jailDir;
 
     try {
 
@@ -50,29 +53,48 @@ app.post('/jails', (req, res) => {
 
     }
 
+    let jailName = configData.name;
+    delete(configData.name);
+
     delete(configData.base);
     delete(configData.rctl);
     delete(configData.cpuset);
+    delete(configData.mounts);
+    delete(configData.dependencies);
 
-    // let argv = jailPipe.start(configData)
-    //     .pipe(ip4)
-    //     .pipe(ip6)
-    //     .pipe(jailPipe.finish)
+    let configFile = path.resolve('./tmp-jail.conf');
+    let configObj = new ConfigFile(configData, jailName);
 
-    let a = [
-        `path=${jailDir}`,
-        'mount.devfs',
-        `name=${configData.name}`,
-        `host.hostname=${configData.name}`,
-        'exec.start=/bin/sh /etc/rc',
-        'exec.stop=/bin/sh /etc/rc.shutdown',
-        'allow.raw_sockets',
-        'allow.socket_af',
-    ];
+    console.log(configObj.toString());
+
+    configObj.save(configFile);
 
     let result = spawnSync('jail', [
         '-c',
-        ... a
+        '-f',
+        configFile,
+        jailName,
+    ]);
+
+    console.log(result.output[1].toString());
+    console.log(result.output[2].toString());
+
+    console.log('finish');
+
+    res.send();
+
+});
+
+app.delete('/jails/:name', (req, res) => {
+
+    let jailName = req.params.name;
+    let configFile = path.resolve('./tmp-jail.conf');
+
+    let result = spawnSync('jail', [
+        '-r',
+        '-f',
+        configFile,
+        jailName,
     ]);
 
     console.log(result.output[1].toString());
