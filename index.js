@@ -4,6 +4,7 @@ const { spawn, spawnSync } = require('child_process')
 const path = require('path');
 const os = require('os');
 const yaml = require('js-yaml');
+const jsonQuery = require('json-query');
 const tar = require('tar');
 const fs = require('fs');
 const minimist = require('minimist');
@@ -11,6 +12,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const ConfigFile = require('./config-file.js');
+const Rctl = require('./rctl.js');
 
 const jailsDir = path.resolve(__dirname + '/jails');
 const ARGV = minimist(process.argv.slice(2));
@@ -57,10 +59,27 @@ app.post('/jails', (req, res) => {
     delete(configData.name);
 
     delete(configData.base);
-    delete(configData.rctl);
-    delete(configData.cpuset);
-    delete(configData.mounts);
     delete(configData.dependencies);
+
+    let rctl = configData.rctl;
+    delete(configData.rctl);
+
+    let cpuset = configData.mounts;
+    delete(configData.cpuset);
+
+    let mounts = configData.mounts;
+    delete(configData.mounts);
+
+    mounts.forEach(points => {
+
+        let [src, dst] = points;
+
+        let result = spawnSync('mount_nullfs', [
+            src,
+            path.join(configData.path, dst),
+        ]);
+
+    });
 
     let configFile = path.resolve('./tmp-jail.conf');
     let configObj = new ConfigFile(configData, jailName);
@@ -70,14 +89,28 @@ app.post('/jails', (req, res) => {
     configObj.save(configFile);
 
     let result = spawnSync('jail', [
-        '-c',
-        '-f',
-        configFile,
-        jailName,
+        '-c', '-f', configFile, jailName,
     ]);
 
     console.log(result.output[1].toString());
     console.log(result.output[2].toString());
+
+    result = spawnSync('jls', [
+        '--libxo=json', '-j', jailName
+    ]);
+
+    let out = result.stdout.toString();
+    out = JSON.parse(out);
+    let jid = out['jail-information'].jail[0].jid;
+
+    console.log(jid);
+
+    result = spawnSync('cpuset', [
+        '-l', cpuset, '-j', jid
+    ]);
+
+    let rctlObj = new Rctl(rctl, jailName);
+    rctlObj.execute();
 
     console.log('finish');
 
