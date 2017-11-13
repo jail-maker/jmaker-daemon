@@ -55,10 +55,12 @@ app.post('/jails', (req, res) => {
 
     }
 
+    delete(configData.base);
+
     let jailName = configData.name;
     delete(configData.name);
 
-    delete(configData.base);
+    let dependencies = configData.dependencies;
     delete(configData.dependencies);
 
     let rctl = configData.rctl;
@@ -80,6 +82,9 @@ app.post('/jails', (req, res) => {
         ]);
 
     });
+
+    let rctlObj = new Rctl(rctl, jailName);
+    rctlObj.execute();
 
     let configFile = path.resolve('./tmp-jail.conf');
     let configObj = new ConfigFile(configData, jailName);
@@ -108,9 +113,6 @@ app.post('/jails', (req, res) => {
     result = spawnSync('cpuset', [
         '-l', cpuset, '-j', jid
     ]);
-
-    let rctlObj = new Rctl(rctl, jailName);
-    rctlObj.execute();
 
     console.log('finish');
 
