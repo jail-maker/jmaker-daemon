@@ -6,14 +6,33 @@ class ConfigFile {
 
     constructor(data = {}, name) {
 
-        this._data = data;
         this._name = name;
+        this._rules = [];
+
+        this._setRules(data);
+        this.pipe(this._pipeRule);
+
+    }
+
+    _setRules(data) {
+
+        for (let key in data) {
+
+            let value = data[key];
+
+            this._rules.push({
+                key: key,
+                data: value,
+                view: '',
+            });
+
+        }
 
     }
 
     pipe(callback) {
 
-        this._data = callback(this._data);
+        this._rules = callback(this._rules);
         return this;
 
     }
@@ -22,40 +41,54 @@ class ConfigFile {
 
     toString() {
 
-        let data = this._data;
+        let rules = this._rules;
         let name = this._name;
         let ret = '';
 
         ret += `${name} {\n`;
 
-        for (let key in data) {
+        rules.forEach(rule => {
 
-            let value = data[key];
-            let type = typeof(data[key]);
+            ret += `${rule.view}\n`;
 
-            if (type === 'boolean') {
-
-                ret += value ? `  ${key};\n` : '';
-
-            } else if (Array.isArray(value)) {
-
-                ret += value.reduce((acc, current) => {
-
-                    return `${acc}  ${key} += "${current}";\n`;
-
-                }, []);
-
-            } else {
-
-                ret += `  ${key} = "${data[key]}";\n`;
-
-            }
-
-        }
+        });
 
         ret += `}`;
 
         return ret;
+
+    }
+
+    _pipeRule(rules) {
+
+        rules.forEach(rule => {
+
+            let type = typeof(rule.data);
+
+            if (type === 'boolean') {
+
+                rule.view = rule.data ? `  ${rule.key};` : '';
+
+            } else if (Array.isArray(rule.data)) {
+
+                let strings = rule.data.map(item => {
+
+                    return `  ${rule.key} += "${item}";`;
+
+                });
+
+                rule.view = strings.join('\n');
+
+            } else {
+
+                rule.view = `  ${rule.key} = "${rule.data}";`;
+
+            }
+
+        })
+
+        return rules;
+
     }
 
     save(path) {
