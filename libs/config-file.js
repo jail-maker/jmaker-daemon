@@ -7,7 +7,7 @@ class ConfigFile {
     constructor(data = {}, name) {
 
         this._name = name;
-        this._rules = [];
+        this._rules = {};
 
         this._setRules(data);
         this.pipe(this._pipeRule);
@@ -20,11 +20,11 @@ class ConfigFile {
 
             let value = data[key];
 
-            this._rules.push({
+            this._rules[key] = {
                 key: key,
                 data: value,
                 view: '',
-            });
+            };
 
         }
 
@@ -47,11 +47,12 @@ class ConfigFile {
 
         ret += `${name} {\n`;
 
-        rules.forEach(rule => {
+        for (let key in rules) {
 
+            let rule = rules[key];
             ret += `${rule.view}\n`;
 
-        });
+        }
 
         ret += `}`;
 
@@ -61,8 +62,10 @@ class ConfigFile {
 
     _pipeRule(rules) {
 
-        rules.forEach(rule => {
 
+        for (let key in rules) {
+
+            let rule = rules[key];
             let type = typeof(rule.data);
 
             if (type === 'boolean') {
@@ -85,7 +88,7 @@ class ConfigFile {
 
             }
 
-        })
+        }
 
         return rules;
 

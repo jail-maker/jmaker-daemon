@@ -11,8 +11,8 @@ const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const ConfigFile = require('./config-file.js');
-const Rctl = require('./rctl.js');
+const ConfigFile = require('./libs/config-file.js');
+const Rctl = require('./libs/rctl.js');
 
 const jailsDir = path.resolve(__dirname + '/jails');
 const ARGV = minimist(process.argv.slice(2));
@@ -88,6 +88,20 @@ app.post('/jails', (req, res) => {
 
     let configFile = path.resolve('./tmp-jail.conf');
     let configObj = new ConfigFile(configData, jailName);
+
+    configObj.pipe(rules => {
+
+        let ipsRule = rules['ip4.addr'];
+
+        if (ipsRule.data === 'DHCP') {
+
+            ipsRule.view = 'ip4.addr = "alc0|192.168.0.55/24";';
+
+        }
+
+        return rules;
+
+    });
 
     console.log(configObj.toString());
 
