@@ -12,14 +12,19 @@ class IpDHCP {
         this._enabled = false;
         this._eth = this._getDefaultEth();
         this._hub = {};
+        this._ngIface = {};
 
     }
 
     enable() {
 
         this._clearEth(this._eth);
-
         this._hub = new Hub(this._eth);
+
+        let iface = this.getIface();
+        iface.execDhcp();
+
+        this._ngIface = iface;
         this._enabled = true;
 
     }
@@ -50,7 +55,7 @@ class IpDHCP {
 
         console.log(ethIfo);
 
-        eth = ethIfo['interface-name'];
+        let eth = ethIfo['interface-name'];
 
         return eth;
 
@@ -80,14 +85,16 @@ class Iface {
 
         this._switchPath = switchPath;
         this._switchHook = switchHook;
-        this._path = `${switchPath}:${switchHook}`;
+        this._path = `${switchPath}.${switchHook}`;
         this._ether = randomMac();
         this._ethName = '';
         this._ip4 = '';
 
         spawnSync('ngctl', [
-            'mkpeer', path, 'eiface', switchHook, 'ether',
+            'mkpeer', switchPath, 'eiface', switchHook, 'ether',
         ]);
+
+        console.log(this._path);
 
         let ethInfo = spawnSync('ngctl', [
             'show', '-n', this._path,
@@ -97,7 +104,7 @@ class Iface {
 
         let ethName = ethInfo.match(/Name\:\s*(\w+)\s/);
         ethName = ethName[1];
-        this._ethName = eth;
+        this._ethName = ethName;
 
         spawnSync('ifconfig', [
             ethName, 'ether', randomMac(), 'up',
@@ -123,13 +130,15 @@ class Iface {
 
         ethInfo = JSON.parse(ethInfo);
 
+        console.log(ethInfo);
+
         let result = jsonQuery(
-            `[name=${eth}]`,
-            { data: out }
+            `[**]interface[name=${eth}].address`,
+            { data: ethInfo }
         ).value;
 
-        this._ip4 = result.address;
-        console.log(result.address);
+        console.log(result);
+        this._ip4 = result;
 
     }
 

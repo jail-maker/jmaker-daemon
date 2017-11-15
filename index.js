@@ -106,7 +106,7 @@ app.post('/jails', (req, res) => {
             let eth = iface.getEthName();
             let ip4 = iface.getIp4Addr();
 
-            ipsRule.view = `ip4.addr = "${eth}|${ip4}";`;
+            ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
 
         }
 

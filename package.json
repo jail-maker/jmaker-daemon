@@ -21,6 +21,7 @@
     "js-yaml": "^3.10.0",
     "json-query": "^2.2.2",
     "minimist": "^1.2.0",
+    "random-mac": "^0.0.4",
     "tar": "^4.0.2",
     "uniqid": "^4.1.1"
   }
