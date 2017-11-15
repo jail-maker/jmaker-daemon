@@ -14,6 +14,8 @@ const bodyParser = require('body-parser');
 const ConfigFile = require('./libs/config-file.js');
 const Rctl = require('./libs/rctl.js');
 
+const IpDHCP = require('./modules/ip-dhcp.js');
+
 const jailsDir = path.resolve(__dirname + '/jails');
 const ARGV = minimist(process.argv.slice(2));
 
@@ -23,6 +25,7 @@ const {
 } = ARGV;
 
 const app = express();
+const dhcp = new IpDHCP;
 
 app.use(bodyParser.json());
 
@@ -95,7 +98,15 @@ app.post('/jails', (req, res) => {
 
         if (ipsRule.data === 'DHCP') {
 
-            ipsRule.view = 'ip4.addr = "alc0|192.168.0.55/24";';
+            if (!dhcp.isEnabled()) dhcp.enable();
+
+            let iface = dhcp.getIface();
+            iface.execDhcp();
+
+            let eth = iface.getEthName();
+            let ip4 = iface.getIp4Addr();
+
+            ipsRule.view = `ip4.addr = "${eth}|${ip4}";`;
 
         }
 

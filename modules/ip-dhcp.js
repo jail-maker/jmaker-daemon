@@ -9,14 +9,32 @@ class IpDHCP {
 
     constructor() {
 
-        this._eth = this._getEth();
-
-        this._clearEth(this._eth);
-        this._createHub(this._eth);
+        this._enabled = false;
+        this._eth = this._getDefaultEth();
+        this._hub = {};
 
     }
 
-    _getEth() {
+    enable() {
+
+        this._clearEth(this._eth);
+
+        this._hub = new Hub(this._eth);
+        this._enabled = true;
+
+    }
+
+    getIface() {
+
+        let hub = this._hub;
+        let sw = hub.getAvilableSwitch();
+        return sw.createIface();
+
+    }
+
+    isEnabled() { return this._enabled; }
+
+    _getDefaultEth() {
 
         let out = spawnSync('netstat', [
             '-r', '-4', '--libxo', 'json',
@@ -35,34 +53,6 @@ class IpDHCP {
         eth = ethIfo['interface-name'];
 
         return eth;
-
-    }
-
-    _createSwitch() {
-
-        let id = uniqid.time();
-
-        spawnSync('ngctl', [
-            'mkpeer', 'jmaker-hub:', 'bridge', id, 'link0',
-        ]);
-
-        return `jmaker-hub:${id}`;
-
-    }
-
-    _createHub(eth) {
-
-        spawnSync('ngctl', [
-            'mkpeer', `${eth}:`, 'hub', 'lower', 'lower',
-        ]);
-
-        spawnSync('ngctl', [
-            'connect', `${eth}:`, `${eth}:lower`, 'upper', 'upper',
-        ]);
-
-        spawnSync('ngctl', [
-            'name', `${eth}:lower`, 'jmaker-hub',
-        ]);
 
     }
 
@@ -86,28 +76,60 @@ class IpDHCP {
 
 class Iface {
 
-    constructor() {
+    constructor(switchPath, switchHook) {
 
-        this._name = '';
-        this._path = '';
+        this._switchPath = switchPath;
+        this._switchHook = switchHook;
+        this._path = `${switchPath}:${switchHook}`;
         this._ether = randomMac();
+        this._ethName = '';
+        this._ip4 = '';
 
         spawnSync('ngctl', [
-            'mkpeer', 'switch:', 'eiface', `link${i}`, 'ether',
+            'mkpeer', path, 'eiface', switchHook, 'ether',
         ]);
 
-        let newEthInfo = spawnSync('ngctl', [
-            'show', '-n', `switch:link${i}`,
+        let ethInfo = spawnSync('ngctl', [
+            'show', '-n', this._path,
         ]).stdout.toString();
 
-        console.log(newEthInfo);
+        console.log(ethInfo);
 
-        let newEth = newEthInfo.match(/Name\:\s*(\w+)\s/);
-        newEth = newEth[1];
+        let ethName = ethInfo.match(/Name\:\s*(\w+)\s/);
+        ethName = ethName[1];
+        this._ethName = eth;
 
         spawnSync('ifconfig', [
-            newEth, 'ether', randomMac(), 'up',
+            ethName, 'ether', randomMac(), 'up',
         ]);
+
+    }
+
+    getEthName() { return this._ethName; }
+
+    getIp4Addr() { return this._ip4; }
+
+    execDhcp() {
+
+        let eth = this._ethName;
+
+        spawnSync('dhclient', [
+            eth,
+        ]);
+
+        let ethInfo = spawnSync('netstat', [
+            '-4', '-I', eth, '-n' ,'--libxo=json',
+        ]).stdout.toString();
+
+        ethInfo = JSON.parse(ethInfo);
+
+        let result = jsonQuery(
+            `[name=${eth}]`,
+            { data: out }
+        ).value;
+
+        this._ip4 = result.address;
+        console.log(result.address);
 
     }
 
@@ -115,23 +137,39 @@ class Iface {
 
 class Switch {
 
-    constructor(hubName) {
+    constructor(hubName, hubHook) {
 
-        this._id = uniqid.time();
         this._hubName = hubName;
+        this._hubHook = hubHook;
+        this._path = `${hubName}:${hubHook}`
         this._ifaces = [];
 
         spawnSync('ngctl', [
-            'mkpeer', `${hubName}:`, 'bridge', this._id, 'link0',
+            'mkpeer', `${hubName}:`, 'bridge', hubHook, 'link0',
         ]);
+
+        this._ifaces.length = 32;
+        this._ifaces.fill(null, 0, 32);
+        this._ifaces[0] = hubName;
 
     }
 
-    getId() { return this._id; }
-
     createIface() {
 
-        let iface = new Iface();
+        let key = this._ifaces.indexOf(null);
+        let hook = `link${key}`;
+        let iface = new Iface(this._path, hook);
+        this._ifaces[key] = iface;
+
+        return iface;
+
+    }
+
+    isFilled() {
+
+        let result = this._ifaces.indexOf(null);
+
+        return result === -1 ? true : false;
 
     }
 
@@ -139,11 +177,11 @@ class Switch {
 
 class Hub {
 
-    constructor(eth, name= 'jmaker-hub') {
+    constructor(eth, name = 'jmaker-hub') {
 
         this._eth = eth;
         this._name = name;
-        this._switches = {};
+        this._switches = [];
 
         spawnSync('ngctl', [
             'mkpeer', `${eth}:`, 'hub', 'lower', 'lower',
@@ -161,9 +199,28 @@ class Hub {
 
     createSwitch() {
 
-        let sw = new Switch(this._name);
-        this._switches[switch.getId()] = sw;
+        let hook = uniqid.time();
+        let sw = new Switch(this._name, hook);
+        this._switches.push(sw);
+
+        return sw;
+
+    }
+
+    getSwitches() { return this._switches; }
+
+    getAvilableSwitch() {
+
+        let sws = this._switches;
+
+        if (!sws.length) return this.createSwitch(); 
+
+        let sw = sws.find(sw => sw.isFilled() ? false : true );
+
+        return sw ? sw : this.createSwitch();
 
     }
 
 }
+
+module.exports = IpDHCP;
