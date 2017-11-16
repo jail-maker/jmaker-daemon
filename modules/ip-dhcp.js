@@ -4,13 +4,14 @@ const jsonQuery = require('json-query');
 const uniqid = require('uniqid');
 const randomMac = require('random-mac');
 const { spawnSync, spawn } = require('child_process');
+const defaultIface = require('../libs/default-iface.js');
 
 class IpDHCP {
 
     constructor() {
 
         this._enabled = false;
-        this._eth = this._getDefaultEth();
+        this._eth = defaultIface.eth;
         this._hub = {};
         this._ngIface = {};
 
@@ -19,7 +20,7 @@ class IpDHCP {
     enable() {
 
         this._clearEth(this._eth);
-        this._hub = new Hub(this._eth);
+        this._hub = new NgHub(this._eth);
 
         let iface = this.getIface();
         iface.execDhcp();
@@ -39,28 +40,6 @@ class IpDHCP {
 
     isEnabled() { return this._enabled; }
 
-    _getDefaultEth() {
-
-        let out = spawnSync('netstat', [
-            '-r', '-4', '--libxo', 'json',
-        ]).stdout.toString();
-
-        out = JSON.parse(out);
-        out = out.statistics['route-information']['route-table']['rt-family'];
-
-        let ethIfo = jsonQuery(
-            '[address-family=Internet].rt-entry[destination=default]',
-            { data: out }
-        ).value;
-
-        console.log(ethIfo);
-
-        let eth = ethIfo['interface-name'];
-
-        return eth;
-
-    }
-
     _clearEth(eth) {
 
         spawnSync('ngctl', [
@@ -79,7 +58,7 @@ class IpDHCP {
 
 }
 
-class Iface {
+class NgIface {
 
     constructor(switchPath, switchHook) {
 
@@ -144,7 +123,7 @@ class Iface {
 
 }
 
-class Switch {
+class NgSwitch {
 
     constructor(hubName, hubHook) {
 
@@ -167,7 +146,7 @@ class Switch {
 
         let key = this._ifaces.indexOf(null);
         let hook = `link${key}`;
-        let iface = new Iface(this._path, hook);
+        let iface = new NgIface(this._path, hook);
         this._ifaces[key] = iface;
 
         return iface;
@@ -184,7 +163,7 @@ class Switch {
 
 }
 
-class Hub {
+class NgHub {
 
     constructor(eth, name = 'jmaker-hub') {
 
@@ -209,7 +188,7 @@ class Hub {
     createSwitch() {
 
         let hook = uniqid.time();
-        let sw = new Switch(this._name, hook);
+        let sw = new NgSwitch(this._name, hook);
         this._switches.push(sw);
 
         return sw;

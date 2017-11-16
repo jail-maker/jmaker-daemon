@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 const { spawn, spawnSync } = require('child_process')
 const path = require('path');
 const os = require('os');
@@ -11,10 +13,13 @@ const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const defaultIface = require('./libs/default-iface.js');
 const ConfigFile = require('./libs/config-file.js');
 const Rctl = require('./libs/rctl.js');
 
 const IpDHCP = require('./modules/ip-dhcp.js');
+const autoIface = require('./modules/auto-iface.js');
+const autoIp = require('./modules/auto-ip.js');
 
 const jailsDir = path.resolve(__dirname + '/jails');
 const ARGV = minimist(process.argv.slice(2));
@@ -92,27 +97,30 @@ app.post('/jails', (req, res) => {
     let configFile = path.resolve('./tmp-jail.conf');
     let configObj = new ConfigFile(configData, jailName);
 
-    configObj.pipe(rules => {
+    configObj
+        .pipe(autoIface.pipeRule)
+        .pipe(autoIp.pipeRule)
+        .pipe(rules => {
 
-        let ipsRule = rules['ip4.addr'];
+            let ipsRule = rules['ip4.addr'];
 
-        if (ipsRule.data === 'DHCP') {
+            if (ipsRule.data === 'DHCP') {
 
-            if (!dhcp.isEnabled()) dhcp.enable();
+                if (!dhcp.isEnabled()) dhcp.enable();
 
-            let iface = dhcp.getIface();
-            iface.execDhcp();
+                let iface = dhcp.getIface();
+                iface.execDhcp();
 
-            let eth = iface.getEthName();
-            let ip4 = iface.getIp4Addr();
+                let eth = iface.getEthName();
+                let ip4 = iface.getIp4Addr();
 
-            ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
+                ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
 
-        }
+            }
 
-        return rules;
+            return rules;
 
-    });
+        });
 
     console.log(configObj.toString());
 
