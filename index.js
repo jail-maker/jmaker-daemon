@@ -74,7 +74,7 @@ app.post('/jails', (req, res) => {
     let rctl = configData.rctl;
     delete(configData.rctl);
 
-    let cpuset = configData.mounts;
+    let cpuset = configData.cpuset;
     delete(configData.cpuset);
 
     let mounts = configData.mounts;
@@ -94,7 +94,7 @@ app.post('/jails', (req, res) => {
     let rctlObj = new Rctl(rctl, jailName);
     rctlObj.execute();
 
-    let configFile = path.resolve('./tmp-jail.conf');
+    let configFile = path.resolve(`./${jailName}-jail.conf`);
     let configObj = new ConfigFile(configData, jailName);
 
     configObj
@@ -143,9 +143,11 @@ app.post('/jails', (req, res) => {
 
     console.log(jid);
 
-    result = spawnSync('cpuset', [
-        '-l', cpuset, '-j', jid
-    ]);
+    if (cpuset !== false) {
+        result = spawnSync('cpuset', [
+            '-l', cpuset, '-j', jid
+        ]);
+    }
 
     console.log('finish');
 
@@ -156,7 +158,7 @@ app.post('/jails', (req, res) => {
 app.delete('/jails/:name', (req, res) => {
 
     let jailName = req.params.name;
-    let configFile = path.resolve('./tmp-jail.conf');
+    let configFile = path.resolve(`./${jailName}-jail.conf`);
 
     let result = spawnSync('jail', [
         '-r',
@@ -167,6 +169,8 @@ app.delete('/jails/:name', (req, res) => {
 
     console.log(result.output[1].toString());
     console.log(result.output[2].toString());
+
+    fs.unlinkSync(configFile);
 
     console.log('finish');
 

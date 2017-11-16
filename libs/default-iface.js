@@ -7,10 +7,17 @@ class DefaultIface {
 
     constructor() {
 
-        this.eth = this._getIface();
+        this.eth = '';
         this.ipv4Address = '';
         this.ipv4Network = '';
 
+        this.refresh();
+
+    }
+
+    refresh() {
+
+        this._getIface();
         this._getEthInfo();
 
     }
@@ -51,8 +58,7 @@ class DefaultIface {
             { data: out }
         ).value;
 
-        let eth = ethIfo['interface-name'];
-        return eth;
+        this.eth = ethIfo['interface-name'];
 
     }
 
@@ -60,14 +66,4 @@ class DefaultIface {
 
 let defaultIface = new DefaultIface;
 
-let proxy = new Proxy(defaultIface, {
-
-    set(target, prop, value) {
-
-        throw new Error('value not writable.');
-
-    },
-
-});
-
-module.exports = proxy;
+module.exports = defaultIface;

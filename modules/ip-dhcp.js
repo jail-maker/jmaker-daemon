@@ -24,6 +24,7 @@ class IpDHCP {
 
         let iface = this.getIface();
         iface.execDhcp();
+        defaultIface.refresh();
 
         this._ngIface = iface;
         this._enabled = true;
