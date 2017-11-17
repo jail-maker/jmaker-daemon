@@ -19,10 +19,19 @@ class IpDHCP {
 
     enable() {
 
-        this._clearEth(this._eth);
+        defaultIface.refresh();
+        this._clearEth(defaultIface);
         this._hub = new NgHub(this._eth);
 
         let iface = this.getIface();
+
+        defaultIface.ipv4Address.forEach(ip => {
+
+            iface.setAlias(ip);
+            defaultIface.rmAliasIp4(ip);
+
+        });
+
         iface.execDhcp();
         defaultIface.refresh();
 
@@ -41,19 +50,17 @@ class IpDHCP {
 
     isEnabled() { return this._enabled; }
 
-    _clearEth(eth) {
+    _clearEth(iface) {
 
         spawnSync('ngctl', [
-            'msg', `${eth}:`, 'setpromisc', '1',
+            'msg', `${iface.eth}:`, 'setpromisc', '1',
         ]);
 
         spawnSync('ngctl', [
-            'msg', `${eth}:`, 'setautosrc', '0',
+            'msg', `${iface.eth}:`, 'setautosrc', '0',
         ]);
 
-        spawnSync('ifconfig', [
-            eth, 'delete'
-        ]);
+        iface.rmAliasIp4(iface.ipv4Address[0]);
 
     }
 
@@ -68,7 +75,7 @@ class NgIface {
         this._path = `${switchPath}.${switchHook}`;
         this._ether = randomMac();
         this._ethName = '';
-        this._ip4 = '';
+        this._ip4 = [];
 
         spawnSync('ngctl', [
             'mkpeer', switchPath, 'eiface', switchHook, 'ether',
@@ -96,6 +103,14 @@ class NgIface {
 
     getIp4Addr() { return this._ip4; }
 
+    setAlias(alias) {
+
+        spawnSync('ifconfig', [
+            this._ethName, 'alias', alias,
+        ]);
+
+    }
+
     execDhcp() {
 
         let eth = this._ethName;
@@ -113,7 +128,7 @@ class NgIface {
         console.log(ethInfo);
 
         let result = jsonQuery(
-            `[**]interface[name=${eth}].address`,
+            `[**]interface[*name=${eth}].address`,
             { data: ethInfo }
         ).value;
 
@@ -132,13 +147,14 @@ class NgSwitch {
         this._hubHook = hubHook;
         this._path = `${hubName}:${hubHook}`
         this._ifaces = [];
+        this._countPorts = 32;
 
         spawnSync('ngctl', [
             'mkpeer', `${hubName}:`, 'bridge', hubHook, 'link0',
         ]);
 
-        this._ifaces.length = 32;
-        this._ifaces.fill(null, 0, 32);
+        this._ifaces.length = this._countPorts;
+        this._ifaces.fill(null, 0, this._countPorts);
         this._ifaces[0] = hubName;
 
     }

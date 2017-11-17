@@ -8,8 +8,8 @@ class DefaultIface {
     constructor() {
 
         this.eth = '';
-        this.ipv4Address = '';
-        this.ipv4Network = '';
+        this.ipv4Address = [];
+        this.ipv4Network = [];
 
         this.refresh();
 
@@ -19,6 +19,14 @@ class DefaultIface {
 
         this._getIface();
         this._getEthInfo();
+
+    }
+
+    rmAliasIp4(ip = '') {
+
+        spawnSync('ifconfig', [
+            this.eth, '-alias', ip
+        ]);
 
     }
 
@@ -33,12 +41,12 @@ class DefaultIface {
         console.log(ethInfo);
 
         this.ipv4Address = jsonQuery(
-            `[**]interface[name=${this.eth}].address`,
+            `[**]interface[*name=${this.eth}].address`,
             { data: ethInfo }
         ).value;
 
         this.ipv4Network = jsonQuery(
-            `[**]interface[name=${this.eth}].network`,
+            `[**]interface[*name=${this.eth}].network`,
             { data: ethInfo }
         ).value;
 

@@ -71,6 +71,9 @@ app.post('/jails', (req, res) => {
     let dependencies = configData.dependencies;
     delete(configData.dependencies);
 
+    let pkg = configData.pkg;
+    delete(configData.pkg);
+
     let rctl = configData.rctl;
     delete(configData.rctl);
 
@@ -79,6 +82,11 @@ app.post('/jails', (req, res) => {
 
     let mounts = configData.mounts;
     delete(configData.mounts);
+
+    let jPostStart = configData['exec.j-poststart'];
+    delete(configData['exec.j-poststart']);
+
+    fs.copyFileSync('/etc/resolv.conf', `${jailDir}/etc/resolv.conf`);
 
     mounts.forEach(points => {
 
@@ -112,7 +120,7 @@ app.post('/jails', (req, res) => {
                 iface.execDhcp();
 
                 let eth = iface.getEthName();
-                let ip4 = iface.getIp4Addr();
+                let ip4 = iface.getIp4Addr()[0];
 
                 ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
 
@@ -148,6 +156,24 @@ app.post('/jails', (req, res) => {
             '-l', cpuset, '-j', jid
         ]);
     }
+
+    result = spawnSync('pkg', [
+        '-j', jailName, 'install', '-y', ...pkg
+    ]);
+
+    console.log(result.output[1].toString());
+    console.log(result.output[2].toString());
+
+    jPostStart.forEach(command => {
+
+        result = spawnSync('/usr/sbin/jexec', [
+            jid, ...command.split(' ')
+        ]);
+
+        console.log(result.output[1].toString());
+        console.log(result.output[2].toString());
+
+    });
 
     console.log('finish');
 
