@@ -50,6 +50,28 @@ class IpDHCP {
 
     isEnabled() { return this._enabled; }
 
+    pipeRule(rules) {
+
+        let ipsRule = rules['ip4.addr'];
+
+        if (ipsRule.data === 'DHCP') {
+
+            if (!this.isEnabled()) this.enable();
+
+            let iface = this.getIface();
+            iface.execDhcp();
+
+            let eth = iface.getEthName();
+            let ip4 = iface.getIp4Addr()[0];
+
+            ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
+
+        }
+
+        return rules;
+
+    }
+
     _clearEth(iface) {
 
         spawnSync('ngctl', [

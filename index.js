@@ -13,6 +13,7 @@ const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const ConfigBody = require('./libs/config-body.js');
 const defaultIface = require('./libs/default-iface.js');
 const ConfigFile = require('./libs/config-file.js');
 const Rctl = require('./libs/rctl.js');
@@ -21,13 +22,7 @@ const IpDHCP = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
 const autoIp = require('./modules/auto-ip.js');
 
-const jailsDir = path.resolve(__dirname + '/jails');
-const ARGV = minimist(process.argv.slice(2));
-
-const {
-    port = 3346,
-    host = '127.0.0.1',
-} = ARGV;
+const config = require('./libs/config.js');
 
 const app = express();
 const dhcp = new IpDHCP;
@@ -38,19 +33,18 @@ app.post('/jails', (req, res) => {
 
     console.log(req.body);
 
-    let configData = req.body;
-    let jailDir = `${jailsDir}/${configData.name}`;
-    configData.path = jailDir;
+    let configBody = new ConfigBody(req.body);
 
     try {
 
-        fs.mkdirSync(jailDir);
+        fs.mkdirSync(configBody.path);
 
         tar.x({
-            file: configData.base + '.tar',
-            cwd: jailDir,
+            file: `${configBody.base}.tar`,
+            cwd: configBody.path,
             sync: true,
         });
+
 
     } catch(e) {
 
@@ -63,86 +57,43 @@ app.post('/jails', (req, res) => {
 
     }
 
-    delete(configData.base);
+    fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
 
-    let jailName = configData.name;
-    delete(configData.name);
-
-    let dependencies = configData.dependencies;
-    delete(configData.dependencies);
-
-    let pkg = configData.pkg;
-    delete(configData.pkg);
-
-    let rctl = configData.rctl;
-    delete(configData.rctl);
-
-    let cpuset = configData.cpuset;
-    delete(configData.cpuset);
-
-    let mounts = configData.mounts;
-    delete(configData.mounts);
-
-    let jPostStart = configData['exec.j-poststart'];
-    delete(configData['exec.j-poststart']);
-
-    fs.copyFileSync('/etc/resolv.conf', `${jailDir}/etc/resolv.conf`);
-
-    mounts.forEach(points => {
+    configBody.mounts.forEach(points => {
 
         let [src, dst] = points;
 
         let result = spawnSync('mount_nullfs', [
             src,
-            path.join(configData.path, dst),
+            path.join(configBody.path, dst),
         ]);
 
     });
 
-    let rctlObj = new Rctl(rctl, jailName);
+    let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
 
-    let configFile = path.resolve(`./${jailName}-jail.conf`);
-    let configObj = new ConfigFile(configData, jailName);
+    let configFile = path.resolve(`./${configBody.jailName}-jail.conf`);
+    let configObj = configBody.getConfigJail();
 
     configObj
         .pipe(autoIface.pipeRule)
         .pipe(autoIp.pipeRule)
-        .pipe(rules => {
-
-            let ipsRule = rules['ip4.addr'];
-
-            if (ipsRule.data === 'DHCP') {
-
-                if (!dhcp.isEnabled()) dhcp.enable();
-
-                let iface = dhcp.getIface();
-                iface.execDhcp();
-
-                let eth = iface.getEthName();
-                let ip4 = iface.getIp4Addr()[0];
-
-                ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
-
-            }
-
-            return rules;
-
-        });
+        .pipe(dhcp.pipeRule);
 
     console.log(configObj.toString());
 
     configObj.save(configFile);
 
     let result = spawnSync('jail', [
-        '-c', '-f', configFile, jailName,
+        '-c', '-f', configFile, configBody.jailName,
     ]);
 
     console.log(result.output[1].toString());
     console.log(result.output[2].toString());
 
     result = spawnSync('jls', [
-        '--libxo=json', '-j', jailName
+        '--libxo=json', '-j', configBody.jailName
     ]);
 
     let out = result.stdout.toString();
@@ -151,20 +102,22 @@ app.post('/jails', (req, res) => {
 
     console.log(jid);
 
-    if (cpuset !== false) {
+    if (configBody.cpuset !== false) {
         result = spawnSync('cpuset', [
-            '-l', cpuset, '-j', jid
+            '-l', configBody.cpuset, '-j', jid
         ]);
     }
 
-    result = spawnSync('pkg', [
-        '-j', jailName, 'install', '-y', ...pkg
-    ]);
+    if (configBody.pkg) {
+        result = spawnSync('pkg', [
+            '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
+        ]);
 
-    console.log(result.output[1].toString());
-    console.log(result.output[2].toString());
+        console.log(result.output[1].toString());
+        console.log(result.output[2].toString());
+    }
 
-    jPostStart.forEach(command => {
+    configBody.jPostStart.forEach(command => {
 
         result = spawnSync('/usr/sbin/jexec', [
             jid, ...command.split(' ')
@@ -204,8 +157,8 @@ app.delete('/jails/:name', (req, res) => {
 
 });
 
-app.listen(port, host, () => {
+app.listen(config.port, config.host, () => {
 
-    console.log(`listening on port ${port}!`);
+    console.log(`listening on port ${config.port}!`);
 
 });
