@@ -9,6 +9,7 @@ const yaml = require('js-yaml');
 const jsonQuery = require('json-query');
 const tar = require('tar');
 const fs = require('fs');
+const request = require('request');
 const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -39,23 +40,47 @@ app.post('/jails', (req, res) => {
 
         fs.mkdirSync(configBody.path);
 
-        tar.x({
-            file: `${configBody.base}.tar`,
-            cwd: configBody.path,
-            sync: true,
-        });
-
-
     } catch(e) {
 
         if (e.code !== 'EEXIST') {
 
             console.log(e);
-            process.exit();
+            res.send();
+            return;
 
         }
 
     }
+
+    let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
+
+    try {
+
+        let fd = fs.openSync(archive, 'r');
+        fs.closeSync(fd);
+
+    } catch(e) {
+
+        if (e.code !== 'ENOENT') {
+
+            console.log(e);
+            req.send();
+            return;
+
+        }
+
+        request(`${config.bases}/${configBody.base}.tar`)
+            .pipe(fs.createWriteStream(archive))
+
+    }
+
+    // process.exit();
+
+    tar.x({
+        file: archive,
+        cwd: configBody.path,
+        sync: true,
+    });
 
     fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
 
@@ -73,7 +98,7 @@ app.post('/jails', (req, res) => {
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
 
-    let configFile = path.resolve(`./${configBody.jailName}-jail.conf`);
+    let configFile = `/tmp/${configBody.jailName}-jail.conf`;
     let configObj = configBody.getConfigJail();
 
     configObj
@@ -137,7 +162,7 @@ app.post('/jails', (req, res) => {
 app.delete('/jails/:name', (req, res) => {
 
     let jailName = req.params.name;
-    let configFile = path.resolve(`./${jailName}-jail.conf`);
+    let configFile = `/tmp/${jailName}-jail.conf`;
 
     let result = spawnSync('jail', [
         '-r',
