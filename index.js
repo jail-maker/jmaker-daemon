@@ -2,7 +2,7 @@
 
 'use strict';
 
-const { spawn, spawnSync } = require('child_process')
+const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const os = require('os');
 const yaml = require('js-yaml');
@@ -14,6 +14,7 @@ const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
 const defaultIface = require('./libs/default-iface.js');
 const ConfigFile = require('./libs/config-file.js');
@@ -36,22 +37,6 @@ app.post('/jails', (req, res) => {
 
     let configBody = new ConfigBody(req.body);
 
-    try {
-
-        fs.mkdirSync(configBody.path);
-
-    } catch(e) {
-
-        if (e.code !== 'EEXIST') {
-
-            console.log(e);
-            res.send();
-            return;
-
-        }
-
-    }
-
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
 
     try {
@@ -69,18 +54,39 @@ app.post('/jails', (req, res) => {
 
         }
 
-        request(`${config.bases}/${configBody.base}.tar`)
-            .pipe(fs.createWriteStream(archive))
+        let result = fetch(`${config.bases}/${configBody.base}.tar`, archive);
+        if (!result) {
+
+            console.log('error fetching file.');
+
+            req.send();
+            return;
+
+        }
 
     }
 
-    // process.exit();
+    try {
 
-    tar.x({
-        file: archive,
-        cwd: configBody.path,
-        sync: true,
-    });
+        fs.mkdirSync(configBody.path);
+
+        tar.x({
+            file: archive,
+            cwd: configBody.path,
+            sync: true,
+        });
+
+    } catch(e) {
+
+        if (e.code !== 'EEXIST') {
+
+            console.log(e);
+            res.send();
+            return;
+
+        }
+
+    }
 
     fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
 
