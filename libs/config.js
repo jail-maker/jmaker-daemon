@@ -13,6 +13,7 @@ class Config {
         this.host = '127.0.0.1';
         this.jailsDir = path.resolve(__dirname + '/jails');
         this.cacheDir = path.resolve(__dirname + '/cache');
+        this.zfs = false;
 
     }
 

@@ -4,3 +4,4 @@ host: "127.0.0.1"
 jailsDir: "./jails"
 cacheDir: "./cache"
 bases: "http://jmaker-bases.websm.io"
+zfs: false
