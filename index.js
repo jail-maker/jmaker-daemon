@@ -2,29 +2,23 @@
 
 'use strict';
 
-const { spawn, spawnSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const path = require('path');
-const os = require('os');
-const yaml = require('js-yaml');
-const jsonQuery = require('json-query');
 const tar = require('tar');
 const fs = require('fs');
-const request = require('request');
-const minimist = require('minimist');
 const express = require('express');
 const bodyParser = require('body-parser');
 
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
-const defaultIface = require('./libs/default-iface.js');
-const ConfigFile = require('./libs/config-file.js');
 const Rctl = require('./libs/rctl.js');
+const FolderStorage = require('./libs/folder-storage.js');
+const ZfsStorage = require('./libs/zfs-storage.js');
+const config = require('./libs/config.js');
 
 const IpDHCP = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
 const autoIp = require('./modules/auto-ip.js');
-
-const config = require('./libs/config.js');
 
 const app = express();
 const dhcp = new IpDHCP;
@@ -36,7 +30,6 @@ app.post('/jails', (req, res) => {
     console.log(req.body);
 
     let configBody = new ConfigBody(req.body);
-
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
 
     try {
@@ -66,9 +59,25 @@ app.post('/jails', (req, res) => {
 
     }
 
-    try {
+    console.log('archive done!');
 
-        fs.mkdirSync(configBody.path);
+    let storage = {};
+
+    if (config.zfs) {
+
+        storage = new ZfsStorage(config.zfsPool, configBody.jailName);
+        configBody.setPath(storage.getPath())
+
+        if (configBody.quota) storage.setQuota(configBody.quota);
+
+    } else {
+
+        storage = new FolderStorage(config.jailsDir, configBody.jailName);
+        configBody.setPath(storage.getPath())
+
+    }
+
+    if (storage.isEmpty()) {
 
         tar.x({
             file: archive,
@@ -76,19 +85,13 @@ app.post('/jails', (req, res) => {
             sync: true,
         });
 
-    } catch(e) {
-
-        if (e.code !== 'EEXIST') {
-
-            console.log(e);
-            res.send();
-            return;
-
-        }
-
     }
 
+    console.log('storage done!');
+
     fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
+
+    console.log('resolv.conf sync done!');
 
     configBody.mounts.forEach(points => {
 
@@ -101,8 +104,12 @@ app.post('/jails', (req, res) => {
 
     });
 
+    console.log('mounts done!');
+
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
+
+    console.log('rctl done!');
 
     let configFile = `/tmp/${configBody.jailName}-jail.conf`;
     let configObj = configBody.getConfigJail();
@@ -116,28 +123,24 @@ app.post('/jails', (req, res) => {
 
     configObj.save(configFile);
 
+    console.log('jail config done!');
+
     let result = spawnSync('jail', [
         '-c', '-f', configFile, configBody.jailName,
     ]);
 
+    console.log('jail start done!');
+
     console.log(result.output[1].toString());
     console.log(result.output[2].toString());
-
-    result = spawnSync('jls', [
-        '--libxo=json', '-j', configBody.jailName
-    ]);
-
-    let out = result.stdout.toString();
-    out = JSON.parse(out);
-    let jid = out['jail-information'].jail[0].jid;
-
-    console.log(jid);
 
     if (configBody.cpuset !== false) {
         result = spawnSync('cpuset', [
             '-l', configBody.cpuset, '-j', jid
         ]);
     }
+
+    console.log('cpuset done!');
 
     if (configBody.pkg) {
         result = spawnSync('pkg', [
@@ -147,6 +150,8 @@ app.post('/jails', (req, res) => {
         console.log(result.output[1].toString());
         console.log(result.output[2].toString());
     }
+
+    console.log('pkg done!');
 
     configBody.jPostStart.forEach(command => {
 
@@ -159,6 +164,7 @@ app.post('/jails', (req, res) => {
 
     });
 
+    console.log('j-poststart done!');
     console.log('finish');
 
     res.send();

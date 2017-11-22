@@ -16,9 +16,17 @@ class ConfigBody {
         this.cpuset = this._extract('cpuset');
         this.mounts = this._extract('mounts');
         this.jPostStart = this._extract('exec.j-poststart');
+        this.quota = this._extract('quota');
 
-        this.path = `${config.jailsDir}/${this.jailName}`;
-        this.fileData.path = this.path;
+        this.setPath('');
+
+    }
+
+    setPath(path) {
+
+        this.path = path;
+        this.fileData.path = path;
+        return this;
 
     }
 

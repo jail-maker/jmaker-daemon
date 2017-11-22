@@ -14,6 +14,7 @@ class Config {
         this.jailsDir = path.resolve(__dirname + '/jails');
         this.cacheDir = path.resolve(__dirname + '/cache');
         this.zfs = false;
+        this.zfsPool = 'jmaker';
 
     }
 
