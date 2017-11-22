@@ -115,9 +115,9 @@ app.post('/jails', (req, res) => {
     let configObj = configBody.getConfigJail();
 
     configObj
-        .pipe(autoIface.pipeRule)
-        .pipe(autoIp.pipeRule)
-        .pipe(dhcp.pipeRule);
+        .pipe(autoIface.pipeRule.bind(autoIface))
+        .pipe(autoIp.pipeRule.bind(autoIp))
+        .pipe(dhcp.pipeRule.bind(dhcp));
 
     console.log(configObj.toString());
 
