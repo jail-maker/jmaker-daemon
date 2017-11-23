@@ -217,7 +217,11 @@ app.delete('/jails/:name', (req, res) => {
 
     });
 
-    ngIface.destroy();
+    if (dhcp.isEnabled() && ngIface) {
+
+        ngIface.destroy();
+
+    }
 
     console.log('finish');
     dataJails.unset(jailName);

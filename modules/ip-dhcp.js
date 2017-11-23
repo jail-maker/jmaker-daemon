@@ -41,6 +41,16 @@ class IpDHCP {
 
     }
 
+    disable() {
+
+        let iface = this._ngIface;
+        defaultIface.refresh();
+
+        this._hub.destroy();
+        this._enabled = false;
+
+    }
+
     getIface() {
 
         let hub = this._hub;
@@ -242,14 +252,25 @@ class NgSwitch {
     removeIface(iface) {
 
         let key = this._ifaces.indexOf(iface);
+
+        if (key === -1) return;
+
         this._ifaces[key] = null;
         this._activePorts--;
 
-        if (this.isEmpty()) this._destroy();
+        if (this.isEmpty()) this.destroy();
 
     }
 
-    _destroy() {
+    destroy() {
+
+        this._ifaces.map(iface => {
+
+            iface.destroy();
+
+        });
+
+        this._ifaces = [];
 
         spawnSync('ngctl', [
             'shutdown', this._path
@@ -312,7 +333,7 @@ class NgHub {
     removeSwitch(ngSwitch) {
 
         let key = this._switches.indexOf(ngSwitch);
-        delete(this._switches[key]);
+        if (key !== -1) delete(this._switches[key]);
 
     }
 
@@ -329,6 +350,22 @@ class NgHub {
         let sw = sws.find(sw => sw.isFilled() ? false : true );
 
         return sw ? sw : this.createSwitch();
+
+    }
+
+    destroy() {
+
+        this._switches.map(ngSwitch => {
+
+            ngSwitch.destroy();
+
+        });
+
+        this._switches = [];
+
+        spawnSync('ngctl', [
+            'shutdown', `${this._name}:`
+        ]);
 
     }
 
