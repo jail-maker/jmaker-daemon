@@ -12,3 +12,10 @@ tune in /boot/loader.conf:
 kern.racct.enable=1
 ng_ether_load="YES"
 ```
+## recommendations:
+tune in /etc/rc.conf:
+```
+sendmail_enable="NO"
+rpcbind_enable="NO"
+
+```
