@@ -4,12 +4,35 @@ const { spawn, spawnSync } = require('child_process');
 
 const ExistsError = require('./Errors/exists-error.js');
 const CommandError = require('./Errors/command-error.js');
+const NotFoundError = require('./Errors/not-found-error.js');
 
 class Zfs {
 
     constructor(pool) {
 
+        this._checkPool(pool);
         this._pool = pool;
+
+    }
+
+    _checkPool(pool) {
+
+        let result = spawnSync('zpool', [
+            'list', '-o', 'name', '-H'
+        ]);
+
+        let pools = result.stdout
+            .toString()
+            .trim()
+            .split(/\n/);
+
+        if (!(pool in pools)) {
+
+            let msg = `Pool "${pool}" not found.\n`
+            msg += `Available pools: ${pools.join(', ')}`;
+            throw new NotFoundError(msg);
+
+        }
 
     }
 
@@ -25,12 +48,12 @@ class Zfs {
 
             case 1:
                 msg = 'Dataset all ready exists.';
-                throw new ExistsError();
+                throw new ExistsError(msg);
                 break;
 
             case 2:
                 msg = 'Invalid command line options were specified.';
-                throw new CommandError();
+                throw new CommandError(msg);
                 break;
 
         }
