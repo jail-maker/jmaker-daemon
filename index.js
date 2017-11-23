@@ -15,6 +15,7 @@ const Rctl = require('./libs/rctl.js');
 const FolderStorage = require('./libs/folder-storage.js');
 const ZfsStorage = require('./libs/zfs-storage.js');
 const config = require('./libs/config.js');
+const dataJails = require('./libs/data-jails.js');
 
 const IpDHCP = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
@@ -30,7 +31,10 @@ app.post('/jails', (req, res) => {
     console.log(req.body);
 
     let configBody = new ConfigBody(req.body);
+    let dataCell = dataJails.createCell(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
+
+    dataCell.configBody = configBody;
 
     try {
 
@@ -117,7 +121,7 @@ app.post('/jails', (req, res) => {
     configObj
         .pipe(autoIface.pipeRule.bind(autoIface))
         .pipe(autoIp.pipeRule.bind(autoIp))
-        .pipe(dhcp.pipeRule.bind(dhcp));
+        .pipe(dhcp.getPipeRule(dataCell).bind(dhcp));
 
     console.log(configObj.toString());
 
@@ -175,6 +179,21 @@ app.delete('/jails/:name', (req, res) => {
 
     let jailName = req.params.name;
     let configFile = `/tmp/${jailName}-jail.conf`;
+    let dataCell = {};
+
+    try {
+
+        dataCell = dataJails.get(jailName);
+
+    } catch (e) {
+
+        res.send();
+        return;
+
+    }
+
+    let configBody = dataCell.configBody;
+    let ngIface = dataCell.ngIface;
 
     let result = spawnSync('jail', [
         '-r',
@@ -188,7 +207,20 @@ app.delete('/jails/:name', (req, res) => {
 
     fs.unlinkSync(configFile);
 
+    configBody.mounts.forEach(points => {
+
+        let [src, dst] = points;
+
+        let result = spawnSync('umount', [
+            '-f', path.join(configBody.path, dst),
+        ]);
+
+    });
+
+    ngIface.destroy();
+
     console.log('finish');
+    dataJails.unset(jailName);
 
     res.send();
 

@@ -5,6 +5,7 @@ const uniqid = require('uniqid');
 const randomMac = require('random-mac');
 const { spawnSync, spawn } = require('child_process');
 const defaultIface = require('../libs/default-iface.js');
+const dataJails = require('../libs/data-jails.js');
 
 class IpDHCP {
 
@@ -72,6 +73,33 @@ class IpDHCP {
 
     }
 
+    getPipeRule(dataCell) {
+
+        return (rules) => {
+
+            let ipsRule = rules['ip4.addr'];
+
+            if (ipsRule.data === 'DHCP') {
+
+                if (!this.isEnabled()) this.enable();
+
+                let iface = this.getIface();
+                dataCell.ngIface = iface;
+                iface.execDhcp();
+
+                let eth = iface.getEthName();
+                let ip4 = iface.getIp4Addr()[0];
+
+                ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
+
+            }
+
+            return rules;
+
+        }
+
+    }
+
     _clearEth(iface) {
 
         spawnSync('ngctl', [
@@ -90,8 +118,11 @@ class IpDHCP {
 
 class NgIface {
 
-    constructor(switchPath, switchHook) {
+    constructor(ngSwitch, switchHook) {
 
+        let switchPath = ngSwitch.getPath();
+
+        this._switch = ngSwitch;
         this._switchPath = switchPath;
         this._switchHook = switchHook;
         this._path = `${switchPath}.${switchHook}`;
@@ -133,6 +164,16 @@ class NgIface {
 
     }
 
+    destroy() {
+
+        spawnSync('ngctl', [
+            'shutdown', this._path,
+        ]);
+
+        this._switch.removeIface(this);
+
+    }
+
     execDhcp() {
 
         let eth = this._ethName;
@@ -163,13 +204,17 @@ class NgIface {
 
 class NgSwitch {
 
-    constructor(hubName, hubHook) {
+    constructor(ngHub, hubHook) {
 
+        let hubName = ngHub.getName();
+
+        this._hub = ngHub;
         this._hubName = hubName;
         this._hubHook = hubHook;
         this._path = `${hubName}:${hubHook}`
         this._ifaces = [];
         this._countPorts = 32;
+        this._activePorts = 1;
 
         spawnSync('ngctl', [
             'mkpeer', `${hubName}:`, 'bridge', hubHook, 'link0',
@@ -185,10 +230,38 @@ class NgSwitch {
 
         let key = this._ifaces.indexOf(null);
         let hook = `link${key}`;
-        let iface = new NgIface(this._path, hook);
+        let iface = new NgIface(this, hook);
+
         this._ifaces[key] = iface;
+        this._activePorts++;
 
         return iface;
+
+    }
+
+    removeIface(iface) {
+
+        let key = this._ifaces.indexOf(iface);
+        this._ifaces[key] = null;
+        this._activePorts--;
+
+        if (this.isEmpty()) this._destroy();
+
+    }
+
+    _destroy() {
+
+        spawnSync('ngctl', [
+            'shutdown', this._path
+        ]);
+
+        this._hub.removeSwitch(this);
+
+    }
+
+    isEmpty() {
+
+        return this._activePorts === 1;
 
     }
 
@@ -199,6 +272,8 @@ class NgSwitch {
         return result === -1 ? true : false;
 
     }
+
+    getPath() { return this._path; }
 
 }
 
@@ -227,12 +302,21 @@ class NgHub {
     createSwitch() {
 
         let hook = uniqid.time();
-        let sw = new NgSwitch(this._name, hook);
+        let sw = new NgSwitch(this, hook);
         this._switches.push(sw);
 
         return sw;
 
     }
+
+    removeSwitch(ngSwitch) {
+
+        let key = this._switches.indexOf(ngSwitch);
+        delete(this._switches[key]);
+
+    }
+
+    getName() { return this._name }
 
     getSwitches() { return this._switches; }
 

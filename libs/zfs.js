@@ -26,7 +26,7 @@ class Zfs {
             .trim()
             .split(/\n/);
 
-        if (!(pool in pools)) {
+        if (pools.indexOf(pool) === -1) {
 
             let msg = `Pool "${pool}" not found.\n`
             msg += `Available pools: ${pools.join(', ')}`;
