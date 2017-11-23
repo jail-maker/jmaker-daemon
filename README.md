@@ -17,5 +17,4 @@ tune in /etc/rc.conf:
 ```
 sendmail_enable="NO"
 rpcbind_enable="NO"
-
 ```
