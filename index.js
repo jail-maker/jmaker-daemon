@@ -26,6 +26,68 @@ const dhcp = new IpDHCP;
 
 app.use(bodyParser.json());
 
+process.on('SIGINT', () => {
+
+    let dataCells = dataJails.getAll();
+
+    for (let key in dataCells) {
+
+        let jailName = key;
+        let configFile = `/tmp/${jailName}-jail.conf`;
+        let dataCell = dataCells[key];
+
+        try {
+
+            dataCell = dataJails.get(jailName);
+
+        } catch (e) {
+
+            res.send();
+            return;
+
+        }
+
+        let configBody = dataCell.configBody;
+        let ngIface = dataCell.ngIface;
+
+        let result = spawnSync('jail', [
+            '-r',
+            '-f',
+            configFile,
+            jailName,
+        ]);
+
+        console.log(result.output[1].toString());
+        console.log(result.output[2].toString());
+
+        fs.unlinkSync(configFile);
+
+        configBody.mounts.forEach(points => {
+
+            let [src, dst] = points;
+
+            let result = spawnSync('umount', [
+                '-f', path.join(configBody.path, dst),
+            ]);
+
+        });
+
+        if (dhcp.isEnabled() && ngIface) {
+
+            ngIface.destroy();
+
+        }
+
+        dataJails.unset(jailName);
+
+    }
+
+    console.log('finish');
+
+    process.exit();
+
+});
+
 app.post('/jails', (req, res) => {
 
     console.log(req.body);
