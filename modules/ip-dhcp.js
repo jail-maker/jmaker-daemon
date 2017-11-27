@@ -47,15 +47,20 @@ class IpDHCP {
     disable() {
 
         let iface = this._ngIface;
+        let oldIface = this._oldIface;
+
         defaultIface.refresh();
-        defaultIface.reset();
 
         iface.getIp4Addresses().forEach(ip => {
 
-            defaultIface.addIp4Address(ip);
+            oldIface.addIp4Address(ip);
             iface.rmIp4Address(ip);
 
         });
+
+        defaultIface.reset();
+        oldIface.execDhcp();
+        defaultIface.refresh();
 
         this._hub.destroy();
         this._enabled = false;
@@ -110,12 +115,6 @@ class IpDHCP {
         spawnSync('ngctl', [
             'msg', `${eth}:`, 'setautosrc', '0',
         ]);
-
-        // iface.getIp4Addresses().forEach(ip => {
-
-        //     iface.rmIp4Address(iface.ipv4Address[0]);
-
-        // });
 
     }
 
