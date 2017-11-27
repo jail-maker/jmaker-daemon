@@ -18,6 +18,10 @@ class DefaultIface {
 
     set(name) {
 
+        spawnSync('route', [
+            'delete', 'default'
+        ]);
+
         let result = spawnSync('route', [
             'add', '-iface', name
         ]);
