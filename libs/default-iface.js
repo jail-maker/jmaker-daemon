@@ -18,10 +18,6 @@ class DefaultIface extends Iface {
 
     set(name) {
 
-        spawnSync('route', [
-            'delete', 'default'
-        ]);
-
         let result = spawnSync('route', [
             'add', '-iface', name
         ]);
@@ -33,6 +29,28 @@ class DefaultIface extends Iface {
         }
 
         this.refresh();
+
+    }
+
+    reset() {
+
+        spawnSync('route', [
+            'delete', 'default'
+        ]);
+
+    }
+
+    intoIface() {
+
+        let iface = new Iface;
+
+        for (let key in this) {
+
+            iface[key] = this[key];
+
+        }
+
+        return iface;
 
     }
 

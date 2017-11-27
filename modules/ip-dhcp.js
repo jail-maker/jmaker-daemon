@@ -15,6 +15,7 @@ class IpDHCP {
 
         this._enabled = false;
         this._eth = defaultIface.getEthName();
+        this._oldIface = defaultIface.intoIface();
         this._hub = {};
         this._ngIface = {};
 
@@ -47,7 +48,7 @@ class IpDHCP {
 
         let iface = this._ngIface;
         defaultIface.refresh();
-        defaultIface.set(this._eth);
+        defaultIface.reset();
 
         iface.getIp4Addresses().forEach(ip => {
 
