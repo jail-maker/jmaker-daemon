@@ -1,5 +1,7 @@
 'use strict';
 
+const { spawn, spawnSync } = require('child_process');
+const jsonQuery = require('json-query');
 const Ip4Addr = require('./ip4addr.js');
 const NotFoundError = require('./Errors/not-found-error.js');
 const ExistsError = require('./Errors/exists-error.js');
@@ -75,7 +77,7 @@ class Iface {
         ).value;
 
         let networks = jsonQuery(
-            `[**]interface[*name=${this._ethNam}].network`,
+            `[**]interface[*name=${this._ethName}].network`,
             { data: ethInfo }
         ).value;
 
@@ -84,7 +86,7 @@ class Iface {
             let matches = networks[key].match(/\/(\d+)$/);
             let prefix = matches[1];
 
-            let ipAddr = new IpAddr(addr, prefix);
+            let ipAddr = new Ip4Addr(addr, prefix);
             ipAddr.network = networks[key].trim();
             this._ipv4Addresses.push(ipAddr);
 
@@ -94,7 +96,7 @@ class Iface {
 
     _getEther() {
 
-        ethInfo = spawnSync('netstat', [
+        let ethInfo = spawnSync('netstat', [
             '-f', 'link', '-I', this._ethName, '-n' ,'--libxo=json',
         ]).stdout.toString();
 
