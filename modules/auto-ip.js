@@ -11,15 +11,15 @@ class AutoIp {
 
         if (rule.data === 'AUTO') {
 
-            console.log(rule);
+            let ip4Addr = defaultIface.getIp4Addresses()[0];
 
             let freeIp = spawnSync('check_ip', [
-                `--ipv4=${defaultIface.ipv4Network}`, '-j', 
+                `--ipv4=${ip4Addr.network}`, '-j', 
             ]).stdout.toString();
 
             freeIp = JSON.parse(freeIp)['free4'];
 
-            rule.view = `ip4.addr = "${defaultIface.eth}|${freeIp}";`;
+            rule.view = `ip4.addr = "${defaultIface.getEthName()}|${freeIp}";`;
 
         }
 

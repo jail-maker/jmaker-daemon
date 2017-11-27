@@ -1,18 +1,20 @@
 'use strict';
 
+const { spawnSync, spawn } = require('child_process');
 const jsonQuery = require('json-query');
 const uniqid = require('uniqid');
 const randomMac = require('random-mac');
-const { spawnSync, spawn } = require('child_process');
 const defaultIface = require('../libs/default-iface.js');
 const dataJails = require('../libs/data-jails.js');
+const Iface = require('../libs/iface.js');
+const Ip4Addr = require('../libs/ip4addr.js');
 
 class IpDHCP {
 
     constructor() {
 
         this._enabled = false;
-        this._eth = defaultIface.eth;
+        this._eth = defaultIface.getEthName();
         this._hub = {};
         this._ngIface = {};
 
@@ -26,10 +28,10 @@ class IpDHCP {
 
         let iface = this.getIface();
 
-        defaultIface.ipv4Address.forEach(ip => {
+        defaultIface.getIp4Addresses().forEach(ip => {
 
-            iface.setAlias(ip);
-            defaultIface.rmAliasIp4(ip);
+            iface.addIp4Address(ip);
+            defaultIface.rmIp4Address(ip);
 
         });
 
@@ -45,6 +47,14 @@ class IpDHCP {
 
         let iface = this._ngIface;
         defaultIface.refresh();
+        defaultIface.set(this._eth);
+
+        iface.getIp4Addresses().forEach(ip => {
+
+            defaultIface.addIp4Address(ip);
+            iface.rmIp4Address(ip);
+
+        });
 
         this._hub.destroy();
         this._enabled = false;
@@ -126,9 +136,11 @@ class IpDHCP {
 
 }
 
-class NgIface {
+class NgIface extends Iface {
 
     constructor(ngSwitch, switchHook) {
+
+        super();
 
         let switchPath = ngSwitch.getPath();
 
@@ -138,7 +150,6 @@ class NgIface {
         this._path = `${switchPath}.${switchHook}`;
         this._ether = randomMac();
         this._ethName = '';
-        this._ip4 = [];
 
         spawnSync('ngctl', [
             'mkpeer', switchPath, 'eiface', switchHook, 'ether',
@@ -157,19 +168,7 @@ class NgIface {
         this._ethName = ethName;
 
         spawnSync('ifconfig', [
-            ethName, 'ether', randomMac(), 'up',
-        ]);
-
-    }
-
-    getEthName() { return this._ethName; }
-
-    getIp4Addr() { return this._ip4; }
-
-    setAlias(alias) {
-
-        spawnSync('ifconfig', [
-            this._ethName, 'alias', alias,
+            ethName, 'ether', this._ether, 'up',
         ]);
 
     }
@@ -192,21 +191,7 @@ class NgIface {
             eth,
         ]);
 
-        let ethInfo = spawnSync('netstat', [
-            '-4', '-I', eth, '-n' ,'--libxo=json',
-        ]).stdout.toString();
-
-        ethInfo = JSON.parse(ethInfo);
-
-        console.log(ethInfo);
-
-        let result = jsonQuery(
-            `[**]interface[*name=${eth}].address`,
-            { data: ethInfo }
-        ).value;
-
-        console.log(result);
-        this._ip4 = result;
+        this._getIp4Addresses();
 
     }
 

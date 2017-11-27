@@ -3,14 +3,14 @@
 const { spawnSync, spawn } = require('child_process');
 const jsonQuery = require('json-query');
 const ExecutionError = require('./Errors/execution-error.js');
+const Iface = require('../libs/iface.js');
+const Ip4Addr = require('../libs/ip4addr.js');
 
-class DefaultIface {
+class DefaultIface extends Iface {
 
     constructor() {
 
-        this.eth = '';
-        this.ipv4Address = [];
-        this.ipv4Network = [];
+        super();
 
         this.refresh();
 
@@ -38,38 +38,11 @@ class DefaultIface {
 
     refresh() {
 
+        this._ipv4Addresses = [];
+
         this._getIface();
-        this._getEthInfo();
-
-    }
-
-    rmAliasIp4(ip = '') {
-
-        spawnSync('ifconfig', [
-            this.eth, '-alias', ip
-        ]);
-
-    }
-
-    _getEthInfo() {
-
-        let ethInfo = spawnSync('netstat', [
-            '-4', '-I', this.eth, '-n' ,'--libxo=json',
-        ]).stdout.toString();
-
-        ethInfo = JSON.parse(ethInfo);
-
-        console.log(ethInfo);
-
-        this.ipv4Address = jsonQuery(
-            `[**]interface[*name=${this.eth}].address`,
-            { data: ethInfo }
-        ).value;
-
-        this.ipv4Network = jsonQuery(
-            `[**]interface[*name=${this.eth}].network`,
-            { data: ethInfo }
-        ).value;
+        this._getEther();
+        this._getIp4Addresses();
 
     }
 
@@ -87,7 +60,7 @@ class DefaultIface {
             { data: out }
         ).value;
 
-        this.eth = ethIfo['interface-name'];
+        this._ethName = ethIfo['interface-name'];
 
     }
 

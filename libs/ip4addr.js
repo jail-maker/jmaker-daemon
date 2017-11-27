@@ -6,6 +6,7 @@ class Ip4Addr {
 
         this.address = address;
         this.prefix = prefix;
+        this.network = '';
 
     }
 

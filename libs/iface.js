@@ -9,20 +9,20 @@ class Iface {
     constructor() {
 
         this._ethName = '';
-        this._ipv4Address = [];
+        this._ipv4Addresses = [];
         this._ether = '00:00:00:00:00:00';
 
     }
 
-    getIp4Aliases() {
+    getIp4Addresses() { return this._ipv4Addresses; }
 
-        return this._ipv4Address;
+    getEthName() { return this._ethName; }
 
-    }
+    getEther() { return this._ether; }
 
-    addIp4Alias(ip4Addr) {
+    addIp4Address(ip4Addr) {
 
-        let index = this._ipv4Address.indexOf(ip4Addr);
+        let index = this._ipv4Addresses.indexOf(ip4Addr);
 
         if (index !== -1) {
 
@@ -35,15 +35,15 @@ class Iface {
             this._ethName, 'alias', ip4Addr.toString(),
         ]);
 
-        this._ipv4Address.push(ip4Addr);
+        this._ipv4Addresses.push(ip4Addr);
 
         return this;
 
     }
 
-    rmIp4Alias(ip4Addr) {
+    rmIp4Address(ip4Addr) {
 
-        let index = this._ipv4Address.indexOf(ip4Addr);
+        let index = this._ipv4Addresses.indexOf(ip4Addr);
 
         if (index === -1) {
 
@@ -52,8 +52,8 @@ class Iface {
 
         }
 
-        delete this._ipv4Address[index];
-        this._ipv4Address = this._ipv4Address.filter(n => n);
+        delete this._ipv4Addresses[index];
+        this._ipv4Addresses = this._ipv4Addresses.filter(n => n);
 
         spawnSync('ifconfig', [
             this._ethNam, '-alias', ip4Addr.toString()
@@ -61,7 +61,7 @@ class Iface {
 
     }
 
-    _getIp4Addr() {
+    _getIp4Addresses() {
 
         let ethInfo = spawnSync('netstat', [
             '-4', '-I', this._ethName, '-n' ,'--libxo=json',
@@ -85,8 +85,8 @@ class Iface {
             let prefix = matches[1];
 
             let ipAddr = new IpAddr(addr, prefix);
-            this._ipv4Address.push(ipAddr);
-            this._aliases.push(ipAddr.toString());
+            ipAddr.network = networks[key].trim();
+            this._ipv4Addresses.push(ipAddr);
 
         });
 

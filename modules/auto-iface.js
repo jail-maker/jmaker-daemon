@@ -12,7 +12,7 @@ class AutoIface {
 
             let strings = rule.data.map(item => {
 
-                item = item.replace(/^\?\|/, `${defaultIface.eth}|`);
+                item = item.replace(/^\?\|/, `${defaultIface.getEthName()}|`);
                 return `  ${rule.key} += "${item}";`;
 
             });
