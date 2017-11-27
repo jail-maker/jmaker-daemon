@@ -22,6 +22,32 @@ class Iface {
 
     getEther() { return this._ether; }
 
+    setEther(ether) {
+
+        this._ether = ether;
+
+        spawnSync('ifconfig', [
+            this._ethName, 'ether', ether,
+        ]);
+
+    }
+
+    up() {
+
+        spawnSync('ifconfig', [
+            this._ethName, 'up'
+        ]);
+
+    }
+
+    down() {
+
+        spawnSync('ifconfig', [
+            this._ethName, 'down'
+        ]);
+
+    }
+
     addIp4Address(ip4Addr) {
 
         let index = this._ipv4Addresses.indexOf(ip4Addr);

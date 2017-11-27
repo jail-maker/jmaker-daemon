@@ -148,8 +148,6 @@ class NgIface extends Iface {
         this._switchPath = switchPath;
         this._switchHook = switchHook;
         this._path = `${switchPath}.${switchHook}`;
-        this._ether = randomMac();
-        this._ethName = '';
 
         spawnSync('ngctl', [
             'mkpeer', switchPath, 'eiface', switchHook, 'ether',
@@ -167,9 +165,9 @@ class NgIface extends Iface {
         ethName = ethName[1];
         this._ethName = ethName;
 
-        spawnSync('ifconfig', [
-            ethName, 'ether', this._ether, 'up',
-        ]);
+        let ether = randomMac();
+        this.setEther(ether);
+        this.up();
 
     }
 

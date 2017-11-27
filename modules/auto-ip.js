@@ -13,7 +13,9 @@ class AutoIp {
 
             let ip4Addr = defaultIface.getIp4Addresses()[0];
 
-            let freeIp = spawnSync('check_ip', [
+            console.log(ip4Addr);
+
+            let freeIp = spawnSync('/usr/local/bin/check_ip', [
                 `--ipv4=${ip4Addr.network}`, '-j', 
             ]).stdout.toString();
 
