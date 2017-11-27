@@ -55,12 +55,12 @@ class DefaultIface extends Iface {
         out = JSON.parse(out);
         out = out.statistics['route-information']['route-table']['rt-family'];
 
-        let ethIfo = jsonQuery(
+        let ethInfo = jsonQuery(
             '[address-family=Internet].rt-entry[destination=default]',
             { data: out }
         ).value;
 
-        this._ethName = ethIfo['interface-name'];
+        this._ethName = ethInfo['interface-name'];
 
     }
 

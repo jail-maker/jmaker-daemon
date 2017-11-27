@@ -71,28 +71,6 @@ class IpDHCP {
 
     isEnabled() { return this._enabled; }
 
-    pipeRule(rules) {
-
-        let ipsRule = rules['ip4.addr'];
-
-        if (ipsRule.data === 'DHCP') {
-
-            if (!this.isEnabled()) this.enable();
-
-            let iface = this.getIface();
-            iface.execDhcp();
-
-            let eth = iface.getEthName();
-            let ip4 = iface.getIp4Addr()[0];
-
-            ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
-
-        }
-
-        return rules;
-
-    }
-
     getPipeRule(dataCell) {
 
         return (rules) => {
@@ -108,9 +86,9 @@ class IpDHCP {
                 iface.execDhcp();
 
                 let eth = iface.getEthName();
-                let ip4 = iface.getIp4Addr()[0];
+                let ip4 = iface.getIp4Addresses()[0];
 
-                ipsRule.view = `ip4.addr = "${eth}|${ip4}/24";`;
+                ipsRule.view = `ip4.addr = "${eth}|${ip4}";`;
 
             }
 
@@ -122,15 +100,21 @@ class IpDHCP {
 
     _clearEth(iface) {
 
+        let eth = iface.getEthName();
+
         spawnSync('ngctl', [
-            'msg', `${iface.eth}:`, 'setpromisc', '1',
+            'msg', `${eth}:`, 'setpromisc', '1',
         ]);
 
         spawnSync('ngctl', [
-            'msg', `${iface.eth}:`, 'setautosrc', '0',
+            'msg', `${eth}:`, 'setautosrc', '0',
         ]);
 
-        iface.rmAliasIp4(iface.ipv4Address[0]);
+        // iface.getIp4Addresses().forEach(ip => {
+
+        //     iface.rmIp4Address(iface.ipv4Address[0]);
+
+        // });
 
     }
 
@@ -178,18 +162,6 @@ class NgIface extends Iface {
         ]);
 
         this._switch.removeIface(this);
-
-    }
-
-    execDhcp() {
-
-        let eth = this._ethName;
-
-        spawnSync('dhclient', [
-            eth,
-        ]);
-
-        this._getIp4Addresses();
 
     }
 

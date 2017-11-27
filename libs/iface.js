@@ -84,8 +84,20 @@ class Iface {
         this._ipv4Addresses = this._ipv4Addresses.filter(n => n);
 
         spawnSync('ifconfig', [
-            this._ethNam, '-alias', ip4Addr.toString()
+            this._ethName, '-alias', ip4Addr.address
         ]);
+
+    }
+
+    execDhcp() {
+
+        let eth = this._ethName;
+
+        spawnSync('dhclient', [
+            eth,
+        ]);
+
+        this._getIp4Addresses();
 
     }
 
@@ -125,6 +137,8 @@ class Iface {
         let ethInfo = spawnSync('netstat', [
             '-f', 'link', '-I', this._ethName, '-n' ,'--libxo=json',
         ]).stdout.toString();
+
+        ethInfo = JSON.parse(ethInfo);
 
         this._ether = jsonQuery(
             `[**]interface[name=${this._ethName}].address`,
