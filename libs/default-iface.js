@@ -2,6 +2,7 @@
 
 const { spawnSync, spawn } = require('child_process');
 const jsonQuery = require('json-query');
+const ExecutionError = require('./Errors/execution-error.js');
 
 class DefaultIface {
 
@@ -10,6 +11,22 @@ class DefaultIface {
         this.eth = '';
         this.ipv4Address = [];
         this.ipv4Network = [];
+
+        this.refresh();
+
+    }
+
+    set(name) {
+
+        let result = spawnSync('route', [
+            'add', '-iface', name
+        ]);
+
+        if (result.status > 0) {
+
+            throw new ExecutionError('Execution command error.');
+
+        }
 
         this.refresh();
 
