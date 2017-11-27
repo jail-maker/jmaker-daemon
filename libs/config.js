@@ -7,12 +7,12 @@ const minimist = require('minimist');
 
 class Config {
 
-    construct() {
+    constructor() {
 
         this.port = 3346;
         this.host = '127.0.0.1';
-        this.jailsDir = path.resolve(__dirname + '/jails');
-        this.cacheDir = path.resolve(__dirname + '/cache');
+        this.jailsDir = path.resolve('./jails');
+        this.cacheDir = path.resolve('./cache');
         this.zfs = false;
         this.zfsPool = 'jmaker';
 
