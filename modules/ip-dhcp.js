@@ -28,6 +28,7 @@ class IpDHCP {
         this._hub = new NgHub(this._eth);
 
         let iface = this.getIface();
+        let oldIface = this._oldIface;
 
         defaultIface.getIp4Addresses().forEach(ip => {
 
@@ -35,6 +36,9 @@ class IpDHCP {
             defaultIface.rmIp4Address(ip);
 
         });
+
+        iface.setEther(oldIface.getEther());
+        oldIface.setEther(randomMac());
 
         iface.execDhcp();
         defaultIface.refresh();
@@ -57,6 +61,9 @@ class IpDHCP {
             iface.rmIp4Address(ip);
 
         });
+
+        oldIface.setEther(iface.getEther());
+        iface.resetEther();
 
         defaultIface.reset();
         oldIface.execDhcp();
@@ -221,7 +228,8 @@ class NgSwitch {
 
         this._ifaces.map(iface => {
 
-            iface.destroy();
+            if (NgIface.prototype.isPrototypeOf(iface))
+                iface.destroy();
 
         });
 

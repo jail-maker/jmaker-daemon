@@ -82,6 +82,8 @@ process.on('SIGINT', () => {
 
     }
 
+    dhcp.disable();
+
     console.log('finish');
 
     process.exit();

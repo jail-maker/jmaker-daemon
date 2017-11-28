@@ -32,6 +32,12 @@ class Iface {
 
     }
 
+    resetEther() {
+
+        this.setEther('00:00:00:00:00:00');
+
+    }
+
     up() {
 
         spawnSync('ifconfig', [

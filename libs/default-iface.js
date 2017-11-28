@@ -16,22 +16,6 @@ class DefaultIface extends Iface {
 
     }
 
-    set(name) {
-
-        let result = spawnSync('route', [
-            'add', '-iface', name
-        ]);
-
-        if (result.status > 0) {
-
-            throw new ExecutionError('Execution command error.');
-
-        }
-
-        this.refresh();
-
-    }
-
     reset() {
 
         spawnSync('route', [
