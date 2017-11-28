@@ -11,6 +11,15 @@ class DataJails {
 
     }
 
+    getNames() {
+
+        let names = [];
+        for (let name in this._data) names.push(name);
+
+        return names; 
+
+    }
+
     get(name) {
 
         if (!this._data[name]) {

@@ -266,4 +266,4 @@ class NgSwitch {
 
 }
 
-module.exports = IpDHCP;
+module.exports = new IpDHCP;
