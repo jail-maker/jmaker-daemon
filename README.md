@@ -1,4 +1,5 @@
-# jmaker-daemon
+# jmaker-server
+
 ## requirements:
 
 - FreeBSD >= 11.1
