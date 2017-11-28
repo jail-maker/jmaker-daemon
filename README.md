@@ -18,3 +18,7 @@ tune in /etc/rc.conf:
 sendmail_enable="NO"
 rpcbind_enable="NO"
 ```
+## install:
+1. clone and change directory project
+2. install dependencies `$ yarn`
+3. run `$ sudo ./index.js --config=config.yml`
