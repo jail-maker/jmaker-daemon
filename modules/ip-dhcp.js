@@ -23,53 +23,51 @@ class IpDHCP {
 
     enable() {
 
-        defaultIface.refresh();
-        this._clearEth(defaultIface);
-        this._hub = new NgHub(this._eth);
+        if (this.isEnabled()) return;
+        this._enabled = true;
 
-        let iface = this.getIface();
+        defaultIface.refresh();
         let oldIface = this._oldIface;
 
-        defaultIface.getIp4Addresses().forEach(ip => {
+        this._clearEth(defaultIface);
+        this._hub = new NgHub(oldIface.getEthName());
 
+        let iface = this.getIface();
+
+        oldIface.getIp4Addresses().forEach(ip => {
+
+            oldIface.rmIp4Address(ip);
             iface.addIp4Address(ip);
-            defaultIface.rmIp4Address(ip);
 
         });
-
-        iface.setEther(oldIface.getEther());
-        oldIface.setEther(randomMac());
 
         iface.execDhcp();
         defaultIface.refresh();
 
         this._ngIface = iface;
-        this._enabled = true;
 
     }
 
     disable() {
 
+        if (!this.isEnabled()) return;
+
         let iface = this._ngIface;
         let oldIface = this._oldIface;
 
-        defaultIface.refresh();
-
         iface.getIp4Addresses().forEach(ip => {
 
-            oldIface.addIp4Address(ip);
             iface.rmIp4Address(ip);
+            oldIface.addIp4Address(ip);
 
         });
 
-        oldIface.setEther(iface.getEther());
-        iface.resetEther();
+        this._hub.destroy();
 
         defaultIface.reset();
         oldIface.execDhcp();
         defaultIface.refresh();
 
-        this._hub.destroy();
         this._enabled = false;
 
     }
