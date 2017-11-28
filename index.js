@@ -17,7 +17,7 @@ const ZfsStorage = require('./libs/zfs-storage.js');
 const config = require('./libs/config.js');
 const dataJails = require('./libs/data-jails.js');
 
-const IpDHCP = require('./modules/ip-dhcp.js');
+const IpDHCP = require('./modules/ip-dhcp2.js');
 const autoIface = require('./modules/auto-iface.js');
 const autoIp = require('./modules/auto-ip.js');
 
