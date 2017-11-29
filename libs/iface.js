@@ -61,7 +61,7 @@ class Iface {
         if (index !== -1) {
 
             let message = `${ip4Addr} already exists in ${this._ethName}.`;
-            throw ExistsError(message);
+            throw new ExistsError(message);
 
         }
 
@@ -82,7 +82,7 @@ class Iface {
         if (index === -1) {
 
             let message = `${ip4Addr} not found in ${this._ethName}.`;
-            throw NotFoundError(message);
+            throw new NotFoundError(message);
 
         }
 

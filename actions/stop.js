@@ -7,19 +7,10 @@ const dataJails = require('../libs/data-jails.js');
 
 function stop(jailName) {
 
-    let dataCell = dataJails.get(jailName);
-    let configFile = `/tmp/${jailName}-jail.conf`;
+    let jail = dataJails.get(jailName);
+    let configBody = jail.configBody;
 
-    let configBody = dataCell.configBody;
-
-    let result = spawnSync('jail', [
-        '-r', '-f', configFile, jailName,
-    ]);
-
-    console.log(result.output[1].toString());
-    console.log(result.output[2].toString());
-
-    fs.unlinkSync(configFile);
+    jail.stop();
 
     configBody.mounts.forEach(points => {
 

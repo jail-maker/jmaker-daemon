@@ -33,7 +33,9 @@ class DataJails {
 
     }
 
-    createCell(name) {
+    add(jail) {
+
+        let name = jail.name;
 
         if (this._data[name]) {
 
@@ -42,9 +44,7 @@ class DataJails {
 
         }
 
-        this._data[name] = new DataCell;
-
-        return this._data[name];
+        this._data[name] = jail;
 
     }
 
@@ -63,17 +63,6 @@ class DataJails {
     unset(name) {
 
         delete(this._data[name]);
-
-    }
-
-}
-
-class DataCell {
-
-    constructor() {
-
-        this.configBody = null;
-        this.ngIface = null;
 
     }
 

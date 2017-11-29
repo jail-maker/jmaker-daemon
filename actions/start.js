@@ -11,18 +11,16 @@ const dataJails = require('../libs/data-jails.js');
 const FolderStorage = require('../libs/folder-storage.js');
 const ZfsStorage = require('../libs/zfs-storage.js');
 const Rctl = require('../libs/rctl.js');
+const Jail = require('../libs/jail.js');
 
-const dhcp = require('../modules/ip-dhcp2.js');
+const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
 const autoIp = require('../modules/auto-ip.js');
 
 
 function start(configBody) {
 
-    let dataCell = dataJails.createCell(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
-
-    dataCell.configBody = configBody;
 
     try {
 
@@ -100,32 +98,24 @@ function start(configBody) {
 
     console.log('rctl done!');
 
-    let configFile = `/tmp/${configBody.jailName}-jail.conf`;
-    let configObj = configBody.getConfigJail();
+    let jail = new Jail(configBody);
+    dataJails.add(jail);
+    let configObj = jail.configFileObj;
 
     configObj
         .pipe(autoIface.pipeRule.bind(autoIface))
         .pipe(autoIp.pipeRule.bind(autoIp))
-        .pipe(dhcp.getPipeRule(dataCell).bind(dhcp));
+        .pipe(dhcp.getPipeRule(jail).bind(dhcp));
 
     console.log(configObj.toString());
 
-    configObj.save(configFile);
-
-    console.log('jail config done!');
-
-    let result = spawnSync('jail', [
-        '-c', '-f', configFile, configBody.jailName,
-    ]);
+    jail.start();
 
     console.log('jail start done!');
 
-    console.log(result.output[1].toString());
-    console.log(result.output[2].toString());
-
     if (configBody.cpuset !== false) {
 
-        result = spawnSync('cpuset', [
+        let result = spawnSync('cpuset', [
             '-l', configBody.cpuset, '-j', jid
         ]);
 
@@ -135,7 +125,7 @@ function start(configBody) {
 
     if (configBody.pkg) {
 
-        result = spawnSync('pkg', [
+        let result = spawnSync('pkg', [
             '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
         ]);
 
@@ -148,7 +138,7 @@ function start(configBody) {
 
     configBody.jPostStart.forEach(command => {
 
-        result = spawnSync('/usr/sbin/jexec', [
+        let result = spawnSync('/usr/sbin/jexec', [
             jid, ...command.split(' ')
         ]);
 
