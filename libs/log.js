@@ -4,10 +4,11 @@ const EventEmitter = require('events');
 
 class Log extends EventEmitter {
 
-    constructor() {
+    constructor(name) {
 
         super();
 
+        this._name = name;
         this._messages = [];
 
     }

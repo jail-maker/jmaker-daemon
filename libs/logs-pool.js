@@ -13,7 +13,7 @@ class LogsPool {
 
     create(name) {
 
-        let log = new Log;
+        let log = new Log(name);
         this._pool[name] = log;
 
         return this._pool[name];

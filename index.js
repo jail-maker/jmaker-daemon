@@ -30,7 +30,6 @@ const stop = require('./actions/stop.js');
 const start = require('./actions/start.js');
 
 app.use(bodyParser.json());
-app.use(stream.pipe());
 
 process.on('SIGINT', () => {
 
@@ -48,14 +47,19 @@ process.on('SIGTERM', () => {
 
 });
 
-app.get('/jails/:name/log-stream', (req, res) => {
+app.get('/jails/:name/log-stream', stream.pipe(), (req, res) => {
 
     let name = req.params.name;
     let jail = dataJails.get(name);
 
     let log = logsPool.get(name);
 
-    let messageListener = message => res.pipe(message);
+    let messageListener = (message) => {
+
+        res.pipe(message);
+
+    };
+
     let finishListener = () => { 
 
         log.removeListener('message', messageListener);
@@ -76,11 +80,12 @@ app.post('/jails', (req, res) => {
     let configBody = new ConfigBody(req.body);
     let log = logsPool.create(configBody.jailName);
 
-    log.message('starting.');
+    log.message('starting...');
     start(configBody);
 
     log.message('finish.');
     log.finish();
+
     res.send();
 
 });
@@ -89,6 +94,8 @@ app.delete('/jails/:name', (req, res) => {
 
     let name = req.params.name;
     let log = logsPool.get(name);
+
+    log.message('stopping...');
 
     stop(name);
 
