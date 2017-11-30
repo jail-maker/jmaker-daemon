@@ -18,6 +18,7 @@
   "homepage": "https://github.com/jail-maker/jmaker-daemon#readme",
   "dependencies": {
     "express": "^4.16.2",
+    "express-stream": "^0.8.0",
     "js-yaml": "^3.10.0",
     "json-query": "^2.2.2",
     "minimist": "^1.2.0",
