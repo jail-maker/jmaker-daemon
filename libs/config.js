@@ -4,6 +4,7 @@ const fs = require('fs');
 const yaml = require('js-yaml');
 const path = require('path');
 const minimist = require('minimist');
+const Redis = require('ioredis');
 
 class Config {
 
@@ -29,6 +30,12 @@ class Config {
     setJailsDir(value) { this.jailsDir = path.resolve(value); }
 
     setCacheDir(value) { this.cacheDir = path.resolve(value); }
+
+    getRedis() {
+
+        return new Redis();
+
+    }
 
 }
 

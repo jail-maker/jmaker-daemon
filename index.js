@@ -2,14 +2,13 @@
 
 'use strict';
 
-var stream = require('express-stream');
-
 const { spawnSync } = require('child_process');
 const path = require('path');
 const tar = require('tar');
 const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
+const stream = require('express-stream');
 
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
@@ -50,26 +49,29 @@ process.on('SIGTERM', () => {
 app.get('/jails/:name/log-stream', stream.pipe(), (req, res) => {
 
     let name = req.params.name;
-    let jail = dataJails.get(name);
+    let channel = `jmaker:log:${name}`;
 
-    let log = logsPool.get(name);
+    let redis = config.getRedis();
 
-    let messageListener = (message) => {
+    let messageListener = (channel, message) => {
 
-        res.pipe(message);
+        if (message === 'finish') {
+
+            redis.removeListener('message', messageListener);
+            redis.unsubscribe(channel);
+            redis.quit();
+            res.close(message + '\n');
+
+        } else {
+
+            res.pipe(message + '\n');
+
+        }
 
     };
 
-    let finishListener = () => { 
-
-        log.removeListener('message', messageListener);
-        log.removeListener('finish', finishListener);
-        res.close(); 
-
-    };
-
-    log.on('message', messageListener);
-    log.on('finish', finishListener);
+    redis.on('message', messageListener);
+    redis.subscribe(channel);
 
 });
 
@@ -78,13 +80,16 @@ app.post('/jails', (req, res) => {
     console.log(req.body);
 
     let configBody = new ConfigBody(req.body);
-    let log = logsPool.create(configBody.jailName);
 
-    log.message('starting...');
+    let channel = `jmaker:log:${configBody.jailName}`;
+    let redis = config.getRedis();
+
+    redis.publish(channel, 'starting...');
+
     start(configBody);
 
-    log.message('finish.');
-    log.finish();
+    redis.publish(channel, 'finish');
+    redis.quit();
 
     res.send();
 
@@ -93,14 +98,14 @@ app.post('/jails', (req, res) => {
 app.delete('/jails/:name', (req, res) => {
 
     let name = req.params.name;
-    let log = logsPool.get(name);
-
-    log.message('stopping...');
+    let channel = `jmaker:log:${name}`;
+    let redis = config.getRedis();
+    redis.publish(channel, 'stopping...');
 
     stop(name);
 
-    log.message('finish.');
-    log.finish();
+    redis.publish(channel, 'finish');
+    redis.quit();
     res.send();
 
 });
