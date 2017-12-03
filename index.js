@@ -15,6 +15,7 @@ const ConfigBody = require('./libs/config-body.js');
 const Rctl = require('./libs/rctl.js');
 const FolderStorage = require('./libs/folder-storage.js');
 const ZfsStorage = require('./libs/zfs-storage.js');
+const Channel = require('./libs/channel.js');
 const config = require('./libs/config.js');
 const dataJails = require('./libs/data-jails.js');
 const logsPool = require('./libs/logs-pool.js');
@@ -49,29 +50,24 @@ process.on('SIGTERM', () => {
 app.get('/jails/:name/log-stream', stream.pipe(), (req, res) => {
 
     let name = req.params.name;
-    let channel = `jmaker:log:${name}`;
+    name = `jmaker:log:${name}`;
 
-    let redis = config.getRedis();
+    let channel = new Channel(name);
 
-    let messageListener = (channel, message) => {
+    let messageListener = (name, message) => {
 
-        if (message === 'finish') {
-
-            redis.removeListener('message', messageListener);
-            redis.unsubscribe(channel);
-            redis.quit();
-            res.close(message + '\n');
-
-        } else {
-
-            res.pipe(message + '\n');
-
-        }
+        console.log(message);
+        res.pipe(message);
 
     };
 
-    redis.on('message', messageListener);
-    redis.subscribe(channel);
+    channel.subscribe(messageListener);
+    channel.on('close', () => {
+
+        console.log('1111111');
+        res.close();
+    
+    });
 
 });
 
@@ -80,16 +76,15 @@ app.post('/jails', (req, res) => {
     console.log(req.body);
 
     let configBody = new ConfigBody(req.body);
+    let name = configBody.jailName;
+    let log = logsPool.create(name);
 
-    let channel = `jmaker:log:${configBody.jailName}`;
-    let redis = config.getRedis();
-
-    redis.publish(channel, 'starting...');
+    log.info('starting...');
 
     start(configBody);
 
-    redis.publish(channel, 'finish');
-    redis.quit();
+    log.info('finish');
+    log.finish();
 
     res.send();
 
@@ -98,14 +93,14 @@ app.post('/jails', (req, res) => {
 app.delete('/jails/:name', (req, res) => {
 
     let name = req.params.name;
-    let channel = `jmaker:log:${name}`;
-    let redis = config.getRedis();
-    redis.publish(channel, 'stopping...');
+    let log = logsPool.get(name);
+    log.info('stopping...');
 
     stop(name);
 
-    redis.publish(channel, 'finish');
-    redis.quit();
+    log.info('finish');
+    log.finish();
+
     res.send();
 
 });
