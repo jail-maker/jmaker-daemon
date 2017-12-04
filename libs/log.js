@@ -14,6 +14,8 @@ class Log extends EventEmitter {
         this._messages = [];
         this._channel = new Channel(`jmaker:log:${name}`);
 
+        this.i = 1;
+
     }
 
     info(text) {
@@ -47,6 +49,7 @@ class Log extends EventEmitter {
     message(level = 'info', text) {
 
         let message = new LogMessage(level, text);
+        console.log(this.i++);
         this._channel.publish(message);
         this._messages.push(message);
         this.emit('message', message);

@@ -29,7 +29,7 @@ wss.on('connection', (ws, req) => {
 
         let messageListener = (name, message) => {
 
-            console.log('!!!!!!');
+            console.log(message);
             ws.send(message);
 
         };
@@ -39,8 +39,11 @@ wss.on('connection', (ws, req) => {
         channel.on('close', () => {
 
             ws.close();
+            console.log(channel);
 
         });
+
+        console.log(name);
 
     });
 
