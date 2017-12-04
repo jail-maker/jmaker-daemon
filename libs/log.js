@@ -1,6 +1,7 @@
 'use strict';
 
 const EventEmitter = require('events');
+const chalk = require('chalk');
 const Channel = require('./channel.js');
 
 class Log extends EventEmitter {
@@ -17,27 +18,37 @@ class Log extends EventEmitter {
 
     info(text) {
 
+        console.log(text);
         this.message('info', text);
+
+    }
+
+    notice(text) {
+
+        console.log(chalk.green(text));
+        this.message('notice', text);
 
     }
 
     warn(text) {
 
+        console.log(chalk.yellow(text));
         this.message('warn', text);
 
     }
 
     crit(text) {
 
+        console.log(chalk.red(text));
         this.message('crit', text);
 
     }
 
-    message(level, text) {
+    message(level = 'info', text) {
 
         let message = new LogMessage(level, text);
-        this._messages.push(message);
         this._channel.publish(message);
+        this._messages.push(message);
         this.emit('message', message);
 
     }

@@ -10,6 +10,7 @@ const config = require('../libs/config.js');
 const dataJails = require('../libs/data-jails.js');
 const FolderStorage = require('../libs/folder-storage.js');
 const ZfsStorage = require('../libs/zfs-storage.js');
+const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
 
@@ -17,9 +18,9 @@ const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
 const autoIp = require('../modules/auto-ip.js');
 
-
 function start(configBody) {
 
+    let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
 
     try {
@@ -46,7 +47,7 @@ function start(configBody) {
 
     }
 
-    console.log('archive done!');
+    log.notice('archive done!');
 
     let storage = {};
 
@@ -74,11 +75,11 @@ function start(configBody) {
 
     }
 
-    console.log('storage done!');
+    log.notice('storage done!');
 
     fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
 
-    console.log('resolv.conf sync done!');
+    log.notice('resolv.conf sync done!');
 
     configBody.mounts.forEach(points => {
 
@@ -91,12 +92,12 @@ function start(configBody) {
 
     });
 
-    console.log('mounts done!');
+    log.notice('mounts done!');
 
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
 
-    console.log('rctl done!');
+    log.notice('rctl done!');
 
     let jail = new Jail(configBody);
     dataJails.add(jail);
@@ -107,11 +108,11 @@ function start(configBody) {
         .pipe(autoIp.pipeRule.bind(autoIp))
         .pipe(dhcp.getPipeRule(jail).bind(dhcp));
 
-    console.log(configObj.toString());
+    log.info(configObj.toString());
 
     jail.start();
 
-    console.log('jail start done!');
+    log.notice('jail start done!');
 
     if (configBody.cpuset !== false) {
 
@@ -121,7 +122,7 @@ function start(configBody) {
 
     }
 
-    console.log('cpuset done!');
+    log.notice('cpuset done!');
 
     if (configBody.pkg) {
 
@@ -129,12 +130,12 @@ function start(configBody) {
             '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
         ]);
 
-        console.log(result.output[1].toString());
-        console.log(result.output[2].toString());
+        log.info(result.output[1].toString());
+        log.info(result.output[2].toString());
 
     }
 
-    console.log('pkg done!');
+    log.notice('pkg done!');
 
     configBody.jPostStart.forEach(command => {
 
@@ -142,13 +143,12 @@ function start(configBody) {
             jid, ...command.split(' ')
         ]);
 
-        console.log(result.output[1].toString());
-        console.log(result.output[2].toString());
+        log.info(result.output[1].toString());
+        log.info(result.output[2].toString());
 
     });
 
-    console.log('j-poststart done!');
-    console.log('finish');
+    log.notice('j-poststart done!');
 
 }
 
