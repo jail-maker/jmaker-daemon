@@ -63,8 +63,7 @@ app.post('/jails', async (req, res) => {
 
     await start(configBody);
 
-    await log.notice('finish');
-    await log.finish();
+    await log.notice('finish', true);
 
     res.send();
 
@@ -79,8 +78,7 @@ app.delete('/jails/:name', async (req, res) => {
 
     await stop(name);
 
-    await log.notice('finish');
-    await log.finish();
+    await log.notice('finish', true);
 
     logsPool.delete(name);
 

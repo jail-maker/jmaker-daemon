@@ -21,52 +21,43 @@ class Log extends EventEmitter {
 
     }
 
-    info(text) {
+    info(text, last = false) {
 
         let level = new LogLevel('info');
-        return this._message(level, text);
+        return this._message(level, text, last);
 
     }
 
-    notice(text) {
+    notice(text, last = false) {
 
         let level = new LogLevel('notice');
-        return this._message(level, text, 'green');
+        return this._message(level, text, last);
 
     }
 
-    warn(text) {
+    warn(text, last = false) {
 
         let level = new LogLevel('warn');
-        return this._message(level, text, 'yellow');
+        return this._message(level, text, last);
 
     }
 
-    crit(text) {
+    crit(text, last = false) {
 
         let level = new LogLevel('crit');
-        return this._message(level, text, 'red');
+        return this._message(level, text, last);
 
     }
 
-    finish() {
-
-        let level = new LogLevel('info');
-        let message = new LogMessage(level, null, true);
-
-        return this._channel.publish(message);
-
-    }
-
-    _message(level, text, color) {
+    _message(level, text, last) {
 
         if (level.toString() <= logLevel.toString()) {
 
-            console.log(color ? chalk[color](text) : text);
+            console.log(level.color ? chalk[level.color](text) : text);
 
         }
 
-        let message = new LogMessage(level, text);
+        let message = new LogMessage(level, text, last);
         this._messages.push(message);
         return this._channel.publish(message);
 

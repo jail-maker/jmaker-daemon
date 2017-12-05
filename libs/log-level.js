@@ -4,32 +4,36 @@ class LogLevel {
 
     constructor(levelName = 'info') {
 
-        this._number = 4;
+        this.number = 4;
+        this.color = null;
 
         switch (levelName) {
 
             case 'debug':
-                this._number = 5;
+                this.number = 5;
                 break;
 
             case 'info':
-                this._number = 4;
+                this.number = 4;
                 break;
 
             case 'notice':
-                this._number = 3;
+                this.number = 3;
+                this.color = 'green';
                 break;
 
             case 'warn':
-                this._number = 2;
+                this.number = 2;
+                this.color = 'yellow';
                 break;
 
             case 'crit':
-                this._number = 1;
+                this.number = 1;
+                this.color = 'red';
                 break;
 
             default:
-                this._number = 4;
+                this.number = 4;
                 break;
 
         }
@@ -38,7 +42,7 @@ class LogLevel {
 
     toString() {
 
-        return this._number;
+        return this.number;
 
     }
 

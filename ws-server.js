@@ -20,8 +20,8 @@ wss.on('connection', (ws, req) => {
         let messageListener = (name, message) => {
 
             let temp = JSON.parse(message);
+            ws.send(message);
             if (temp.last) ws.close();
-            else ws.send(message);
 
         };
 
