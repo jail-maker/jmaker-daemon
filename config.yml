@@ -3,6 +3,7 @@ port: 3346
 host: "127.0.0.1"
 jailsDir: "./jails"
 cacheDir: "./cache"
+logLevel: "info"
 bases: "http://jmaker-bases.websm.io"
 zfs: false
 zfsPool: "jmaker"

@@ -11,7 +11,6 @@ const http = require('http');
 const express = require('express');
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
-const stream = require('express-stream');
 
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
@@ -52,7 +51,7 @@ process.on('SIGTERM', () => {
 
 });
 
-app.post('/jails', (req, res) => {
+app.post('/jails', async (req, res) => {
 
     console.log(req.body);
 
@@ -60,27 +59,30 @@ app.post('/jails', (req, res) => {
     let name = configBody.jailName;
     let log = logsPool.create(name);
 
-    log.notice('starting...');
+    await log.notice('starting...');
 
-    start(configBody);
+    await start(configBody);
 
-    log.notice('finish');
-    log.finish();
+    await log.notice('finish');
+    await log.finish();
 
     res.send();
 
 });
 
-app.delete('/jails/:name', (req, res) => {
+app.delete('/jails/:name', async (req, res) => {
 
     let name = req.params.name;
     let log = logsPool.get(name);
-    log.notice('stopping...');
 
-    stop(name);
+    await log.notice('stopping...');
 
-    log.notice('finish');
-    log.finish();
+    await stop(name);
+
+    await log.notice('finish');
+    await log.finish();
+
+    logsPool.delete(name);
 
     res.send();
 

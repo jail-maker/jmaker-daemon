@@ -3,6 +3,11 @@
 const EventEmitter = require('events');
 const chalk = require('chalk');
 const Channel = require('./channel.js');
+const config = require('./config.js');
+const LogMessage = require('./log-message.js');
+const LogLevel = require('./log-level.js');
+
+const logLevel = new LogLevel(config.logLevel);
 
 class Log extends EventEmitter {
 
@@ -14,52 +19,56 @@ class Log extends EventEmitter {
         this._messages = [];
         this._channel = new Channel(`jmaker:log:${name}`);
 
-        this.i = 1;
-
     }
 
     info(text) {
 
-        console.log(text);
-        this.message('info', text);
+        let level = new LogLevel('info');
+        return this._message(level, text);
 
     }
 
     notice(text) {
 
-        console.log(chalk.green(text));
-        this.message('notice', text);
+        let level = new LogLevel('notice');
+        return this._message(level, text, 'green');
 
     }
 
     warn(text) {
 
-        console.log(chalk.yellow(text));
-        this.message('warn', text);
+        let level = new LogLevel('warn');
+        return this._message(level, text, 'yellow');
 
     }
 
     crit(text) {
 
-        console.log(chalk.red(text));
-        this.message('crit', text);
-
-    }
-
-    message(level = 'info', text) {
-
-        let message = new LogMessage(level, text);
-        console.log(this.i++);
-        this._channel.publish(message);
-        this._messages.push(message);
-        this.emit('message', message);
+        let level = new LogLevel('crit');
+        return this._message(level, text, 'red');
 
     }
 
     finish() {
 
-        this._channel.close();
-        this.emit('finish');
+        let level = new LogLevel('info');
+        let message = new LogMessage(level, null, true);
+
+        return this._channel.publish(message);
+
+    }
+
+    _message(level, text, color) {
+
+        if (level.toString() <= logLevel.toString()) {
+
+            console.log(color ? chalk[color](text) : text);
+
+        }
+
+        let message = new LogMessage(level, text);
+        this._messages.push(message);
+        return this._channel.publish(message);
 
     }
 
@@ -68,23 +77,6 @@ class Log extends EventEmitter {
         return this._messages
             .map(mesage => message.text)
             .join('\n');
-
-    }
-
-}
-
-class LogMessage {
-
-    constructor(level = 'info', text) {
-
-        this.level = level;
-        this.text = text;
-
-    }
-
-    toString() {
-
-        return JSON.stringify(this);
 
     }
 

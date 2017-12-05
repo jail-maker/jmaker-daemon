@@ -12,6 +12,7 @@ class Config {
 
         this.port = 3346;
         this.host = '127.0.0.1';
+        this.logLevel = 'info';
         this.jailsDir = path.resolve('./jails');
         this.cacheDir = path.resolve('./cache');
         this.zfs = false;
@@ -30,12 +31,6 @@ class Config {
     setJailsDir(value) { this.jailsDir = path.resolve(value); }
 
     setCacheDir(value) { this.cacheDir = path.resolve(value); }
-
-    getRedis() {
-
-        return new Redis();
-
-    }
 
 }
 

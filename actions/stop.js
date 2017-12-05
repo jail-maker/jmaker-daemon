@@ -6,13 +6,13 @@ const fs = require('fs');
 const dataJails = require('../libs/data-jails.js');
 const logsPool = require('../libs/logs-pool.js');
 
-function stop(jailName) {
+async function stop(jailName) {
 
     let log = logsPool.get(jailName);
     let jail = dataJails.get(jailName);
     let configBody = jail.configBody;
 
-    jail.stop();
+    await jail.stop();
 
     configBody.mounts.forEach(points => {
 
@@ -25,6 +25,7 @@ function stop(jailName) {
     });
 
     dataJails.unset(jailName);
+    return;
 
 }
 

@@ -5,6 +5,7 @@ const EventEmitter = require('events');
 const fs = require('fs');
 
 const ConfigFile = require('./config-file.js');
+const logsPool = require('./logs-pool.js');
 
 class Jail extends EventEmitter {
 
@@ -23,16 +24,17 @@ class Jail extends EventEmitter {
 
     }
 
-    stop() {
+    async stop() {
 
         this.emit('stopBegin', this);
 
+        let log = logsPool.get(this.name);
         let result = spawnSync('jail', [
             '-r', '-f', this.configFilePath, this.name,
         ]);
 
-        console.log(result.output[1].toString());
-        console.log(result.output[2].toString());
+        await log.info(result.output[1].toString());
+        await log.info(result.output[2].toString());
 
         fs.unlinkSync(this.configFilePath);
 
@@ -42,18 +44,18 @@ class Jail extends EventEmitter {
 
     }
 
-    start() {
+    async start() {
 
         this.emit('startBegin', this);
-
         this.configFileObj.save(this.configFilePath);
 
+        let log = logsPool.get(this.name);
         let result = spawnSync('jail', [
             '-c', '-f', this.configFilePath, this.name,
         ]);
 
-        console.log(result.output[1].toString());
-        console.log(result.output[2].toString());
+        await log.info(result.output[1].toString());
+        await log.info(result.output[2].toString());
 
         this._working = true;
 

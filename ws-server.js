@@ -2,9 +2,7 @@
 
 'use strict';
 
-const path = require('path');
 const url = require('url');
-const http = require('http');
 const WebSocket = require('ws');
 
 const Channel = require('./libs/channel.js');
@@ -15,35 +13,21 @@ wss.on('connection', (ws, req) => {
 
     const location = url.parse(req.url, true);
 
-    console.log('------------->');
-
-    ws.on('close', _ => console.log('ws is closed'));
-
     ws.on('message', name => {
 
-        console.log('<-------------');
-
         name = `jmaker:log:${name}`;
-
         let channel = new Channel(name);
-
         let messageListener = (name, message) => {
 
-            console.log(message);
-            ws.send(message);
+            let temp = JSON.parse(message);
+            if (temp.last) ws.close();
+            else ws.send(message);
 
         };
 
         channel.subscribe(messageListener);
 
-        channel.on('close', () => {
-
-            ws.close();
-            console.log(channel);
-
-        });
-
-        console.log(name);
+        ws.on('close', _ => channel.close());
 
     });
 

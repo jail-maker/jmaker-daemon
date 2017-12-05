@@ -18,7 +18,7 @@ const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
 const autoIp = require('../modules/auto-ip.js');
 
-function start(configBody) {
+async function start(configBody) {
 
     let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
@@ -47,7 +47,7 @@ function start(configBody) {
 
     }
 
-    log.notice('archive done!');
+    await log.notice('archive done!');
 
     let storage = {};
 
@@ -75,11 +75,11 @@ function start(configBody) {
 
     }
 
-    log.notice('storage done!');
+    await log.notice('storage done!');
 
     fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
 
-    log.notice('resolv.conf sync done!');
+    await log.notice('resolv.conf sync done!');
 
     configBody.mounts.forEach(points => {
 
@@ -92,12 +92,12 @@ function start(configBody) {
 
     });
 
-    log.notice('mounts done!');
+    await log.notice('mounts done!');
 
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
 
-    log.notice('rctl done!');
+    await log.notice('rctl done!');
 
     let jail = new Jail(configBody);
     dataJails.add(jail);
@@ -108,11 +108,11 @@ function start(configBody) {
         .pipe(autoIp.pipeRule.bind(autoIp))
         .pipe(dhcp.getPipeRule(jail).bind(dhcp));
 
-    log.info(configObj.toString());
+    await log.info(configObj.toString());
 
-    jail.start();
+    await jail.start();
 
-    log.notice('jail start done!');
+    await log.notice('jail start done!');
 
     if (configBody.cpuset !== false) {
 
@@ -122,7 +122,7 @@ function start(configBody) {
 
     }
 
-    log.notice('cpuset done!');
+    await log.notice('cpuset done!');
 
     if (configBody.pkg) {
 
@@ -130,12 +130,12 @@ function start(configBody) {
             '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
         ]);
 
-        log.info(result.output[1].toString());
-        log.info(result.output[2].toString());
+        await log.info(result.output[1].toString());
+        await log.info(result.output[2].toString());
 
     }
 
-    log.notice('pkg done!');
+    await log.notice('pkg done!');
 
     configBody.jPostStart.forEach(command => {
 
@@ -148,7 +148,9 @@ function start(configBody) {
 
     });
 
-    log.notice('j-poststart done!');
+    await log.notice('j-poststart done!');
+
+    return;
 
 }
 

@@ -19,7 +19,7 @@ class Channel extends EventEmitter {
         let type = typeof(message);
         if (type !== 'string') message = message.toString();
 
-        this._redis.publish(this._name, message);
+        return this._redis.publish(this._name, message);
 
     }
 
