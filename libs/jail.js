@@ -19,6 +19,7 @@ class Jail extends EventEmitter {
         this.configFileObj = new ConfigFile(fileData, this.name);
         this.configFilePath = `/tmp/${this.name}-jail.conf`;
         this.configBody = configBody;
+        this.info = {};
 
         this._working = false;
 
@@ -57,9 +58,23 @@ class Jail extends EventEmitter {
         await log.info(result.output[1].toString());
         await log.info(result.output[2].toString());
 
+        this._loadInfo();
+
         this._working = true;
 
         this.emit('startEnd', this);
+
+    }
+
+    _loadInfo() {
+
+        let result = spawnSync('jls', [
+            '-j', this.name, '-n', '--libxo=json',
+        ]);
+
+        let jsonData = JSON.parse(result.output[1].toString());
+
+        this.info = jsonData['jail-information'].jail[0];
 
     }
 

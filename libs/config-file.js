@@ -20,11 +20,7 @@ class ConfigFile {
 
             let value = data[key];
 
-            this._rules[key] = {
-                key: key,
-                data: value,
-                view: '',
-            };
+            this._rules[key] = new Rule(key, value);
 
         }
 
@@ -94,9 +90,40 @@ class ConfigFile {
 
     }
 
+    getValue(rule) {
+
+        return this._rules[rule];
+
+    }
+
+    setRule(key, value) {
+
+        this._rules[key] = value;
+        return this;
+
+    }
+
     save(path) {
 
         writeFileSync(path, this.toString(), { flags: 'w' });
+
+    }
+
+}
+
+class Rule {
+
+    constructor(key, value, view = '') {
+
+        this.key = key;
+        this.data = value;
+        this.view = view;
+
+    }
+
+    toString() {
+
+        return this.view;
 
     }
 

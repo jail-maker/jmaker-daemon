@@ -13,6 +13,7 @@ const ZfsStorage = require('../libs/zfs-storage.js');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
+const hosts = require('../libs/hosts.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
@@ -147,6 +148,16 @@ async function start(configBody) {
         log.info(result.output[2].toString());
 
     });
+
+    {
+
+        let ip4 = jail.info['ip4.addr'].split(',');
+
+        hosts.addHost(ip4[0], configBody.jailName);
+        hosts.addHost(ip4[0], jail.info['host.hostname']);
+        hosts.commit();
+
+    }
 
     await log.notice('j-poststart done!');
 

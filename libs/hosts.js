@@ -7,36 +7,40 @@ class Hosts {
     constructor() {
 
         this._data = '';
+        this._marker = '# jmaker host';
 
         this._loadFile();
-    
-    }
-
-    addHost(ip, domain) {
-
-        this._data += `${ip} ${domain}\n`;
-        this._commitFile();
 
     }
 
-    rmHost(domain) {
+    addHost(ip, hostName) {
 
-        this._commitFile();
+        this._data += `${ip} ${hostName} ${this._marker}\n`;
+
+    }
+
+    rmHost(hostName) {
+
+        hostName = hostName.replace(/(\W)/mg, '\\$1');
+        let marker = this._marker.replace(/(\W)/mg, '\\$1');
+        let exp = new RegExp(`^(\\d+\\.?){4} ${hostName} ${marker}\n`, 'mg');
+        this._data = this._data.replace(exp, '');
 
     }
 
     _loadFile() {
 
         let data = fs.readFileSync('/etc/hosts');
-        console.log(data);
         this._data = data.toString();
 
     }
 
-    _commitFile() {
+    commit() {
 
         fs.writeFileSync('/etc/hosts', this._data);
 
     }
 
 }
+
+module.exports = new Hosts;

@@ -59,13 +59,22 @@ app.post('/jails', async (req, res) => {
     let name = configBody.jailName;
     let log = logsPool.create(name);
 
-    await log.notice('starting...');
+    try {
 
-    await start(configBody);
+        await log.notice('starting...');
+        await start(configBody);
+        await log.notice('finish', true);
 
-    await log.notice('finish', true);
+    } catch (e) {
 
-    res.send();
+        log.crit(e.toString(), true);
+        console.log(e);
+
+    } finally {
+
+        res.send();
+
+    }
 
 });
 
@@ -74,15 +83,24 @@ app.delete('/jails/:name', async (req, res) => {
     let name = req.params.name;
     let log = logsPool.get(name);
 
-    await log.notice('stopping...');
+    try {
 
-    await stop(name);
+        await log.notice('stopping...');
+        await stop(name);
+        await log.notice('finish', true);
 
-    await log.notice('finish', true);
+        logsPool.delete(name);
 
-    logsPool.delete(name);
+    } catch (e) {
 
-    res.send();
+        log.crit(e.toString(), true);
+        console.log(e);
+
+    } finally {
+
+        res.send();
+
+    }
 
 });
 
