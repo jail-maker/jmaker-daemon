@@ -37,17 +37,39 @@ app.use(bodyParser.json());
 
 process.on('SIGINT', async _ => {
 
-    await Promise.all(dataJails.getNames().map(stop));
-    dhcp.disable();
-    process.exit();
+    try {
+
+        await Promise.all(dataJails.getNames().map(stop));
+        dhcp.disable();
+
+    } catch (e) {
+
+        console.log(e);
+
+    } finally {
+
+        process.exit();
+
+    }
 
 });
 
 process.on('SIGTERM', async _ => {
 
-    await Promise.all(dataJails.getNames().map(stop));
-    dhcp.disable();
-    process.exit();
+    try {
+
+        await Promise.all(dataJails.getNames().map(stop));
+        dhcp.disable();
+
+    } catch (e) {
+
+        console.log(e);
+
+    } finally {
+
+        process.exit();
+
+    }
 
 });
 
