@@ -35,17 +35,17 @@ const start = require('./actions/start.js');
 
 app.use(bodyParser.json());
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async _ => {
 
-    dataJails.getNames().forEach(stop);
+    await Promise.all(dataJails.getNames().map(stop));
     dhcp.disable();
     process.exit();
 
 });
 
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async _ => {
 
-    dataJails.getNames().forEach(stop);
+    await Promise.all(dataJails.getNames().map(stop));
     dhcp.disable();
     process.exit();
 
