@@ -1,6 +1,7 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
+const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const fs = require('fs');
 const tar = require('tar');
@@ -85,10 +86,12 @@ async function start(configBody) {
     configBody.mounts.forEach(points => {
 
         let [src, dst] = points;
+        dst = path.join(configBody.path, dst);
+
+        mkdirSync(dst);
 
         let result = spawnSync('mount_nullfs', [
-            src,
-            path.join(configBody.path, dst),
+            src, dst,
         ]);
 
     });
