@@ -10,7 +10,7 @@ class ConfigFile {
         this._rules = {};
 
         this._setRules(data);
-        this.pipe(this._pipeRule);
+        // this.pipe(this._pipeRule);
 
     }
 
@@ -56,8 +56,7 @@ class ConfigFile {
 
     }
 
-    _pipeRule(rules) {
-
+    out(rules) {
 
         for (let key in rules) {
 

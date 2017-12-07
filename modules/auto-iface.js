@@ -8,18 +8,14 @@ class AutoIface {
 
         let rule = rules['ip4.addr'];
 
-        if (Array.isArray(rule.data)) {
+        if (!Array.isArray(rule.data)) rule.data = [rule.data];
 
-            let strings = rule.data.map(item => {
+        rule.data = rule.data.map(item => {
 
-                item = item.replace(/^\?\|/, `${defaultIface.getEthName()}|`);
-                return `  ${rule.key} += "${item}";`;
+            item = item.replace(/^\?\|/, `${defaultIface.getEthName()}|`);
+            return item;
 
-            });
-
-            rule.view = strings.join('\n');
-
-        }
+        });
 
         return rules;
 

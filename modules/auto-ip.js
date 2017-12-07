@@ -9,11 +9,13 @@ class AutoIp {
 
         let rule = rules['ip4.addr'];
 
-        if (rule.data === 'AUTO') {
+        if (!Array.isArray(rule.data)) rule.data = [rule.data];
+
+        rule.data = rule.data.map(item => {
+
+            if (item.toLowerCase() !== 'auto') return item;
 
             let ip4Addr = defaultIface.getIp4Addresses()[0];
-
-            console.log(ip4Addr);
 
             let freeIp = spawnSync('/usr/local/bin/check_ip', [
                 `--ipv4=${ip4Addr.network}`, '-j', 
@@ -21,9 +23,9 @@ class AutoIp {
 
             freeIp = JSON.parse(freeIp)['free4'];
 
-            rule.view = `ip4.addr = "${defaultIface.getEthName()}|${freeIp}";`;
+            return `${defaultIface.getEthName()}|${freeIp}`;
 
-        }
+        });
 
         return rules;
 

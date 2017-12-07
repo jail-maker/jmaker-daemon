@@ -105,9 +105,10 @@ async function start(configBody) {
     let configObj = jail.configFileObj;
 
     configObj
+        .pipe(dhcp.getPipeRule(jail).bind(dhcp))
         .pipe(autoIface.pipeRule.bind(autoIface))
         .pipe(autoIp.pipeRule.bind(autoIp))
-        .pipe(dhcp.getPipeRule(jail).bind(dhcp));
+        .pipe(configObj.out.bind(configObj));
 
     await log.info(configObj.toString());
 

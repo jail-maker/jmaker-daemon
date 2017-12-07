@@ -103,7 +103,11 @@ class IpDHCP extends EventEmitter {
 
             let ipsRule = rules['ip4.addr'];
 
-            if (ipsRule.data === 'DHCP') {
+            if (!Array.isArray(ipsRule.data)) ipsRule.data = [ipsRule.data];
+
+            ipsRule.data = ipsRule.data.map(item => {
+
+                if (item.toLowerCase() !== 'dhcp') return item;
 
                 if (!this.isEnabled()) this.enable();
 
@@ -118,15 +122,15 @@ class IpDHCP extends EventEmitter {
 
                 tmpIface.destroy();
 
-                ipsRule.view = `ip4.addr = "${eth}|${ip4}";`;
-
                 jail.on('stopEnd', jail => {
 
                     ngIface.rmIp4Address(ip4);
 
                 });
 
-            }
+                return `${eth}|${ip4}`;
+
+            });
 
             return rules;
 
