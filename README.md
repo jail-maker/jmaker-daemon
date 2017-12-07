@@ -1,5 +1,7 @@
 # jmaker-server
 
+[![asciicast](https://asciinema.org/a/151534.png)](https://asciinema.org/a/151534)
+
 ## requirements:
 
 - FreeBSD >= 11.1
