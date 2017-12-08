@@ -5,6 +5,7 @@ const jsonQuery = require('json-query');
 const ExecutionError = require('./Errors/execution-error.js');
 const Iface = require('../libs/iface.js');
 const Ip4Addr = require('../libs/ip4addr.js');
+const Ipv6TypesAddresses = require('../libs/ipv6-types-addresses.js');
 
 class DefaultIface extends Iface {
 
@@ -41,10 +42,13 @@ class DefaultIface extends Iface {
     refresh() {
 
         this._ipv4Addresses = [];
+        this._ipv6Addresses = [];
+        this._ipv6TypeAdresses = new Ipv6TypesAddresses;
 
         this._getIface();
         this._getEther();
         this._getIp4Addresses();
+        this._getIp6Addresses();
 
     }
 
