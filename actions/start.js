@@ -148,7 +148,7 @@ async function start(configBody) {
     configBody.jPostStart.forEach(command => {
 
         let result = spawnSync('/usr/sbin/jexec', [
-            jid, ...command.split(' ')
+            configBody.jailName, ...command.split(' ')
         ]);
 
         log.info(result.output[1].toString());
