@@ -15,8 +15,9 @@ class Config {
         this.logLevel = 'info';
         this.jailsDir = path.resolve('./jails');
         this.cacheDir = path.resolve('./cache');
-        this.zfs = false;
         this.zfsPool = 'jmaker';
+        this.zfs = false;
+        this.resolvSync = true;
 
     }
 

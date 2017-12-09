@@ -79,9 +79,12 @@ async function start(configBody) {
 
     await log.notice('storage done!');
 
-    fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
+    if (config.resolvSync) {
 
-    await log.notice('resolv.conf sync done!');
+        fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
+        await log.notice('resolv.conf sync done!');
+
+    }
 
     configBody.mounts.forEach(points => {
 
