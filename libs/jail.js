@@ -1,11 +1,12 @@
 'use strict';
 
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 const EventEmitter = require('events');
 const fs = require('fs');
 
 const ConfigFile = require('./config-file.js');
 const logsPool = require('./logs-pool.js');
+const collectLogs = require('./collect-logs.js');
 
 class Jail extends EventEmitter {
 
@@ -30,12 +31,13 @@ class Jail extends EventEmitter {
         this.emit('stopBegin', this);
 
         let log = logsPool.get(this.name);
-        let result = spawnSync('jail', [
+        let child = spawn('jail', [
             '-r', '-f', this.configFilePath, this.name,
-        ]);
+        ], {
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
 
-        await log.info(result.output[1].toString());
-        await log.info(result.output[2].toString());
+        await collectLogs(child);
 
         fs.unlinkSync(this.configFilePath);
 
@@ -51,12 +53,13 @@ class Jail extends EventEmitter {
         this.configFileObj.save(this.configFilePath);
 
         let log = logsPool.get(this.name);
-        let result = spawnSync('jail', [
+        let child = spawn('jail', [
             '-c', '-f', this.configFilePath, this.name,
-        ]);
+        ], {
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
 
-        await log.info(result.output[1].toString());
-        await log.info(result.output[2].toString());
+        await collectLogs(child);
 
         this._loadInfo();
 
