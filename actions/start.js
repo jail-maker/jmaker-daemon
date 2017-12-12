@@ -1,6 +1,6 @@
 'use strict';
 
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const fs = require('fs');
@@ -145,16 +145,45 @@ async function start(configBody) {
 
     await log.notice('pkg done!');
 
-    configBody.jPostStart.forEach(command => {
+    let promises = configBody.jPostStart.map(command => {
 
-        let result = spawnSync('/usr/sbin/jexec', [
-            configBody.jailName, ...command.split(' ')
-        ]);
+        // let result = spawnSync('/usr/sbin/jexec', [
+        //     configBody.jailName, ...command.split(' ')
+        // ]);
 
-        log.info(result.output[1].toString());
-        log.info(result.output[2].toString());
+
+        return new Promise((res, rej) => {
+
+            let child = spawn('/usr/sbin/jexec', [
+                configBody.jailName, ...command.split(' ')
+            ], {
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
+
+            child.stdout.on('data', data => {
+
+                log.info(data.toString());
+
+            });
+
+            child.stderr.on('data', data => {
+
+                log.crit(data.toString());
+
+            });
+
+            child.on('exit', _ => {
+                res();
+            });
+
+        });
+
+        // log.info(result.output[1].toString());
+        // log.info(result.output[2].toString());
 
     });
+
+    await Promise.all(promises);
 
     {
 
