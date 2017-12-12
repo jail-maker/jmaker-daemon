@@ -1,6 +1,6 @@
 'use strict';
 
-const { spawnSync } = require('child_process');
+const { spawnSync, spawn } = require('child_process');
 const EventEmitter = require('events');
 const fs = require('fs');
 
@@ -51,12 +51,17 @@ class Jail extends EventEmitter {
         this.configFileObj.save(this.configFilePath);
 
         let log = logsPool.get(this.name);
-        let result = spawnSync('jail', [
-            '-c', '-f', this.configFilePath, this.name,
-        ]);
+        let result = spawn('jail', [
+                '-c', '-f', this.configFilePath, this.name,
+        // ]);
+            ], {
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
 
-        await log.info(result.output[1].toString());
-        await log.info(result.output[2].toString());
+        Promise.all([log.getOtherLog(result)]);
+
+        // await log.info(result.output[1].toString());
+        // await log.info(result.output[2].toString());
 
         this._loadInfo();
 

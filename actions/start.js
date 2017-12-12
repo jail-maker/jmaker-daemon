@@ -134,14 +134,23 @@ async function start(configBody) {
 
     if (configBody.pkg) {
 
-        let result = spawnSync('pkg', [
-            '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
-        ]);
+        // let result = spawnSync('pkg', [
+        //     '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
+        // ]);
 
-        await log.info(result.output[1].toString());
-        await log.info(result.output[2].toString());
+        let sp = spawn('pkg', [
+                '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
+            ], {
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
+
+        // await log.info(result.output[1].toString());
+        // await log.info(result.output[2].toString());
+
+        await Promise.all([log.getOtherLog(sp)]);
 
     }
+
 
     await log.notice('pkg done!');
 
