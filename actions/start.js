@@ -25,6 +25,8 @@ async function start(configBody) {
     let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
 
+    await log.notice('decompression...');
+
     try {
 
         let fd = fs.openSync(archive, 'r');
@@ -86,6 +88,8 @@ async function start(configBody) {
 
     }
 
+    await log.notice('mounting...');
+
     configBody.mounts.forEach(points => {
 
         let [src, dst] = points;
@@ -118,8 +122,8 @@ async function start(configBody) {
 
     await log.info(configObj.toString());
 
+    await log.notice('jail starting...');
     await jail.start();
-
     await log.notice('jail start done!');
 
     if (configBody.cpuset !== false) {
@@ -131,6 +135,8 @@ async function start(configBody) {
     }
 
     await log.notice('cpuset done!');
+
+    await log.notice('pkg installing...');
 
     if (configBody.pkg) {
 
@@ -153,6 +159,7 @@ async function start(configBody) {
 
 
     await log.notice('pkg done!');
+    await log.notice('j-poststart...');
 
     let promises = configBody.jPostStart.map(command => {
 

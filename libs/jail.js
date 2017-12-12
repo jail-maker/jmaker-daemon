@@ -30,12 +30,17 @@ class Jail extends EventEmitter {
         this.emit('stopBegin', this);
 
         let log = logsPool.get(this.name);
-        let result = spawnSync('jail', [
+        let result = spawn('jail', [
             '-r', '-f', this.configFilePath, this.name,
-        ]);
+        // ]);
+            ], {
+                stdio: ['ignore', 'pipe', 'pipe']
+            });
 
-        await log.info(result.output[1].toString());
-        await log.info(result.output[2].toString());
+        await Promise.all([log.getOtherLog(result)]);
+
+        // await log.info(result.output[1].toString());
+        // await log.info(result.output[2].toString());
 
         fs.unlinkSync(this.configFilePath);
 
@@ -58,7 +63,7 @@ class Jail extends EventEmitter {
                 stdio: ['ignore', 'pipe', 'pipe']
             });
 
-        Promise.all([log.getOtherLog(result)]);
+        await Promise.all([log.getOtherLog(result)]);
 
         // await log.info(result.output[1].toString());
         // await log.info(result.output[2].toString());
