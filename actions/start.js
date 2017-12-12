@@ -15,6 +15,7 @@ const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
 const hosts = require('../libs/hosts.js');
+const collectLogs = require('../libs/collect-logs.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
@@ -51,7 +52,7 @@ async function start(configBody) {
 
     }
 
-    await log.notice('archive done!');
+    await log.notice('done!');
 
     let storage = {};
 
@@ -103,7 +104,7 @@ async function start(configBody) {
 
     });
 
-    await log.notice('mounts done!');
+    await log.notice('done!');
 
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
@@ -124,7 +125,7 @@ async function start(configBody) {
 
     await log.notice('jail starting...');
     await jail.start();
-    await log.notice('jail start done!');
+    await log.notice('done!');
 
     if (configBody.cpuset !== false) {
 
@@ -136,66 +137,33 @@ async function start(configBody) {
 
     await log.notice('cpuset done!');
 
-    await log.notice('pkg installing...');
+    await log.notice('package installing...');
 
     if (configBody.pkg) {
 
-        // let result = spawnSync('pkg', [
-        //     '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
-        // ]);
-
-        let sp = spawn('pkg', [
+        let child = spawn('pkg', [
                 '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
             ], {
                 stdio: ['ignore', 'pipe', 'pipe']
             });
 
-        // await log.info(result.output[1].toString());
-        // await log.info(result.output[2].toString());
-
-        await Promise.all([log.getOtherLog(sp)]);
+        await collectLogs(child);
 
     }
 
 
-    await log.notice('pkg done!');
+    await log.notice('done!');
     await log.notice('j-poststart...');
 
     let promises = configBody.jPostStart.map(command => {
 
-        // let result = spawnSync('/usr/sbin/jexec', [
-        //     configBody.jailName, ...command.split(' ')
-        // ]);
-
-
-        return new Promise((res, rej) => {
-
-            let child = spawn('/usr/sbin/jexec', [
-                configBody.jailName, ...command.split(' ')
-            ], {
-                stdio: ['ignore', 'pipe', 'pipe']
-            });
-
-            child.stdout.on('data', data => {
-
-                log.info(data.toString());
-
-            });
-
-            child.stderr.on('data', data => {
-
-                log.crit(data.toString());
-
-            });
-
-            child.on('exit', _ => {
-                res();
-            });
-
+        let child = spawn('/usr/sbin/jexec', [
+            configBody.jailName, ...command.split(' ')
+        ], {
+            stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        // log.info(result.output[1].toString());
-        // log.info(result.output[2].toString());
+        return collectLogs(child);
 
     });
 
@@ -211,7 +179,7 @@ async function start(configBody) {
 
     }
 
-    await log.notice('j-poststart done!');
+    await log.notice('done!');
 
     return;
 

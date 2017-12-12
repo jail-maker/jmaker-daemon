@@ -71,30 +71,6 @@ class Log extends EventEmitter {
 
     }
 
-    getOtherLog(spawn) {
-
-        return new Promise((res, rej) => {
-
-            spawn.stdout.on('data', data => {
-
-                this.info(data.toString());
-
-            });
-
-            spawn.stderr.on('data', data => {
-
-                this.crit(data.toString());
-
-            });
-
-            spawn.on('exit', _ => {
-                res();
-            });
-
-        });
-
-    }
-
 }
 
 module.exports = Log;
