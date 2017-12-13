@@ -131,7 +131,7 @@ async function start(configBody) {
         .pipe(configObj.out.bind(configObj));
 
     await log.info(configObj.toString() + '\n');
-    await log.info('jail starting...\n');
+    await log.notice('jail starting...\n');
 
     await jail.start();
 
