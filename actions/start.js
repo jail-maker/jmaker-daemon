@@ -147,23 +147,7 @@ async function start(configBody) {
 
     } catch (e) {
 
-        await jail.stop();
-
-        configBody.mounts.forEach(points => {
-
-            let [src, dst] = points;
-
-            log.info(`umount ${src}\n`);
-
-            let result = spawnSync('umount', [
-                '-f', path.join(configBody.path, dst),
-            ]);
-
-        });
-
-        logsPool.delete(configBody.jailName);
-
-        throw new Error(e);
+        throw e;
 
     }
 
