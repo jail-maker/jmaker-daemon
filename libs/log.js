@@ -71,6 +71,30 @@ class Log extends EventEmitter {
 
     }
 
+    fromProcess(child) {
+
+        return new Promise((res, rej) => {
+
+            child.stdout.on('data', data => {
+
+                log.info(data.toString());
+
+            });
+
+            child.stderr.on('data', data => {
+
+                log.crit(data.toString());
+
+            });
+
+            child.on('exit', _ => {
+                res();
+            });
+
+        });
+
+    }
+
 }
 
 module.exports = Log;

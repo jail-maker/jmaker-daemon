@@ -15,7 +15,6 @@ const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
 const hosts = require('../libs/hosts.js');
-const collectLogs = require('../libs/collect-logs.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
@@ -147,7 +146,7 @@ async function start(configBody) {
                 stdio: ['ignore', 'pipe', 'pipe']
             });
 
-        await collectLogs(child);
+        await log.fromProcess(child);
 
     }
 
@@ -163,7 +162,7 @@ async function start(configBody) {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        return collectLogs(child);
+        return log.fromProcess(child);
 
     });
 
