@@ -24,7 +24,7 @@ async function stop(jailName) {
 
         let [src, dst] = points;
 
-        log.info(`umount ${src}`);
+        log.info(`umount ${src}\n`);
 
         let result = spawnSync('umount', [
             '-f', path.join(configBody.path, dst),

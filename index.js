@@ -83,9 +83,9 @@ app.post('/jails', async (req, res) => {
 
     try {
 
-        await log.notice('starting...');
+        await log.notice('starting...\n');
         await start(configBody);
-        await log.notice('finish', true);
+        await log.notice('finish.\n', true);
 
     } catch (e) {
 
@@ -107,9 +107,9 @@ app.delete('/jails/:name', async (req, res) => {
 
     try {
 
-        await log.notice('stopping...');
+        await log.notice('stopping...\n');
         await stop(name);
-        await log.notice('finish', true);
+        await log.notice('finish\n', true);
 
         logsPool.delete(name);
 

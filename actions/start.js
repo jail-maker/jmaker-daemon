@@ -25,12 +25,15 @@ async function start(configBody) {
     let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
 
-    await log.notice('decompression...');
 
     try {
 
+        await log.info('checking base... ');
+
         let fd = fs.openSync(archive, 'r');
         fs.closeSync(fd);
+
+        await log.notice('done\n');
 
     } catch(e) {
 
@@ -41,6 +44,8 @@ async function start(configBody) {
 
         }
 
+        await log.info('fetching base... ');
+
         let result = fetch(`${config.bases}/${configBody.base}.tar`, archive);
 
         if (!result) {
@@ -49,9 +54,9 @@ async function start(configBody) {
 
         }
 
-    }
+        await log.notice('done\n');
 
-    await log.notice('done!');
+    }
 
     let storage = {};
 
@@ -71,24 +76,27 @@ async function start(configBody) {
 
     if (storage.isEmpty()) {
 
+        await log.info('decompression... ');
+
         tar.x({
             file: archive,
             cwd: configBody.path,
             sync: true,
         });
 
-    }
+        await log.notice('done\n');
 
-    await log.notice('storage done!');
+    }
 
     if (config.resolvSync) {
 
+        await log.info('resolv.conf sync... ');
         fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
-        await log.notice('resolv.conf sync done!');
+        await log.notice('done\n');
 
     }
 
-    await log.notice('mounting...');
+    await log.info('mounting... ');
 
     configBody.mounts.forEach(points => {
 
@@ -103,12 +111,14 @@ async function start(configBody) {
 
     });
 
-    await log.notice('done!');
+    await log.notice('done\n');
+
+    await log.info('rctl... ');
 
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     rctlObj.execute();
 
-    await log.notice('rctl done!');
+    await log.notice('done\n');
 
     let jail = new Jail(configBody);
     dataJails.add(jail);
@@ -120,11 +130,13 @@ async function start(configBody) {
         .pipe(autoIp.pipeRule.bind(autoIp))
         .pipe(configObj.out.bind(configObj));
 
-    await log.info(configObj.toString());
+    await log.info(configObj.toString() + '\n');
+    await log.info('jail starting...\n');
 
-    await log.notice('jail starting...');
     await jail.start();
-    await log.notice('done!');
+
+    await log.notice('done\n');
+    await log.info('cpuset... ');
 
     if (configBody.cpuset !== false) {
 
@@ -134,25 +146,23 @@ async function start(configBody) {
 
     }
 
-    await log.notice('cpuset done!');
-
-    await log.notice('package installing...');
+    await log.notice('done\n');
+    await log.notice('package installing...\n');
 
     if (configBody.pkg) {
 
         let child = spawn('pkg', [
-                '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
-            ], {
-                stdio: ['ignore', 'pipe', 'pipe']
-            });
+            '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
+        ], {
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
 
         await log.fromProcess(child);
 
     }
 
-
-    await log.notice('done!');
-    await log.notice('j-poststart...');
+    await log.notice('done\n');
+    await log.notice('j-poststart...\n');
 
     let promises = configBody.jPostStart.map(command => {
 
@@ -178,7 +188,7 @@ async function start(configBody) {
 
     }
 
-    await log.notice('done!');
+    await log.notice('done\n');
 
     return;
 

@@ -53,7 +53,8 @@ class Log extends EventEmitter {
 
         if (level.toString() <= logLevel.toString()) {
 
-            console.log(level.color ? chalk[level.color](text) : text);
+            let stream = process.stdout;
+            stream.write(level.color ? chalk[level.color](text) : text);
 
         }
 
