@@ -77,13 +77,13 @@ class Log extends EventEmitter {
 
             child.stdout.on('data', data => {
 
-                log.info(data.toString());
+                this.info(data.toString());
 
             });
 
             child.stderr.on('data', data => {
 
-                log.crit(data.toString());
+                this.crit(data.toString());
 
             });
 
