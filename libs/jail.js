@@ -6,7 +6,6 @@ const fs = require('fs');
 
 const ConfigFile = require('./config-file.js');
 const logsPool = require('./logs-pool.js');
-const collectLogs = require('./collect-logs.js');
 
 class Jail extends EventEmitter {
 
@@ -37,7 +36,7 @@ class Jail extends EventEmitter {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        await collectLogs(child);
+        await log.fromProcess(child);
 
         fs.unlinkSync(this.configFilePath);
 
@@ -59,7 +58,7 @@ class Jail extends EventEmitter {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        await collectLogs(child);
+        await log.fromProcess(child);
 
         this._loadInfo();
 
