@@ -77,19 +77,11 @@ async function start(configBody) {
 
         await log.info('decompression... ');
 
-        try {
-
-            tar.x({
-                file: archive,
-                cwd: configBody.path,
-                sync: true,
-            });
-
-        } catch (e) {
-
-            throw new Error(e);
-
-        }
+        tar.x({
+            file: archive,
+            cwd: configBody.path,
+            sync: true,
+        });
 
         await log.notice('done\n');
 
@@ -139,17 +131,9 @@ async function start(configBody) {
 
     await log.info(configObj.toString() + '\n');
 
-    try {
-
-        await log.notice('jail starting...\n');
-        await jail.start();
-        await log.notice('done\n');
-
-    } catch (e) {
-
-        throw e;
-
-    }
+    await log.notice('jail starting...\n');
+    await jail.start();
+    await log.notice('done\n');
 
     if (configBody.cpuset !== false) {
 
