@@ -7,7 +7,7 @@ const WebSocket = require('ws');
 
 const Channel = require('./libs/channel.js');
 
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({ port: 3347 });
 
 wss.on('connection', (ws, req) => {
 
