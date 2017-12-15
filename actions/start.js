@@ -25,7 +25,6 @@ async function start(configBody) {
     let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
 
-
     try {
 
         await log.info('checking base... ');
@@ -78,11 +77,19 @@ async function start(configBody) {
 
         await log.info('decompression... ');
 
-        tar.x({
-            file: archive,
-            cwd: configBody.path,
-            sync: true,
-        });
+        try {
+
+            tar.x({
+                file: archive,
+                cwd: configBody.path,
+                sync: true,
+            });
+
+        } catch (e) {
+
+            throw new Error(e);
+
+        }
 
         await log.notice('done\n');
 
@@ -131,25 +138,35 @@ async function start(configBody) {
         .pipe(configObj.out.bind(configObj));
 
     await log.info(configObj.toString() + '\n');
-    await log.notice('jail starting...\n');
 
-    await jail.start();
+    try {
 
-    await log.notice('done\n');
-    await log.info('cpuset... ');
+        await log.notice('jail starting...\n');
+        await jail.start();
+        await log.notice('done\n');
+
+    } catch (e) {
+
+        throw e;
+
+    }
 
     if (configBody.cpuset !== false) {
+
+        await log.info('cpuset... ');
 
         let result = spawnSync('cpuset', [
             '-l', configBody.cpuset, '-j', jid
         ]);
 
+        await log.notice('done\n');
+
     }
 
-    await log.notice('done\n');
-    await log.notice('package installing...\n');
 
     if (configBody.pkg) {
+
+        await log.notice('package installing...\n');
 
         let child = spawn('pkg', [
             '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
@@ -158,10 +175,10 @@ async function start(configBody) {
         });
 
         await log.fromProcess(child);
+        await log.notice('done\n');
 
     }
 
-    await log.notice('done\n');
     await log.notice('j-poststart...\n');
 
     let promises = configBody.jPostStart.map(command => {

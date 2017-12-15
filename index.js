@@ -89,7 +89,7 @@ app.post('/jails', async (req, res) => {
 
     } catch (e) {
 
-        log.crit(e.toString(), true);
+        await log.crit(`\n${e.toString()}\n`, true);
         console.log(e);
 
     } finally {
@@ -115,7 +115,7 @@ app.delete('/jails/:name', async (req, res) => {
 
     } catch (e) {
 
-        log.crit(e.toString(), true);
+        await log.crit(`\n${e.toString()}\n`, true);
         console.log(e);
 
     } finally {

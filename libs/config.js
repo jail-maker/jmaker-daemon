@@ -18,6 +18,7 @@ class Config {
         this.zfsPool = 'jmaker';
         this.zfs = false;
         this.resolvSync = true;
+        this.bases = '';
 
     }
 
