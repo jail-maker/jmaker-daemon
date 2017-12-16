@@ -4,6 +4,7 @@ const { spawnSync, spawn } = require('child_process');
 const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const tar = require('tar');
 
 const fetch = require('../libs/bsd-fetch.js');
@@ -135,12 +136,23 @@ async function start(configBody) {
     await jail.start();
     await log.notice('done\n');
 
+    if (configBody.cpus) {
+
+        let cpus = parseInt(configBody.cpus);
+        let osCpus = os.cpus().length;
+        cpus = cpus < osCpus ? cpus : osCpus;
+
+        if (cpus === 1) configBody.cpuset = '0';
+        else configBody.cpuset = `0-${cpus - 1}`;
+
+    }
+
     if (configBody.cpuset !== false) {
 
         await log.info('cpuset... ');
 
         let result = spawnSync('cpuset', [
-            '-l', configBody.cpuset, '-j', jid
+            '-l', configBody.cpuset, '-j', jail.info.jid
         ]);
 
         await log.notice('done\n');

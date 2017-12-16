@@ -13,6 +13,7 @@ class ConfigBody {
         this.dependencies = this._extract('dependencies');
         this.pkg = this._extract('pkg');
         this.rctl = this._extract('rctl');
+        this.cpus = this._extract('cpus');
         this.cpuset = this._extract('cpuset');
         this.mounts = this._extract('mounts');
         this.jPostStart = this._extract('exec.j-poststart');
