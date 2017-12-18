@@ -8,14 +8,6 @@ class RecordInterface {
 
 }
 
-class MountStep extends RecordInterface {
-
-    run() {}
-
-    rollback() {}
-
-}
-
 class Recorder {
 
     constructor() {
@@ -43,7 +35,19 @@ class Recorder {
     rollback () {
 
         this._pool.reverse();
-        this._pool.forEach(rec => rec.rollback());
+        this._pool.forEach(rec => {
+
+            try {
+
+                rec.rollback();
+
+            } catch (e) {
+
+                console.log(e);
+
+            }
+
+        });
 
         this._pool = [];
 
