@@ -126,6 +126,69 @@ app.delete('/jails/:name', async (req, res) => {
 
 });
 
+app.get('/jails/', async (req, res) => {
+
+    let names = dataJails.getNames().map(name => {
+
+        return {
+            name: name,
+            ref: `/jails/${name}`,
+        };
+
+    });
+
+    res.json(names);
+
+});
+
+app.get('/jails/:name', async (req, res) => {
+
+    let ret = {};
+
+    try {
+
+        let jail = dataJails.get(req.params.name);
+        ret.name = jail.name;
+        ret.working = jail.isWorking();
+        ret.info = jail.info;
+        Object.assign(ret, jail.configBody);
+        delete(ret.fileData);
+
+        ret.links = {
+            log: `/jails/${jail.name}/log`,
+        };
+
+        res.json(ret);
+
+    } catch (e) {
+
+        if (e.name === 'NotFoundError')
+            res.status(404).send(e.message);
+
+        else res.status(500).send(e.message);
+
+    }
+
+});
+
+app.get('/jails/:name/log', async (req, res) => {
+
+    try {
+
+        let log = logsPool.get(req.params.name);
+        res.json({ data: log.toString() });
+
+    } catch (e) {
+
+        if (e.name === 'NotFoundError')
+            res.status(404).send(e.message);
+
+        else res.status(500).send(e.message);
+
+    }
+
+});
+
 server.listen(config.port, config.host, () => {
 
     console.log(`listening on port ${config.port}!`);

@@ -10,6 +10,7 @@
 - `npm` or `yarn`
 - [check_ip](https://github.com/jail-maker/check_ip) -
 for automatically getting ip addresses
+- `dual-dhclient` for support dhcp6
 
 tune in /boot/loader.conf:
 ```
@@ -22,6 +23,7 @@ tune in /etc/rc.conf:
 redis_enable="YES"
 
 # recommendations:
+dhclient_program="/usr/local/sbin/dual-dhclient"
 sendmail_enable="NO"
 rpcbind_enable="NO"
 ```

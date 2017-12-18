@@ -151,11 +151,12 @@ class Iface {
 
         let eth = this._ethName;
 
-        spawnSync('dhclient', [
+        spawnSync('dual-dhclient', [
             eth,
         ]);
 
         this._getIp4Addresses();
+        this._getIp6Addresses();
 
     }
 

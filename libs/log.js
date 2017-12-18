@@ -67,8 +67,8 @@ class Log extends EventEmitter {
     toString() {
 
         return this._messages
-            .map(mesage => message.text)
-            .join('\n');
+            .map(message => message.text)
+            .join('');
 
     }
 
