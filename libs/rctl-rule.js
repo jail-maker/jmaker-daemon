@@ -11,13 +11,24 @@ class RctlRule {
     toString() {
 
         let {
+            value,
+        } = this._data;
+
+        let ruleName = this.getRuleName();
+
+        return `${ruleName}=${value}`;
+
+    }
+
+    getRuleName() {
+
+        let {
             resource,
             action,
-            value,
             jailName
         } = this._data;
 
-        return `jail:${jailName}:${resource}:${action}=${value}`;
+        return `jail:${jailName}:${resource}:${action}`;
 
     }
 

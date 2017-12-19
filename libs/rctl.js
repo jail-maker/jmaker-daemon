@@ -2,6 +2,7 @@
 
 const { spawn, spawnSync } = require('child_process')
 const RctlRule = require('./rctl-rule.js');
+const ExecutionError = require('../libs/Errors/execution-error.js');
 
 class Rctl {
 
@@ -29,18 +30,31 @@ class Rctl {
 
             }
 
-
         }
 
     }
 
-    execute() {
+    async run() {
 
         this._rules.forEach(rule => {
 
-            spawnSync('rctl', [
-                '-a',
-                rule.toString()
+            let result = spawnSync('rctl', [
+                '-a', rule.toString()
+            ]);
+
+            if (result.status !== 0)
+                throw new ExecutionError('Error execution rctl.');
+
+        });
+
+    }
+
+    async rollback() {
+
+        this._rules.forEach(rule => {
+
+            let result = spawnSync('rctl', [
+                '-r', rule.getRuleName()
             ]);
 
         });

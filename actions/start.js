@@ -15,16 +15,24 @@ const ZfsStorage = require('../libs/zfs-storage.js');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
-const hosts = require('../libs/hosts.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
 const autoIp = require('../modules/auto-ip.js');
 
+const Mounts = require('../modules/mounts.js');
+const Cpuset = require('../modules/cpuset.js');
+const Pkg = require('../modules/pkg.js');
+const JPostStart = require('../modules/j-poststart.js');
+const Hosts = require('../modules/hosts.js');
+
+const Recorder = require('../libs/recorder.js');
+
 async function start(configBody) {
 
     let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
+    let recorder = new Recorder;
 
     try {
 
@@ -98,25 +106,15 @@ async function start(configBody) {
 
     await log.info('mounting... ');
 
-    configBody.mounts.forEach(points => {
-
-        let [src, dst] = points;
-        dst = path.join(configBody.path, dst);
-
-        mkdirSync(dst);
-
-        let result = spawnSync('mount_nullfs', [
-            src, dst,
-        ]);
-
-    });
+    let mounts = new Mounts(configBody.mounts, configBody.path);
+    await recorder.run(mounts);
 
     await log.notice('done\n');
 
     await log.info('rctl... ');
 
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
-    rctlObj.execute();
+    await recorder.run(rctlObj);
 
     await log.notice('done\n');
 
@@ -133,7 +131,7 @@ async function start(configBody) {
     await log.info(configObj.toString() + '\n');
 
     await log.notice('jail starting...\n');
-    await jail.start();
+    await recorder.run(jail);
     await log.notice('done\n');
 
     if (configBody.cpus) {
@@ -151,57 +149,34 @@ async function start(configBody) {
 
         await log.info('cpuset... ');
 
-        let result = spawnSync('cpuset', [
-            '-l', configBody.cpuset, '-j', jail.info.jid
-        ]);
+        let cpuset = new Cpuset(jail.info.jid, configBody.cpuset);
+        console.log(cpuset);
+        await recorder.run(cpuset);
 
         await log.notice('done\n');
 
     }
 
-
-    if (configBody.pkg) {
+    if (configBody.pkg.length) {
 
         await log.notice('package installing...\n');
 
-        let child = spawn('pkg', [
-            '-j', configBody.jailName, 'install', '-y', ...configBody.pkg
-        ], {
-            stdio: ['ignore', 'pipe', 'pipe']
-        });
+        let pkg = new Pkg(configBody.jailName, configBody.pkg);
+        await recorder.run(pkg);
 
-        await log.fromProcess(child);
         await log.notice('done\n');
 
     }
 
     await log.notice('j-poststart...\n');
 
-    let promises = configBody.jPostStart.map(command => {
-
-        let child = spawn('/usr/sbin/jexec', [
-            configBody.jailName, ...command.split(' ')
-        ], {
-            stdio: ['ignore', 'pipe', 'pipe']
-        });
-
-        return log.fromProcess(child);
-
-    });
-
-    await Promise.all(promises);
-
-    {
-
-        let ip4 = jail.info['ip4.addr'].split(',');
-
-        hosts.addHost(ip4[0], configBody.jailName);
-        hosts.addHost(ip4[0], jail.info['host.hostname']);
-        hosts.commit();
-
-    }
+    let jPostStart = new JPostStart(configBody.jailName, configBody.jPostStart);
+    await recorder.run(jPostStart);
 
     await log.notice('done\n');
+
+    let hosts = new Hosts(jail);
+    await recorder.run(hosts);
 
     return;
 

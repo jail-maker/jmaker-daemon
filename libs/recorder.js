@@ -1,13 +1,5 @@
 'use strict';
 
-class RecordInterface {
-
-    run() {}
-
-    rollback() {}
-
-}
-
 class Recorder {
 
     constructor() {
@@ -16,41 +8,43 @@ class Recorder {
 
     }
 
-    run(record) {
+    async run(record, allRollback = true) {
 
         try {
 
-            record.run();
+            await record.run();
             this._pool.push(record);
 
-        } catch (e) {
+        } catch (error) {
 
-            record.rollback();
-            throw e;
+            await record.rollback();
+            if (allRollback) await this.rollback();
+            throw error;
 
         }
 
     }
 
-    rollback () {
+    async rollback() {
 
-        this._pool.reverse();
-        this._pool.forEach(rec => {
+        while (this._pool.length) {
+
+            let rec = this._pool.pop();
 
             try {
 
-                rec.rollback();
+                await rec.rollback();
 
-            } catch (e) {
+            } catch (error) {
 
-                console.log(e);
+                console.log(error);
 
             }
 
-        });
-
-        this._pool = [];
+        }
 
     }
 
 }
+
+module.exports = Recorder;

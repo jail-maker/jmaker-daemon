@@ -88,8 +88,8 @@ class Log extends EventEmitter {
 
             });
 
-            child.on('exit', _ => {
-                res();
+            child.on('exit', (code, signal) => {
+                res({code, signal});
             });
 
         });

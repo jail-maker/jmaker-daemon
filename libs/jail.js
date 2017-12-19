@@ -4,6 +4,8 @@ const { spawnSync, spawn } = require('child_process');
 const EventEmitter = require('events');
 const fs = require('fs');
 
+const ExecutionError = require('./Errors/execution-error.js');
+
 const ConfigFile = require('./config-file.js');
 const logsPool = require('./logs-pool.js');
 
@@ -58,13 +60,28 @@ class Jail extends EventEmitter {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        await log.fromProcess(child);
+        let { code } = await log.fromProcess(child);
+
+        let msg = 'Error execution jail.';
+        if (code !== 0) throw new ExecutionError(msg);
 
         this._loadInfo();
 
         this._working = true;
 
         this.emit('startEnd', this);
+
+    }
+
+    async run() {
+
+        await this.start();
+
+    }
+
+    async rollback() {
+
+        await this.stop();
 
     }
 
