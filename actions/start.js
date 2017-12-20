@@ -118,24 +118,48 @@ async function start(configBody) {
 
     await log.notice('done\n');
 
-    let jail = new Jail(configBody);
-    dataJails.add(jail);
+    let jail = {};
+
+    {
+
+        let call = {
+            run: _ => {
+
+                jail = new Jail(configBody);
+                dataJails.add(jail);
+
+            },
+            rollback: _ => {
+
+                dataJails.unset(configBody.jailName);
+
+            }
+        }
+
+        await recorder.run(call);
+
+    }
+
     let configObj = jail.configFileObj;
 
-    let call = {
-        run: _ => {
+    {
 
-            configObj
-            // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
-                .pipe(autoIface.pipeRule.bind(autoIface))
-                .pipe(autoIp.pipeRule.bind(autoIp))
-                .pipe(configObj.out.bind(configObj));
+        let call = {
+            run: _ => {
 
-        },
-        rollback: _ => {}
-    };
+                configObj
+                // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
+                    .pipe(autoIface.pipeRule.bind(autoIface))
+                    .pipe(autoIp.pipeRule.bind(autoIp))
+                    .pipe(configObj.out.bind(configObj));
 
-    await recorder.run(call);
+            },
+            rollback: _ => {}
+        };
+
+        await recorder.run(call);
+
+    }
 
     await log.info(configObj.toString() + '\n');
 

@@ -79,6 +79,15 @@ app.post('/jails', async (req, res) => {
 
     let configBody = new ConfigBody(req.body);
     let name = configBody.jailName;
+
+    if (dataJails.has(name)) {
+
+        let msg = `Jail "${name}" already exists.`;
+        res.status(409).send(msg);
+        return;
+
+    }
+
     let log = logsPool.create(name);
 
     try {
@@ -90,6 +99,7 @@ app.post('/jails', async (req, res) => {
     } catch (e) {
 
         await log.crit(`\n${e.toString()}\n`, true);
+        logsPool.delete(name);
         console.log(e);
 
     } finally {
