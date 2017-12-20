@@ -59,7 +59,6 @@ class DefaultIface extends Iface {
         ]).stdout.toString();
 
         out = JSON.parse(out);
-        console.log(out);
         out = out.statistics['route-information']['route-table']['rt-family'];
 
         let ethInfo = jsonQuery(

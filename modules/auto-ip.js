@@ -37,11 +37,18 @@ class AutoIp {
             if (item.toLowerCase() !== 'auto') return item;
 
             let ipAddr = defaultIface.getIp4Addresses()[0];
-            let freeIp = spawnSync('/usr/local/bin/check_ip', [
+            let result = spawnSync('/usr/local/bin/check_ip', [
                 `--ipv4=${ipAddr.network}`, '-j', 
-            ]).stdout.toString();
+            ]);
 
+            if (result.status !== 0)
+                throw new ExecutionError('Error execution check_ip.');
+
+            let freeIp = result.stdout.toString();
             freeIp = JSON.parse(freeIp)['free4'];
+
+            let msg = `Free IPv4 not found in network ${ipAddr.network}`;
+            if (!freeIp) throw new NotFoundError(msg);
 
             return `${defaultIface.getEthName()}|${freeIp}`;
 
@@ -71,11 +78,18 @@ class AutoIp {
             }
 
             let ipAddr = ipAddrs[0];
-            let freeIp = spawnSync('/usr/local/bin/check_ip', [
+            let result = spawnSync('/usr/local/bin/check_ip', [
                 `--ipv6=${ipAddr.network}`, '-j', 
-            ]).stdout.toString();
+            ]);
 
+            if (result.status !== 0)
+                throw new ExecutionError('Error execution check_ip.');
+
+            let freeIp = result.stdout.toString();
             freeIp = JSON.parse(freeIp)['free6'];
+
+            let msg = `Free IPv6 not found in network ${ipAddr.network}`;
+            if (!freeIp) throw new NotFoundError(msg);
 
             return `${defaultIface.getEthName()}|${freeIp}`;
 

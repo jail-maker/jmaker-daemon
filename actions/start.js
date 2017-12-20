@@ -122,11 +122,20 @@ async function start(configBody) {
     dataJails.add(jail);
     let configObj = jail.configFileObj;
 
-    configObj
-        .pipe(dhcp.getPipeRule(jail).bind(dhcp))
-        .pipe(autoIface.pipeRule.bind(autoIface))
-        .pipe(autoIp.pipeRule.bind(autoIp))
-        .pipe(configObj.out.bind(configObj));
+    let call = {
+        run: _ => {
+
+            configObj
+            // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
+                .pipe(autoIface.pipeRule.bind(autoIface))
+                .pipe(autoIp.pipeRule.bind(autoIp))
+                .pipe(configObj.out.bind(configObj));
+
+        },
+        rollback: _ => {}
+    };
+
+    await recorder.run(call);
 
     await log.info(configObj.toString() + '\n');
 
