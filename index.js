@@ -21,6 +21,7 @@ const Channel = require('./libs/channel.js');
 const config = require('./libs/config.js');
 const dataJails = require('./libs/data-jails.js');
 const logsPool = require('./libs/logs-pool.js');
+const recorderPool = require('./libs/recorder-pool.js');
 
 const dhcp = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
@@ -30,48 +31,14 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
-const stop = require('./actions/stop.js');
 const start = require('./actions/start.js');
+const stop = require('./actions/stop.js');
+const sigHandler = require('./actions/sig-handler.js');
 
 app.use(bodyParser.json());
 
-process.on('SIGINT', async _ => {
-
-    try {
-
-        await Promise.all(dataJails.getNames().map(stop));
-        dhcp.disable();
-
-    } catch (e) {
-
-        console.log(e);
-
-    } finally {
-
-        process.exit();
-
-    }
-
-});
-
-process.on('SIGTERM', async _ => {
-
-    try {
-
-        await Promise.all(dataJails.getNames().map(stop));
-        dhcp.disable();
-
-    } catch (e) {
-
-        console.log(e);
-
-    } finally {
-
-        process.exit();
-
-    }
-
-});
+process.on('SIGINT', sigHandler);
+process.on('SIGTERM', sigHandler);
 
 app.post('/jails', async (req, res) => {
 

@@ -13,8 +13,8 @@ class Config {
         this.port = 3346;
         this.host = '127.0.0.1';
         this.logLevel = 'info';
-        this.jailsDir = path.resolve('./jails');
-        this.cacheDir = path.resolve('./cache');
+        this.jailsDir = path.resolve(__dirname + '/../jails');
+        this.cacheDir = path.resolve(__dirname + '/../cache');
         this.zfsPool = 'jmaker';
         this.zfs = false;
         this.resolvSync = true;

@@ -15,6 +15,7 @@ const ZfsStorage = require('../libs/zfs-storage.js');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
+const recorderPool = require('../libs/recorder-pool.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
@@ -33,6 +34,8 @@ async function start(configBody) {
     let log = logsPool.get(configBody.jailName);
     let archive = `${path.join(config.cacheDir, configBody.base)}.tar`;
     let recorder = new Recorder;
+
+    recorderPool.set(configBody.jailName, recorder);
 
     try {
 
@@ -192,7 +195,7 @@ async function start(configBody) {
 
     if (configBody.pkg.length) {
 
-        await log.notice('package installing...\n');
+        await log.notice('installing packages...\n');
 
         let pkg = new Pkg(configBody.jailName, configBody.pkg);
         await recorder.run(pkg);
