@@ -1,0 +1,24 @@
+#!/bin/sh
+#
+
+# PROVIDE: jmaker_server
+# REQUIRE: NETWORKING
+
+. /etc/rc.subr
+
+export PATH="$PATH:/usr/local/bin"
+programm="jmaker-server"
+
+name="jmaker_server"
+rcvar=${name}_enable
+pidfile="/var/run/${programm}"
+command="/usr/sbin/daemon"
+
+load_rc_config $name
+
+: ${jmaker_server_enable="NO"}
+: ${jmaker_server_config="/usr/local/etc/${programm}.yml"}
+
+command_args="-f -t ${programm} -P /var/run/${programm} -r /usr/local/bin/${programm} --config=${jmaker_server_config}"
+
+run_rc_command "$1"
