@@ -7,18 +7,21 @@
 . /etc/rc.subr
 
 export PATH="$PATH:/usr/local/bin"
-programm="jmaker-server"
+_programm="jmaker-server"
+_procname="/usr/local/bin/${_programm}"
 
 name="jmaker_server"
 rcvar=${name}_enable
-pidfile="/var/run/${programm}"
-command="/usr/sbin/daemon"
 
 load_rc_config $name
 
-: ${jmaker_server_enable="NO"}
-: ${jmaker_server_config="/usr/local/etc/${programm}.yml"}
+pidfile="/var/run/${_programm}"
+procname="/usr/local/bin/node"
+command="/usr/sbin/daemon"
 
-command_args="-f -t ${programm} -P /var/run/${programm} -r /usr/local/bin/${programm} --config=${jmaker_server_config}"
+: ${jmaker_server_enable="NO"}
+: ${jmaker_server_config="/usr/local/etc/${_programm}.yml"}
+
+command_args="-f -t ${_programm} -p ${pidfile} ${_procname} --config=${jmaker_server_config}"
 
 run_rc_command "$1"
