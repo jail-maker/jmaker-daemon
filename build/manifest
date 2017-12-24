@@ -1,6 +1,6 @@
 {
     "name": "jmaker-server",
-    "www": "",
+    "www": "https://github.com/jail-maker/jmaker-server",
     "desc": "",
     "origin": "sysutils/jmaker-server",
     "comment": "",
@@ -15,6 +15,10 @@
         "node": {
             "version": ">=9.3.0",
             "origin": "www/node"
+        },
+        "check_ip": {
+            "version": ">=1.0.0",
+            "origin": "net/check_ip"
         }
     }
 }
