@@ -6,7 +6,7 @@
     "comment": "",
     "version": "0.0.1",
     "maintainer": "",
-    "prefix": "/usr/local"
+    "prefix": "/usr/local",
     "deps": {
         "yarn": {
             "version": ">=1.3.2_2",
@@ -19,6 +19,10 @@
         "check_ip": {
             "version": ">=1.0.0",
             "origin": "net/check_ip"
+        },
+        "redis": {
+            "version": ">=3.2.11",
+            "origin": "databases/redis"
         }
     }
 }
