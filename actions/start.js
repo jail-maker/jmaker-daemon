@@ -25,6 +25,7 @@ const Mounts = require('../modules/mounts.js');
 const Cpuset = require('../modules/cpuset.js');
 const Pkg = require('../modules/pkg.js');
 const JPostStart = require('../modules/j-poststart.js');
+const HPostStart = require('../modules/h-poststart.js');
 const Hosts = require('../modules/hosts.js');
 
 const Recorder = require('../libs/recorder.js');
@@ -185,9 +186,17 @@ async function start(configBody) {
 
         await log.info('cpuset... ');
 
-        let cpuset = new Cpuset(jail.info.jid, configBody.cpuset);
-        console.log(cpuset);
-        await recorder.run(cpuset);
+        try {
+
+            let cpuset = new Cpuset(jail.info.jid, configBody.cpuset);
+            await recorder.run(cpuset);
+
+        } catch (error) {
+
+            await recorder.rollback();
+            throw error;
+
+        }
 
         await log.notice('done\n');
 
@@ -208,6 +217,13 @@ async function start(configBody) {
 
     let jPostStart = new JPostStart(configBody.jailName, configBody.jPostStart);
     await recorder.run(jPostStart);
+
+    await log.notice('done\n');
+
+    await log.notice('h-poststart...\n');
+
+    let hPostStart = new HPostStart(configBody.jailName, configBody.hPostStart);
+    await recorder.run(hPostStart);
 
     await log.notice('done\n');
 

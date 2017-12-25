@@ -4,7 +4,7 @@ const { spawn, exec } = require('child_process');
 const logsPool = require('../libs/logs-pool.js');
 const ExecutionError = require('../libs/Errors/execution-error.js');
 
-class JPostStart {
+class HPostStart {
 
     constructor(jailName, commands = []) {
 
@@ -23,7 +23,7 @@ class JPostStart {
 
         for (let i = 0; i != commands.length; i++) {
 
-            let command = `/usr/sbin/jexec ${this._jailName} ${commands[i]}`;
+            let command = commands[i];
             let child = exec(command, {
                 stdio: ['ignore', 'pipe', 'pipe']
             });
@@ -45,4 +45,4 @@ class JPostStart {
 
 }
 
-module.exports = JPostStart;
+module.exports = HPostStart;
