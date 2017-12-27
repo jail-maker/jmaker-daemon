@@ -1,3 +1,6 @@
+@dir /var/cache/jmaker-server
+@dir jmaker-server
+
 etc/rc.d/jmaker-server
 etc/jmaker-server.yml.sample
 
