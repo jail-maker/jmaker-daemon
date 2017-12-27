@@ -80,7 +80,28 @@ app.post('/jails', async (req, res) => {
 app.delete('/jails/:name', async (req, res) => {
 
     let name = req.params.name;
-    let log = logsPool.get(name);
+
+    if (!dataJails.has(name)) {
+
+        let msg = `Jail "${name}" not found.`;
+        res.status(404).send(msg);
+        return;
+
+    }
+
+    let log = {};
+
+    try {
+
+        log = logsPool.get(name);
+
+    } catch (error) {
+
+        let msg = `Log "${name}" not found.`;
+        res.status(500).send(msg);
+        return;
+
+    }
 
     try {
 
