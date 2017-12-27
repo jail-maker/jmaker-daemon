@@ -1,7 +1,7 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
-const { mkdirSync } = require('fs');
+const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const ExecutionError = require('../libs/Errors/execution-error.js');
 
