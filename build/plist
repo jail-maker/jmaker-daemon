@@ -4,19 +4,16 @@
 etc/rc.d/jmaker-server
 etc/jmaker-server.yml.sample
 
-share/jmaker-server/index.js
-share/jmaker-server/LICENSE
-share/jmaker-server/README.md
-share/jmaker-server/package.json
-share/jmaker-server/actions/start.js
 share/jmaker-server/actions/stop.js
 share/jmaker-server/actions/sig-handler.js
+share/jmaker-server/actions/start.js
+share/jmaker-server/index.js
 share/jmaker-server/libs/Errors/command-error.js
 share/jmaker-server/libs/Errors/execution-error.js
 share/jmaker-server/libs/Errors/exists-error.js
 share/jmaker-server/libs/Errors/not-found-error.js
-share/jmaker-server/libs/bsd-fetch.js
 share/jmaker-server/libs/config-body.js
+share/jmaker-server/libs/bsd-fetch.js
 share/jmaker-server/libs/config-file.js
 share/jmaker-server/libs/config.js
 share/jmaker-server/libs/data-jails.js
@@ -40,14 +37,18 @@ share/jmaker-server/libs/ipv6-types-addresses.js
 share/jmaker-server/libs/recorder.js
 share/jmaker-server/libs/record-interface.js
 share/jmaker-server/libs/recorder-pool.js
+share/jmaker-server/LICENSE
 share/jmaker-server/modules/auto-iface.js
 share/jmaker-server/modules/auto-ip.js
 share/jmaker-server/modules/ip-dhcp.js
 share/jmaker-server/modules/mounts.js
-share/jmaker-server/modules/cpuset.js
-share/jmaker-server/modules/pkg.js
 share/jmaker-server/modules/j-poststart.js
+share/jmaker-server/modules/cpuset.js
+share/jmaker-server/modules/h-poststart.js
+share/jmaker-server/modules/pkg.js
 share/jmaker-server/modules/hosts.js
+share/jmaker-server/package.json
+share/jmaker-server/README.md
 
 @postexec /bin/cp ${PKG_PREFIX}/etc/jmaker-server.yml.sample ${PKG_PREFIX}/etc/jmaker-server.yml
 @postexec /bin/ln -s ${PKG_PREFIX}/share/jmaker-server/index.js ${PKG_PREFIX}/bin/jmaker-server
