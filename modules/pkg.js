@@ -6,20 +6,34 @@ const ExecutionError = require('../libs/Errors/execution-error.js');
 
 class Pkg {
 
-    constructor(jailName, packages = []) {
+    constructor(jailName, packages = [], regex = false) {
 
         this._jailName = jailName;
         this._packages = packages;
+        this._regex = regex;
 
     }
 
     async run() {
 
         let log = logsPool.get(this._jailName);
+        let argv = [];
 
-        let child = spawn('pkg', [
-            '-j', this._jailName, 'install', '-y', ...this._packages
-        ], {
+        if (this._regex) {
+
+            argv = [
+                '-j', this._jailName, 'install', '-y', '-x', ...this._packages
+            ];
+
+        } else {
+
+            argv = [
+                '-j', this._jailName, 'install', '-y', ...this._packages
+            ];
+
+        }
+
+        let child = spawn('pkg', argv, {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 

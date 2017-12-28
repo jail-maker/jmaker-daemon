@@ -12,6 +12,7 @@ class ConfigBody {
         this.jailName = this._extract('name');
         this.dependencies = this._extract('dependencies');
         this.pkg = this._extract('pkg');
+        this.pkgRegex = this._extract('pkg-regex');
         this.rctl = this._extract('rctl');
         this.cpus = this._extract('cpus');
         this.cpuset = this._extract('cpuset');
