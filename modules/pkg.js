@@ -17,23 +17,11 @@ class Pkg {
     async run() {
 
         let log = logsPool.get(this._jailName);
-        let argv = [];
+        let argv = ['-j', this._jailName, 'install', '-y'];
 
-        if (this._regex) {
+        if (this._regex) argv.push('-x');
 
-            argv = [
-                '-j', this._jailName, 'install', '-y', '-x', ...this._packages
-            ];
-
-        } else {
-
-            argv = [
-                '-j', this._jailName, 'install', '-y', ...this._packages
-            ];
-
-        }
-
-        let child = spawn('pkg', argv, {
+        let child = spawn('pkg', argv.concat(this._packages), {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
@@ -44,7 +32,7 @@ class Pkg {
 
     }
 
-    async rollback() { }
+    async rollback() {}
 
 }
 

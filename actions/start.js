@@ -203,6 +203,7 @@ async function start(configBody) {
     }
 
     await log.notice('installing packages...\n');
+
     if (configBody.pkg.length) {
 
         let pkg = new Pkg(configBody.jailName, configBody.pkg);
@@ -212,10 +213,11 @@ async function start(configBody) {
 
     if (configBody.pkgRegex.length) {
 
-        let pkg = new Pkg(configBody.jailName, configBody.pkgRegex);
-        await recorder.run(pkg);
+        let pkgRegex = new Pkg(configBody.jailName, configBody.pkgRegex, true);
+        await recorder.run(pkgRegex);
 
     }
+
     await log.notice('done\n');
 
     await log.notice('j-poststart...\n');
