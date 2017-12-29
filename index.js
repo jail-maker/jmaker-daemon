@@ -187,6 +187,7 @@ app.get('/jails/:name/log', async (req, res) => {
 
 });
 
+server.timeout = null;
 server.listen(config.port, config.host, () => {
 
     console.log(`listening on port ${config.port}!`);
