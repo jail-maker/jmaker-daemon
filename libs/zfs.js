@@ -60,10 +60,44 @@ class Zfs {
 
     }
 
-    destroy(name) {
+    destroy(fs, snap = null) {
+
+        let name = (snap !== null) ? `${fs}@${snap}` : fs;
 
         let result = spawnSync('zfs', [
-            'destroy', `${this._pool}/${name}`
+            'destroy', '-R', `${this._pool}/${name}`
+        ]);
+
+        return result.status ? false : true;
+
+    }
+
+    snapshot(fs, name) {
+
+        let result = spawnSync('zfs', [
+            'snapshot', `${this._pool}/${fs}@${name}`
+        ]);
+
+        switch (result.status) {
+
+            case 1:
+                msg = 'Snapshot all ready exists.';
+                throw new ExistsError(msg);
+                break;
+
+            case 2:
+                msg = 'Invalid command line options were specified.';
+                throw new CommandError(msg);
+                break;
+
+        }
+
+    }
+
+    clone(fs, snap, newFs) {
+
+        let result = spawnSync('zfs', [
+            'clone', `${this._pool}/${fs}@${snap}`, `${this._pool}/${newFs}`
         ]);
 
         return result.status ? false : true;
