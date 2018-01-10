@@ -6,26 +6,62 @@ const ExecutionError = require('../libs/Errors/execution-error.js');
 
 class Pkg {
 
-    constructor(jailName, packages = [], regex = false) {
+    constructor(packages) {
 
-        this._jailName = jailName;
+        this._output = null;
         this._packages = packages;
-        this._regex = regex;
+        this._regex = false;
+        this._chroot = '/';
+
+    }
+
+    chroot(path) {
+
+        this._chroot = path;
+        return this;
+
+    }
+
+    regex(value) {
+
+        this._regex = value;
+        return this;
+
+    }
+
+    output(value) {
+
+        this._output = value;
+        return this;
 
     }
 
     async run() {
 
-        let log = logsPool.get(this._jailName);
-        let argv = ['-j', this._jailName, 'install', '-y'];
+        let code = 0;
+        let argv = [this._chroot, 'pkg', 'install', '-y'];
 
         if (this._regex) argv.push('-x');
 
-        let child = spawn('pkg', argv.concat(this._packages), {
+        let child = spawn('chroot', argv.concat(this._packages), {
             stdio: ['ignore', 'pipe', 'pipe']
         });
 
-        let { code } = await log.fromProcess(child);
+        if (this._output !== null) {
+
+            code = (await this._output.fromProcess(child)).code;
+
+        } else {
+
+            code = await new Promise((res, rej) => {
+
+                child.on('exit', (code, signal) => {
+                    res(code);
+                });
+
+            });
+
+        }
 
         if (code !== 0)
             throw new ExecutionError('Error execution pkg.');

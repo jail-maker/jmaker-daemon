@@ -10,7 +10,6 @@ class ZfsStorage {
 
         this._pool = pool;
         this._name = name;
-        this._new = false;
         this._zfs = new Zfs(pool);
         this._path = '';
 
@@ -20,20 +19,8 @@ class ZfsStorage {
 
     _create() {
 
-        let zfs = this._zfs;
-
-        try {
-
-            zfs.create(this._name);
-            this._new = true;
-
-        } catch (e) {
-
-            if (e.code !== 'EEXIST') { throw e; }
-
-        }
-
-        this._path = zfs.get(this._name, 'mountpoint');
+        this._zfs.create(this._name);
+        this._path = this._zfs.get(this._name, 'mountpoint');
 
     }
 
