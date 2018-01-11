@@ -14,10 +14,12 @@ const dataJails = require('../libs/data-jails.js');
 const FolderStorage = require('../libs/folder-storage.js');
 const ZfsStorage = require('../libs/zfs-storage.js');
 const Zfs = require('../libs/zfs.js');
+const ZfsLayers = require('../libs/zfs-layers.js');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
 const recorderPool = require('../libs/recorder-pool.js');
+const RawArgument = require('../libs/raw-argument.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
@@ -44,6 +46,7 @@ async function start(configBody) {
 
         await log.info('checking base... ');
         let storage = new ZfsStorage(config.zfsPool, configBody.base);
+        storage.create();
         await log.notice('done\n');
 
         await log.info('fetching base... ');
@@ -63,7 +66,11 @@ async function start(configBody) {
             cwd: storage.getPath(),
             sync: true,
         });
+
+        fs.unlinkSync(archive);
         await log.notice('done\n');
+
+        zfs.snapshot(configBody.base, 'jmaker');
 
     } catch(e) {
 
@@ -74,31 +81,32 @@ async function start(configBody) {
 
         }
 
-    }
-
-    process.exit();
-
-    // configBody.setPath(storage.getPath())
-    // if (configBody.quota) storage.setQuota(configBody.quota);
-
-    zfs.snapshot(configBody.base, 'jmaker');
-
-    if (config.resolvSync) {
-
-        await log.info('resolv.conf sync... ');
-        zfs.clone(configBody.base, 'jmaker', sha256(`${i} resolv ${configBody.jailName}`));
-        fs.copyFileSync('/etc/resolv.conf', `${configBody.path}/etc/resolv.conf`);
-        zfs.snapshot(configBody.base, 'jmaker');
         await log.notice('done\n');
 
     }
 
-    await log.info('mounting... ');
+    let layers = new ZfsLayers(configBody.base);
 
-    let mounts = new Mounts(configBody.mounts, configBody.path);
-    await recorder.run(mounts);
+    // configBody.setPath(storage.getPath())
+    // if (configBody.quota) storage.setQuota(configBody.quota);
 
-    await log.notice('done\n');
+    if (config.resolvSync) {
+
+        await log.info('resolv.conf sync... ');
+
+        let name = `resolv ${configBody.jailName}`;
+        await layers.create(name, async storage => {
+
+            fs.copyFileSync(
+                '/etc/resolv.conf',
+                `${storage.getPath()}/etc/resolv.conf`
+            );
+
+        });
+
+        await log.notice('done\n');
+
+    }
 
     await log.info('rctl... ');
 
@@ -111,22 +119,32 @@ async function start(configBody) {
 
     if (configBody.pkg.length) {
 
-        let pkg = new Pkg(configBody.pkg);
-        pkg.output(log);
-        pkg.chroot(configBody.path);
+        let name = `${configBody.pkg.join(' ')} ${configBody.jailName}`;
+        await layers.create(name, async storage => {
 
-        await recorder.run(pkg);
+            let pkg = new Pkg(configBody.pkg);
+            pkg.output(log);
+            pkg.chroot(storage.getPath());
+
+            await recorder.run(pkg);
+
+        });
 
     }
 
     if (configBody.pkgRegex.length) {
 
-        let pkg = new Pkg(configBody.pkgRegex);
-        pkg.output(log);
-        pkg.chroot(configBody.path);
-        pkg.regex(true);
+        let name = `${configBody.pkgRegex.join(' ')} ${configBody.jailName}`;
+        await layers.create(name, async storage => {
 
-        await recorder.run(pkg);
+            let pkg = new Pkg(configBody.pkgRegex);
+            pkg.output(log);
+            pkg.chroot(storage.getPath());
+            pkg.regex(true);
+
+            await recorder.run(pkg);
+
+        });
 
     }
 
@@ -134,52 +152,65 @@ async function start(configBody) {
 
     let jail = {};
 
-    {
+    await layers.create(new RawArgument(configBody.jailName), async storage => {
 
-        let call = {
-            run: _ => {
+        configBody.setPath(storage.getPath());
 
-                jail = new Jail(configBody);
-                dataJails.add(jail);
+        await log.info('mounting... ');
 
-            },
-            rollback: _ => {
+        let mounts = new Mounts(configBody.mounts, configBody.path);
+        await recorder.run(mounts);
 
-                dataJails.unset(configBody.jailName);
+        await log.notice('done\n');
 
+
+        {
+
+            let call = {
+                run: _ => {
+
+                    jail = new Jail(configBody);
+                    dataJails.add(jail);
+
+                },
+                rollback: _ => {
+
+                    dataJails.unset(configBody.jailName);
+
+                }
             }
+
+            await recorder.run(call);
+
         }
 
-        await recorder.run(call);
+        let configObj = jail.configFileObj;
 
-    }
+        {
 
-    let configObj = jail.configFileObj;
+            let call = {
+                run: _ => {
 
-    {
+                    configObj
+                    // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
+                        .pipe(autoIface.pipeRule.bind(autoIface))
+                        .pipe(autoIp.pipeRule.bind(autoIp))
+                        .pipe(configObj.out.bind(configObj));
 
-        let call = {
-            run: _ => {
+                },
+                rollback: _ => {}
+            };
 
-                configObj
-                // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
-                    .pipe(autoIface.pipeRule.bind(autoIface))
-                    .pipe(autoIp.pipeRule.bind(autoIp))
-                    .pipe(configObj.out.bind(configObj));
+            await recorder.run(call);
 
-            },
-            rollback: _ => {}
-        };
+        }
 
-        await recorder.run(call);
+        await log.info(configObj.toString() + '\n');
+        await log.notice('jail starting...\n');
+        await recorder.run(jail);
+        await log.notice('done\n');
 
-    }
-
-    await log.info(configObj.toString() + '\n');
-
-    await log.notice('jail starting...\n');
-    await recorder.run(jail);
-    await log.notice('done\n');
+    }, false);
 
     if (configBody.cpus) {
 

@@ -11,16 +11,12 @@ class ZfsStorage {
         this._pool = pool;
         this._name = name;
         this._zfs = new Zfs(pool);
-        this._path = '';
-
-        this._create();
 
     }
 
-    _create() {
+    create() {
 
         this._zfs.create(this._name);
-        this._path = this._zfs.get(this._name, 'mountpoint');
 
     }
 
@@ -30,7 +26,11 @@ class ZfsStorage {
 
     }
 
-    getPath() { return this._path; }
+    getPath() {
+
+        return this._zfs.get(this._name, 'mountpoint');
+
+    }
 
     isEmpty() {
 

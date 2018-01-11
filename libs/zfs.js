@@ -78,6 +78,8 @@ class Zfs {
             'snapshot', `${this._pool}/${fs}@${name}`
         ]);
 
+        let msg = '';
+
         switch (result.status) {
 
             case 1:
@@ -121,6 +123,16 @@ class Zfs {
         ]);
 
         return result.status ? false : true;
+
+    }
+
+    has(name) {
+
+        let result = spawnSync('zfs', [
+            'list', '-o', 'name', '-H', `${this._pool}/${name}`
+        ]);
+
+        return (result.status === 0) ? true : false;
 
     }
 

@@ -44,7 +44,10 @@ class Pkg {
         if (this._regex) argv.push('-x');
 
         let child = spawn('chroot', argv.concat(this._packages), {
-            stdio: ['ignore', 'pipe', 'pipe']
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env: {
+                ASSUME_ALWAYS_YES: 'yes',
+            }
         });
 
         if (this._output !== null) {
