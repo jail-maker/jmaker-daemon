@@ -19,7 +19,7 @@ class Mounts {
         this._mounts.forEach(points => {
 
             let [src, dst] = points;
-            dst = path.join(this._dstPrefix, dst);
+            dst = path.join(this._dstPrefix, path.resolve(dst));
 
             try {
 

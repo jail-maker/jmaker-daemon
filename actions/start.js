@@ -14,7 +14,7 @@ const dataJails = require('../libs/data-jails.js');
 const FolderStorage = require('../libs/folder-storage.js');
 const ZfsStorage = require('../libs/zfs-storage.js');
 const Zfs = require('../libs/zfs.js');
-const ZfsLayers = require('../libs/zfs-layers.js');
+const zfsLayersPool = require('../libs/zfs-layers-pool.js');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
@@ -28,9 +28,10 @@ const autoIp = require('../modules/auto-ip.js');
 const Mounts = require('../modules/mounts.js');
 const Cpuset = require('../modules/cpuset.js');
 const Pkg = require('../modules/pkg.js');
+const JPreStart = require('../modules/j-prestart.js');
 const JPostStart = require('../modules/j-poststart.js');
-const HPostStart = require('../modules/h-poststart.js');
 const Hosts = require('../modules/hosts.js');
+const ModCopy = require('../modules/copy.js');
 
 const Recorder = require('../libs/recorder.js');
 
@@ -85,7 +86,7 @@ async function start(configBody) {
 
     }
 
-    let layers = new ZfsLayers(configBody.base);
+    let layers = zfsLayersPool.create(configBody.jailName, configBody.base);
 
     // configBody.setPath(storage.getPath())
     // if (configBody.quota) storage.setQuota(configBody.quota);
@@ -150,19 +151,26 @@ async function start(configBody) {
 
     await log.notice('done\n');
 
+    await log.info('copy... ');
+
+    let modCopy = new ModCopy(configBody.jailName, configBody.copy);
+    await recorder.run(modCopy);
+
+    await log.notice('done\n');
+
+    await log.notice('j-prestart...\n');
+
+    let jPreStart = new JPreStart(configBody.jailName, configBody.jPreStart);
+    await recorder.run(jPreStart);
+
+    await log.notice('done\n');
+
     let jail = {};
 
     await layers.create(new RawArgument(configBody.jailName), async storage => {
 
+        if (configBody.quota) storage.setQuota(configBody.quota);
         configBody.setPath(storage.getPath());
-
-        await log.info('mounting... ');
-
-        let mounts = new Mounts(configBody.mounts, configBody.path);
-        await recorder.run(mounts);
-
-        await log.notice('done\n');
-
 
         {
 
@@ -212,6 +220,13 @@ async function start(configBody) {
 
     }, false);
 
+    await log.info('mounting... ');
+
+    let mounts = new Mounts(configBody.mounts, configBody.path);
+    await recorder.run(mounts);
+
+    await log.notice('done\n');
+
     if (configBody.cpus) {
 
         let cpus = parseInt(configBody.cpus);
@@ -247,13 +262,6 @@ async function start(configBody) {
 
     let jPostStart = new JPostStart(configBody.jailName, configBody.jPostStart);
     await recorder.run(jPostStart);
-
-    await log.notice('done\n');
-
-    await log.notice('h-poststart...\n');
-
-    let hPostStart = new HPostStart(configBody.jailName, configBody.hPostStart);
-    await recorder.run(hPostStart);
 
     await log.notice('done\n');
 

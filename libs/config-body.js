@@ -18,8 +18,9 @@ class ConfigBody {
         this.cpuset = this._extract('cpuset');
         this.mounts = this._extract('mounts');
         this.jPostStart = this._extract('exec.j-poststart');
-        this.hPostStart = this._extract('exec.h-poststart');
+        this.jPreStart = this._extract('exec.j-prestart');
         this.quota = this._extract('quota');
+        this.copy = this._extract('copy');
 
         this.setPath('');
 
