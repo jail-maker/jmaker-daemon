@@ -13,7 +13,7 @@ class ZfsLayersPool {
 
     create(name, layer) {
 
-        let layers = new ZfsLayers(name);
+        let layers = new ZfsLayers(layer);
         this._pool[name] = layers;
 
         return this._pool[name];

@@ -25,7 +25,9 @@ class Copy {
 
         for (let i = 0; i != copys.length; i++) {
 
-            await layers.create(copys[i].join(' '), async storage => {
+            let name = `${copys[i].join(' ')} ${this._jailName}`;
+
+            await layers.create(name, async storage => {
 
                 let [src, dst] = copys[i];
                 dst = path.join(storage.getPath(), path.resolve(dst));
