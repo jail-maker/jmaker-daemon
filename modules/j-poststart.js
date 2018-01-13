@@ -3,19 +3,9 @@
 const { spawn, exec } = require('child_process');
 const logsPool = require('../libs/logs-pool.js');
 const ExecutionError = require('../libs/Errors/execution-error.js');
+const ExecAbstract = require('../libs/exec-abstract.js');
 
-class JPostStart {
-
-    constructor(jailName, commands = [], env = {}) {
-
-        if (!Array.prototype.isPrototypeOf(commands))
-            commands = [commands];
-
-        this._jailName = jailName;
-        this._commands = commands;
-        this._env = env;
-
-    }
+class JPostStart extends ExecAbstract {
 
     async run() {
 
@@ -24,10 +14,14 @@ class JPostStart {
 
         for (let i = 0; i != commands.length; i++) {
 
-            let command = `/usr/sbin/jexec ${this._jailName} ${commands[i]}`;
+            let cmdObj = this._normalizeCmd(commands[i]);
+            let env = Object.assign(this._env, cmdObj.env);
+
+            let command = `/usr/sbin/jexec ${this._jailName} ${cmdObj.cmd}`;
             let child = exec(command, {
                 stdio: ['ignore', 'pipe', 'pipe'],
-                env: this._env,
+                env: env,
+                shell: true,
             });
 
             let { code } = await log.fromProcess(child);

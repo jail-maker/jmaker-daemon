@@ -4,19 +4,9 @@ const { spawn, exec } = require('child_process');
 const logsPool = require('../libs/logs-pool.js');
 const ExecutionError = require('../libs/Errors/execution-error.js');
 const zfsLayersPool = require('../libs/zfs-layers-pool.js');
+const ExecAbstract = require('../libs/exec-abstract.js');
 
-class JPreStart {
-
-    constructor(jailName, commands = [], env = {}) {
-
-        if (!Array.prototype.isPrototypeOf(commands))
-            commands = [commands];
-
-        this._jailName = jailName;
-        this._commands = commands;
-        this._env = env;
-
-    }
+class JPreStart extends ExecAbstract {
 
     async run() {
 
@@ -26,12 +16,16 @@ class JPreStart {
 
         for (let i = 0; i != commands.length; i++) {
 
-            await layers.create(commands[i], async storage => {
+            let cmdObj = this._normalizeCmd(commands[i]);
+            let env = Object.assign(this._env, cmdObj.env);
 
-                let command = `chroot ${storage.getPath()} ${commands[i]}`;
+            await layers.create(cmdObj.cmd, async storage => {
+
+                let command = `chroot ${storage.getPath()} ${cmdObj.cmd}`;
                 let child = exec(command, {
                     stdio: ['ignore', 'pipe', 'pipe'],
-                    env: this._env,
+                    env: env,
+                    shell: true,
                 });
 
                 let { code } = await log.fromProcess(child);
