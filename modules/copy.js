@@ -29,6 +29,9 @@ class Copy {
 
             await layers.create(name, async storage => {
 
+                if (typeof(copys[i]) === 'string') 
+                    copys[i] = [copys[i], copys[i]];
+
                 let [src, dst] = copys[i];
                 dst = path.join(storage.getPath(), path.resolve(dst));
 
