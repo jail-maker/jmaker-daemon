@@ -65,7 +65,7 @@ class Zfs {
         let name = (snap !== null) ? `${fs}@${snap}` : fs;
 
         let result = spawnSync('zfs', [
-            'destroy', '-R', `${this._pool}/${name}`
+            'destroy', '-R', '-f', `${this._pool}/${name}`
         ]);
 
         return result.status ? false : true;

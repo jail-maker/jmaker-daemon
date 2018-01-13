@@ -7,13 +7,14 @@ const zfsLayersPool = require('../libs/zfs-layers-pool.js');
 
 class JPreStart {
 
-    constructor(jailName, commands = []) {
+    constructor(jailName, commands = [], env = {}) {
 
         if (!Array.prototype.isPrototypeOf(commands))
             commands = [commands];
 
         this._jailName = jailName;
         this._commands = commands;
+        this._env = env;
 
     }
 
@@ -29,7 +30,8 @@ class JPreStart {
 
                 let command = `chroot ${storage.getPath()} ${commands[i]}`;
                 let child = exec(command, {
-                    stdio: ['ignore', 'pipe', 'pipe']
+                    stdio: ['ignore', 'pipe', 'pipe'],
+                    env: this._env,
                 });
 
                 let { code } = await log.fromProcess(child);

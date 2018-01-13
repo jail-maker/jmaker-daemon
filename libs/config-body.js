@@ -21,6 +21,7 @@ class ConfigBody {
         this.jPreStart = this._extract('exec.j-prestart');
         this.quota = this._extract('quota');
         this.copy = this._extract('copy');
+        this.env = this._extract('env');
 
         this.setPath('');
 

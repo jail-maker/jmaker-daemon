@@ -88,9 +88,6 @@ async function start(configBody) {
 
     let layers = zfsLayersPool.create(configBody.jailName, configBody.base);
 
-    // configBody.setPath(storage.getPath())
-    // if (configBody.quota) storage.setQuota(configBody.quota);
-
     if (config.resolvSync) {
 
         await log.info('resolv.conf sync... ');
@@ -160,14 +157,20 @@ async function start(configBody) {
 
     await log.notice('j-prestart...\n');
 
-    let jPreStart = new JPreStart(configBody.jailName, configBody.jPreStart);
+    let jPreStart = new JPreStart(
+        configBody.jailName,
+        configBody.jPreStart,
+        configBody.env
+    );
     await recorder.run(jPreStart);
 
     await log.notice('done\n');
 
     let jail = {};
 
-    await layers.create(new RawArgument(configBody.jailName), async storage => {
+    await layers.create(
+        new RawArgument(configBody.jailName),
+        async storage => {
 
         if (configBody.quota) storage.setQuota(configBody.quota);
         configBody.setPath(storage.getPath());
@@ -260,7 +263,11 @@ async function start(configBody) {
 
     await log.notice('j-poststart...\n');
 
-    let jPostStart = new JPostStart(configBody.jailName, configBody.jPostStart);
+    let jPostStart = new JPostStart(
+        configBody.jailName,
+        configBody.jPostStart,
+        configBody.env
+    );
     await recorder.run(jPostStart);
 
     await log.notice('done\n');

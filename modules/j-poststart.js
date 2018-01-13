@@ -6,13 +6,14 @@ const ExecutionError = require('../libs/Errors/execution-error.js');
 
 class JPostStart {
 
-    constructor(jailName, commands = []) {
+    constructor(jailName, commands = [], env = {}) {
 
         if (!Array.prototype.isPrototypeOf(commands))
             commands = [commands];
 
         this._jailName = jailName;
         this._commands = commands;
+        this._env = env;
 
     }
 
@@ -25,7 +26,8 @@ class JPostStart {
 
             let command = `/usr/sbin/jexec ${this._jailName} ${commands[i]}`;
             let child = exec(command, {
-                stdio: ['ignore', 'pipe', 'pipe']
+                stdio: ['ignore', 'pipe', 'pipe'],
+                env: this._env,
             });
 
             let { code } = await log.fromProcess(child);
