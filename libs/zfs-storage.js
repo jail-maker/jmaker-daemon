@@ -32,6 +32,12 @@ class ZfsStorage {
 
     }
 
+    getName() {
+
+        return this._name;
+
+    }
+
     isEmpty() {
 
         let result = fs.readdirSync(this._path);

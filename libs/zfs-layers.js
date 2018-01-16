@@ -33,6 +33,16 @@ class ZfsLayers {
         if (!cacheable && zfs.has(name)) zfs.destroy(name);
         if (!zfs.has(name)) {
 
+            try {
+
+                zfs.snapshot(this._current, 'jmaker');
+
+            } catch (error) {
+
+                if (error.name !== "ExistsError") throw error;
+
+            }
+
             zfs.clone(this._current, 'jmaker', name);
             let storage = new ZfsStorage(config.zfsPool, name);
 
@@ -47,7 +57,7 @@ class ZfsLayers {
 
             }
 
-            zfs.snapshot(name, 'jmaker');
+            // zfs.snapshot(name, 'jmaker');
 
         }
 

@@ -22,6 +22,7 @@ class ConfigBody {
         this.quota = this._extract('quota');
         this.copy = this._extract('copy');
         this.env = this._extract('env');
+        this.resolvSync = this._extract('resolv-sync');
 
         this.setPath('');
 

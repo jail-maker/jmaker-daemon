@@ -18,12 +18,26 @@ class ExecAbstract {
         if (typeof(command) === 'string')
             command = {cmd: command, env: {}};
 
-        command = Object.assign({
-            cmd: '',
-            env: {},
-        }, command);
+        command = Object.assign(new Command, command);
 
         return command;
+
+    }
+
+}
+
+class Command {
+
+    constructor() {
+
+        this.cmd = '';
+        this.env = {};
+
+    }
+
+    toString() {
+
+        return JSON.stringify(this);
 
     }
 

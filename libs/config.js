@@ -17,7 +17,6 @@ class Config {
         this.cacheDir = path.resolve(__dirname + '/../cache');
         this.zfsPool = 'jmaker';
         this.zfs = false;
-        this.resolvSync = true;
         this.bases = '';
 
     }

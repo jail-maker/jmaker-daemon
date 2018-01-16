@@ -136,6 +136,28 @@ class Zfs {
 
     }
 
+    list(name) {
+
+        let result = spawnSync('zfs', [
+            'list', '-o', 'name', '-H'
+        ]);
+
+        let pools = result.stdout
+            .toString()
+            .trim()
+            .split(/\n/);
+
+        let match = this._pool.replace(/(\W)/, '\\$1');
+        let exp = new RegExp(`^${match}\\b`);
+
+        return pools.filter(item => {
+
+            return exp.test(item);
+
+        });
+
+    }
+
 }
 
 module.exports = Zfs;
