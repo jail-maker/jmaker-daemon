@@ -16,7 +16,7 @@ class ZfsLayers {
 
     }
 
-    async create(name, call, cacheable = true) {
+    async create(name, call = _ => {}, cacheable = true) {
 
         if (!(name instanceof RawArgument)) {
 
@@ -56,8 +56,6 @@ class ZfsLayers {
                 throw error;
 
             }
-
-            // zfs.snapshot(name, 'jmaker');
 
         }
 

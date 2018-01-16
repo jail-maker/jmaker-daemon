@@ -31,6 +31,7 @@ const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
+const create = require('./actions/create.js');
 const start = require('./actions/start.js');
 const stop = require('./actions/stop.js');
 const sigHandler = require('./actions/sig-handler.js');
@@ -40,9 +41,33 @@ app.use(bodyParser.json());
 process.on('SIGINT', sigHandler);
 process.on('SIGTERM', sigHandler);
 
-app.post('/jails', async (req, res) => {
+app.post('/jails/create', async (res, req) => {
 
-    console.log(req.body);
+    let configBody = new ConfigBody(req.body);
+    let name = configBody.jailName;
+    let log = logsPool.create(name);
+
+    try {
+
+        await log.notice('create...\n');
+        await create(configBody);
+        await log.notice('finish.\n', true);
+
+    } catch (e) {
+
+        await log.crit(`\n${e.toString()}\n`, true);
+        logsPool.delete(name);
+        console.log(e);
+
+    } finally {
+
+        res.send();
+
+    }
+
+});
+
+app.post('/jails/start', async (res, req) => {
 
     let configBody = new ConfigBody(req.body);
     let name = configBody.jailName;
@@ -60,6 +85,42 @@ app.post('/jails', async (req, res) => {
     try {
 
         await log.notice('starting...\n');
+        await start(configBody);
+        await log.notice('finish.\n', true);
+
+    } catch (e) {
+
+        await log.crit(`\n${e.toString()}\n`, true);
+        logsPool.delete(name);
+        console.log(e);
+
+    } finally {
+
+        res.send();
+
+    }
+
+});
+
+app.post('/jails/run', async (res, req) => {
+
+    let configBody = new ConfigBody(req.body);
+    let name = configBody.jailName;
+
+    if (dataJails.has(name)) {
+
+        let msg = `Jail "${name}" already exists.`;
+        res.status(409).send(msg);
+        return;
+
+    }
+
+    let log = logsPool.create(name);
+
+    try {
+
+        await log.notice('starting...\n');
+        await create(configBody);
         await start(configBody);
         await log.notice('finish.\n', true);
 

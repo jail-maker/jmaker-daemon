@@ -39,171 +39,77 @@ async function start(configBody) {
 
     let log = logsPool.get(configBody.jailName);
     let recorder = new Recorder;
-    let zfs = new Zfs(config.zfsPool);
-    let layers = zfsLayersPool.create(configBody.jailName, 'empty');
+    let jail = {};
+    let storage = new ZfsStorage(config.zfsPool, configBody.jailName);
 
-    if (!zfs.has('empty')) zfs.create('empty');
     recorderPool.set(configBody.jailName, recorder);
 
-    // await log.info('checking base... ');
-    if (configBody.base) {
+    if (configBody.resolvSync) {
 
-        await layers.create(configBody.base, async storage => {
+        await log.info('resolv.conf sync... ');
 
-            await log.info('fetching base... ');
-            let archive = `${path.join('/tmp', configBody.base)}.tar`;
-            let result = fetch(`${config.bases}/${configBody.base}.tar`, archive);
+        fs.copyFileSync(
+            '/etc/resolv.conf',
+            `${storage.getPath()}/etc/resolv.conf`
+        );
 
-            if (!result) {
+        await log.notice('done\n');
 
-                throw new Error('error fetching file.');
+    }
+
+    if (configBody.quota) storage.setQuota(configBody.quota);
+    configBody.setPath(storage.getPath());
+
+    {
+
+        let call = {
+            run: _ => {
+
+                jail = new Jail(configBody);
+                dataJails.add(jail);
+
+            },
+            rollback: _ => {
+
+                dataJails.unset(configBody.jailName);
 
             }
-            await log.notice('done\n');
+        }
 
-            await log.info('decompression... ');
-            tar.x({
-                file: archive,
-                cwd: storage.getPath(),
-                sync: true,
-            });
+        await recorder.run(call);
 
-            fs.unlinkSync(archive);
-            await log.notice('done\n');
+    }
 
-        });
+    let configObj = jail.configFileObj;
+
+    {
+
+        let call = {
+            run: _ => {
+
+                configObj
+                // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
+                    .pipe(autoIface.pipeRule.bind(autoIface))
+                    .pipe(autoIp.pipeRule.bind(autoIp))
+                    .pipe(configObj.out.bind(configObj));
+
+            },
+            rollback: _ => {}
+        };
+
+        await recorder.run(call);
 
     }
 
     await log.info('rctl... ');
-
     let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
     await recorder.run(rctlObj);
-
     await log.notice('done\n');
 
-    await log.notice('installing packages...\n');
-
-    if (configBody.pkg.length) {
-
-        let name = `${configBody.pkg.join(' ')} ${configBody.jailName}`;
-        await layers.create(name, async storage => {
-
-            let pkg = new Pkg(configBody.pkg);
-            pkg.output(log);
-            pkg.chroot(storage.getPath());
-
-            await recorder.run(pkg);
-
-        });
-
-    }
-
-    if (configBody.pkgRegex.length) {
-
-        let name = `${configBody.pkgRegex.join(' ')} ${configBody.jailName}`;
-        await layers.create(name, async storage => {
-
-            let pkg = new Pkg(configBody.pkgRegex);
-            pkg.output(log);
-            pkg.chroot(storage.getPath());
-            pkg.regex(true);
-
-            await recorder.run(pkg);
-
-        });
-
-    }
-
+    await log.info(configObj.toString() + '\n');
+    await log.notice('jail starting...\n');
+    await recorder.run(jail);
     await log.notice('done\n');
-
-    await log.info('copy... ');
-
-    let modCopy = new ModCopy(configBody.jailName, configBody.copy);
-    await recorder.run(modCopy);
-
-    await log.notice('done\n');
-
-    await log.notice('j-prestart...\n');
-
-    let jPreStart = new JPreStart(
-        configBody.jailName,
-        configBody.jPreStart,
-        configBody.env
-    );
-    await recorder.run(jPreStart);
-
-    await log.notice('done\n');
-
-    let jail = {};
-
-    await layers.create(
-        new RawArgument(configBody.jailName),
-        async storage => {
-
-            if (configBody.resolvSync) {
-
-                await log.info('resolv.conf sync... ');
-
-                fs.copyFileSync(
-                    '/etc/resolv.conf',
-                    `${storage.getPath()}/etc/resolv.conf`
-                );
-
-                await log.notice('done\n');
-
-            }
-
-            if (configBody.quota) storage.setQuota(configBody.quota);
-            configBody.setPath(storage.getPath());
-
-            {
-
-                let call = {
-                    run: _ => {
-
-                        jail = new Jail(configBody);
-                        dataJails.add(jail);
-
-                    },
-                    rollback: _ => {
-
-                        dataJails.unset(configBody.jailName);
-
-                    }
-                }
-
-                await recorder.run(call);
-
-            }
-
-            let configObj = jail.configFileObj;
-
-            {
-
-                let call = {
-                    run: _ => {
-
-                        configObj
-                        // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
-                            .pipe(autoIface.pipeRule.bind(autoIface))
-                            .pipe(autoIp.pipeRule.bind(autoIp))
-                            .pipe(configObj.out.bind(configObj));
-
-                    },
-                    rollback: _ => {}
-                };
-
-                await recorder.run(call);
-
-            }
-
-            await log.info(configObj.toString() + '\n');
-            await log.notice('jail starting...\n');
-            await recorder.run(jail);
-            await log.notice('done\n');
-
-        }, false);
 
     await log.info('mounting... ');
 
