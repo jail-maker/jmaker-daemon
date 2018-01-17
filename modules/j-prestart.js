@@ -17,23 +17,23 @@ class JPreStart extends ExecAbstract {
         for (let i = 0; i != commands.length; i++) {
 
             let cmdObj = this._normalizeCmd(commands[i]);
-            let env = Object.assign({}, this._env, cmdObj.env);
+            let env = Object.assign({}, process.env, this._env, cmdObj.env);
             let layerName = `${cmdObj.toString()} ${this._jailName}`;
 
             await layers.create(layerName, async storage => {
 
-                let command = `chroot ${storage.getPath()} ${cmdObj.cmd}`;
-                let child = exec(command, {
+                let child = spawn('chroot', [storage.getPath(), `sh -c "${cmdObj.cmd}"`], {
                     stdio: ['ignore', 'pipe', 'pipe'],
                     env: env,
                     shell: true,
+                    cwd: '/',
                 });
 
                 let { code } = await log.fromProcess(child);
 
                 if (code !== 0) {
 
-                    let msg = `Error execution command: ${command} .`;
+                    let msg = `Error execution command: ${cmdObj.cmd} .`;
                     throw new ExecutionError(msg);
 
                 }

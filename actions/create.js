@@ -43,7 +43,7 @@ async function create(configBody) {
     // await log.info('checking base... ');
     if (configBody.base) {
 
-        await layers.create(configBody.base, async storage => {
+        await layers.create(new RawArgument(configBody.base), async storage => {
 
             await log.info('fetching base... ');
             let archive = `${path.join('/tmp', configBody.base)}.tar`;

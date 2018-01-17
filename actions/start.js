@@ -106,17 +106,19 @@ async function start(configBody) {
     await recorder.run(rctlObj);
     await log.notice('done\n');
 
+    await log.info('mounting... ');
+    let mounts = new Mounts(configBody.mounts, configBody.path);
+    await recorder.run(mounts);
+    await log.notice('done\n');
+
     await log.info(configObj.toString() + '\n');
+
     await log.notice('jail starting...\n');
     await recorder.run(jail);
     await log.notice('done\n');
 
-    await log.info('mounting... ');
-
-    let mounts = new Mounts(configBody.mounts, configBody.path);
-    await recorder.run(mounts);
-
-    await log.notice('done\n');
+    let hosts = new Hosts(jail);
+    await recorder.run(hosts);
 
     if (configBody.cpus) {
 
@@ -159,10 +161,6 @@ async function start(configBody) {
     await recorder.run(jPostStart);
 
     await log.notice('done\n');
-
-    let hosts = new Hosts(jail);
-    await recorder.run(hosts);
-
     return;
 
 }

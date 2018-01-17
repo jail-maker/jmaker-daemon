@@ -122,7 +122,7 @@ class IpDHCP extends EventEmitter {
 
                 tmpIface.destroy();
 
-                jail.on('stopEnd', jail => {
+                jail.on('afterStop', jail => {
 
                     ngIface.rmIp4Address(ip4);
 

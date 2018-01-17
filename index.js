@@ -41,8 +41,9 @@ app.use(bodyParser.json());
 process.on('SIGINT', sigHandler);
 process.on('SIGTERM', sigHandler);
 
-app.post('/jails/create', async (res, req) => {
+app.post('/jails/create', async (req, res) => {
 
+    console.log(req.body);
     let configBody = new ConfigBody(req.body);
     let name = configBody.jailName;
     let log = logsPool.create(name);
@@ -67,7 +68,7 @@ app.post('/jails/create', async (res, req) => {
 
 });
 
-app.post('/jails/start', async (res, req) => {
+app.post('/jails/start', async (req, res) => {
 
     let configBody = new ConfigBody(req.body);
     let name = configBody.jailName;
@@ -86,6 +87,7 @@ app.post('/jails/start', async (res, req) => {
 
         await log.notice('starting...\n');
         await start(configBody);
+        await stop(configBody.jailName);
         await log.notice('finish.\n', true);
 
     } catch (e) {
@@ -102,7 +104,7 @@ app.post('/jails/start', async (res, req) => {
 
 });
 
-app.post('/jails/run', async (res, req) => {
+app.post('/jails/run', async (req, res) => {
 
     let configBody = new ConfigBody(req.body);
     let name = configBody.jailName;
@@ -122,6 +124,7 @@ app.post('/jails/run', async (res, req) => {
         await log.notice('starting...\n');
         await create(configBody);
         await start(configBody);
+        await stop(configBody.jailName);
         await log.notice('finish.\n', true);
 
     } catch (e) {
@@ -138,7 +141,7 @@ app.post('/jails/run', async (res, req) => {
 
 });
 
-app.delete('/jails/:name', async (req, res) => {
+app.delete('/jails/:name/stop', async (req, res) => {
 
     let name = req.params.name;
 
