@@ -70,7 +70,7 @@ async function create(configBody) {
 
     if (configBody.pkg.length) {
 
-        let name = `${configBody.pkg.join(' ')} ${configBody.jailName}`;
+        let name = `${configBody.pkg.join(' ')} ${configBody.base}`;
         await layers.create(name, async storage => {
 
             let pkg = new Pkg(configBody.pkg);
@@ -84,7 +84,7 @@ async function create(configBody) {
 
     if (configBody.pkgRegex.length) {
 
-        let name = `${configBody.pkgRegex.join(' ')} ${configBody.jailName}`;
+        let name = `${configBody.pkgRegex.join(' ')} ${configBody.base}`;
         await layers.create(name, async storage => {
 
             let pkg = new Pkg(configBody.pkgRegex);
@@ -117,7 +117,7 @@ async function create(configBody) {
     await jPreStart.run();
     await log.notice('done\n');
 
-    await layers.create(new RawArgument(configBody.jailName));
+    await layers.create(new RawArgument(configBody.jailName), _ => {}, false);
 
     return;
 

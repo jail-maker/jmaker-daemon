@@ -18,9 +18,12 @@ class ZfsLayers {
 
     async create(name, call = _ => {}, cacheable = true) {
 
+        console.log('layer: ' + this._counter + ' << ');
+        this._counter++;
+
         if (!(name instanceof RawArgument)) {
 
-            name = sha256(`${++this._counter} ${name}`);
+            name = sha256(`${this._counter} ${name} ${this._current}`);
 
         } else {
 
