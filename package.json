@@ -19,7 +19,7 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "express": "^4.16.2",
-    "fs-extra": "kolgotko/node-fs-extra#6fa1c43",
+    "fs-extra": "kolgotko/node-fs-extra#067c1cd",
     "ioredis": "^3.2.2",
     "js-sha256": "^0.9.0",
     "js-yaml": "^3.10.0",
