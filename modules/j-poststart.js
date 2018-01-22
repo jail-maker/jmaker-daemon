@@ -25,9 +25,11 @@ class JPostStart extends ExecAbstract {
                 cwd: '/',
             });
 
-            let { code } = await log.fromProcess(child);
+            let result = await log.fromProcess(child);
 
-            if (code !== 0) {
+            if (result.code) {
+
+                console.log(result);
 
                 let msg = `Error execution command: ${command} .`;
                 throw new ExecutionError(msg);

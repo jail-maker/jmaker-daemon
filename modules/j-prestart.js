@@ -37,7 +37,7 @@ class JPreStart extends ExecAbstract {
 
                 umount(storage.getPath() + '/dev', true);
 
-                if (code !== 0) {
+                if (code) {
 
                     let msg = `Error execution command: ${cmdObj.cmd} .`;
                     throw new ExecutionError(msg);
