@@ -26,12 +26,14 @@ class JPreStart extends ExecAbstract {
 
                 mountDevfs(storage.getPath() + '/dev');
 
-                let child = spawn('chroot', [storage.getPath(), `sh -c "${cmdObj.cmd}"`], {
-                    stdio: ['ignore', 'pipe', 'pipe'],
-                    env: env,
-                    shell: true,
-                    cwd: '/',
-                });
+                let child = spawn(
+                    'chroot', [storage.getPath(), "sh", "-c", `${cmdObj.cmd}`], 
+                    {
+                        stdio: ['ignore', 'pipe', 'pipe'],
+                        env: env,
+                        cwd: '/',
+                    }
+                );
 
                 let { code } = await log.fromProcess(child);
 

@@ -39,16 +39,21 @@ class Pkg {
     async run() {
 
         let code = 0;
-        let argv = [this._chroot, 'pkg', 'install', '-y'];
+        let argv = ['pkg', 'install', '-y'];
 
         if (this._regex) argv.push('-x');
+        argv = argv.concat(this._packages);
 
-        let child = spawn('chroot', argv.concat(this._packages), {
-            stdio: ['ignore', 'pipe', 'pipe'],
-            env: {
-                ASSUME_ALWAYS_YES: 'yes',
+        let child = spawn(
+            'chroot',
+            [this._chroot, "sh", "-c", `${argv.join(' ')}`],
+            {
+                stdio: ['ignore', 'pipe', 'pipe'],
+                env: {
+                    ASSUME_ALWAYS_YES: 'yes',
+                }
             }
-        });
+        );
 
         if (this._output !== null) {
 
