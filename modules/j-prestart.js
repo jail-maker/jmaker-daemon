@@ -19,7 +19,7 @@ class JPreStart extends ExecAbstract {
         for (let i = 0; i != commands.length; i++) {
 
             let cmdObj = this._normalizeCmd(commands[i]);
-            let env = Object.assign({}, this._env, cmdObj.env);
+            let env = Object.assign({}, process.env, this._env, cmdObj.env);
             let layerName = `${cmdObj.toString()} ${this._jailName}`;
 
             await layers.create(layerName, async storage => {

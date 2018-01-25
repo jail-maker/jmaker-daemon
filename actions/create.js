@@ -5,7 +5,6 @@ const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const tar = require('tar');
 const sha256 = require('js-sha256').sha256;
 
 const fetch = require('../libs/bsd-fetch.js');
@@ -19,6 +18,7 @@ const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
 const RawArgument = require('../libs/raw-argument.js');
+const decompress = require('../libs/decompress.js');
 
 const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
@@ -46,20 +46,14 @@ async function create(configBody) {
         await layers.create(new RawArgument(configBody.base), async storage => {
 
             await log.info('fetching base... ');
-            let archive = `${path.join('/tmp', configBody.base)}.tar`;
-            let result = fetch(`${config.bases}/${configBody.base}.tar`, archive);
+            let archive = `${path.join('/tmp', configBody.base)}.txz`;
+            let result = fetch(`${config.bases}/${configBody.base}.txz`, archive);
 
             if (!result) throw new Error('error fetching file.');
             await log.notice('done\n');
 
             await log.info('decompression... ');
-            tar.x({
-                file: archive,
-                cwd: storage.getPath(),
-                sync: true,
-            });
-
-            fs.unlinkSync(archive);
+            await decompress(archive, storage.getPath(), true);
             await log.notice('done\n');
 
         });
