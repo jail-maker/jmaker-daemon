@@ -18,6 +18,7 @@
   "homepage": "https://github.com/jail-maker/jmaker-daemon#readme",
   "dependencies": {
     "chalk": "^2.3.0",
+    "connect-multiparty": "^2.1.0",
     "express": "^4.16.2",
     "fs-extra": "kolgotko/node-fs-extra#067c1cd",
     "ioredis": "^3.2.2",

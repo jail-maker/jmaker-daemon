@@ -5,7 +5,6 @@ const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const tar = require('tar');
 const sha256 = require('js-sha256').sha256;
 
 const fetch = require('../libs/bsd-fetch.js');

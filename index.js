@@ -5,12 +5,12 @@
 const { spawnSync } = require('child_process');
 const path = require('path');
 const url = require('url');
-const tar = require('tar');
 const fs = require('fs');
 const http = require('http');
 const express = require('express');
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
+const multiparty = require('connect-multiparty');
 
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
@@ -37,6 +37,7 @@ const stop = require('./actions/stop.js');
 const sigHandler = require('./actions/sig-handler.js');
 
 app.use(bodyParser.json());
+app.use(multiparty());
 
 process.on('SIGINT', sigHandler);
 process.on('SIGTERM', sigHandler);
@@ -44,7 +45,9 @@ process.on('SIGTERM', sigHandler);
 app.post('/jails/create', async (req, res) => {
 
     console.log(req.body);
-    let configBody = new ConfigBody(req.body);
+    console.log(req.files);
+
+    let configBody = new ConfigBody(JSON.parse(req.body.body));
     let name = configBody.jailName;
     let log = logsPool.create(name);
 

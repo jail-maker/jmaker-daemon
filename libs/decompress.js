@@ -19,4 +19,4 @@ module.exports = (archive, dst, remove = false) => {
 
     });
 
-}
+};
