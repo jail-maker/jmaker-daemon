@@ -11,6 +11,7 @@ const express = require('express');
 const WebSocket = require('ws');
 const bodyParser = require('body-parser');
 const multiparty = require('connect-multiparty');
+const reqest = require('request-promise-native');
 
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
@@ -41,6 +42,37 @@ app.use(multiparty());
 
 process.on('SIGINT', sigHandler);
 process.on('SIGTERM', sigHandler);
+
+// { meta: '' } -> POST /context/  -> { id: '222', _links: []}
+// /context/222/data 404
+// POST /context/222/data
+
+// POST file /context/ - > { id: '', meta: '' }
+// {..., context_id: ''} -> POST /jails/create
+
+
+app.get('/images', async (req, res) => {
+
+    res.json({
+        first: {
+            name: 'first',
+            links: { }
+        },
+        second: {
+            name: 'second',
+            links: { }
+        }
+    });
+
+});
+
+app.post('/images/download-from-repo', async (req, res) => {
+
+    let stream = await request(src);
+    let tmpFile
+    stream.pipe(fs.createWriteStream('doodle.png'));
+
+});
 
 app.post('/jails/create', async (req, res) => {
 
