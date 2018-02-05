@@ -11,7 +11,7 @@ module.exports = (archive, dst, remove = false) => {
 
         child.on('exit', (code, signal) => {
 
-            if (remove) fs.unlink(archive);
+            if (remove) fs.unlinkSync(archive);
             if (code <= 0) res({code, signal});
             else rej({code, signal});
 

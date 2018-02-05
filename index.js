@@ -13,16 +13,21 @@ const bodyParser = require('body-parser');
 const multiparty = require('connect-multiparty');
 const reqest = require('request-promise-native');
 
+const Repository = require('./libs/repository.js');
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
 const Rctl = require('./libs/rctl.js');
 const FolderStorage = require('./libs/folder-storage.js');
 const ZfsStorage = require('./libs/zfs-storage.js');
+const ZfsLayers = require('./libs/zfs-layers.js');
+const Zfs = require('./libs/zfs.js');
 const Channel = require('./libs/channel.js');
 const config = require('./libs/config.js');
 const dataJails = require('./libs/data-jails.js');
 const logsPool = require('./libs/logs-pool.js');
 const recorderPool = require('./libs/recorder-pool.js');
+const RawArgument = require('./libs/raw-argument.js');
+const decompress = require('./libs/decompress.js');
 
 const dhcp = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
@@ -66,11 +71,61 @@ app.get('/images', async (req, res) => {
 
 });
 
+app.get('/images/:image', (req, res) => {
+
+    res.status = 404;
+    res.send();
+
+});
+
 app.post('/images/download-from-repo', async (req, res) => {
 
-    let stream = await request(src);
-    let tmpFile
-    stream.pipe(fs.createWriteStream('doodle.png'));
+    let {
+        image,
+        repository = 'localhost'
+    } = req.body;
+
+    let repo = new Repository(repository);
+    let parents = await repo.getParents(image);
+    let zfs = new Zfs(config.zfsPool);
+    let layer = new ZfsLayers('empty');
+
+    for (let i = 0; i < parents.length; i++) {
+
+        let dep = parents[i];
+
+        if (zfs.has(dep.name)) {
+
+            layer = new ZfsLayers(dep.name);
+            continue;
+
+        }
+
+        let meta = await repo.getMeta(dep.name);
+        let archive = `/tmp/${meta.data.fileName}`;
+
+        repo.downloadImage(dep.name, archive);
+
+        await layer.create(new RawArgument(dep.name), async (storage) => {
+
+            await decompress(archive, storage.getPath(), true);
+
+        });
+
+    }
+
+    let meta = await repo.getMeta(image);
+    let archive = `/tmp/${meta.data.fileName}`;
+
+    repo.downloadImage(image, archive);
+
+    await layer.create(new RawArgument(image), async (storage) => {
+
+        await decompress(archive, storage.getPath(), true);
+
+    });
+
+    res.send();
 
 });
 
