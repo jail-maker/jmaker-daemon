@@ -158,6 +158,32 @@ class Zfs {
 
     }
 
+    diff(snapshot, fs) {
+
+        let result = spawnSync('zfs', [
+            'diff', snapshot, fs
+        ]);
+
+        let msg = '';
+
+        switch (result.status) {
+
+            case 1:
+                msg = 'Error execution command "zfs diff".';
+                throw new ExistsError(msg);
+                break;
+
+            case 2:
+                msg = 'Invalid command line options were specified.';
+                throw new CommandError(msg);
+                break;
+
+        }
+
+        return result.stdout;
+
+    }
+
 }
 
 module.exports = Zfs;

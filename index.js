@@ -28,6 +28,7 @@ const logsPool = require('./libs/logs-pool.js');
 const recorderPool = require('./libs/recorder-pool.js');
 const RawArgument = require('./libs/raw-argument.js');
 const decompress = require('./libs/decompress.js');
+const compress = require('./libs/compress.js');
 
 const dhcp = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
@@ -74,6 +75,21 @@ app.get('/images', async (req, res) => {
 app.get('/images/:image', (req, res) => {
 
     res.status = 404;
+    res.send();
+
+});
+
+app.post('/images/push-to-repo', async (req, res) => {
+
+    console.log('push');
+    let {
+        image,
+        repository = 'localhost'
+    } = req.body;
+
+    let repo = new Repository(repository);
+
+    repo.push(image);
     res.send();
 
 });
