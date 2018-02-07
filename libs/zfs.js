@@ -136,7 +136,7 @@ class Zfs {
 
     }
 
-    list(name) {
+    list() {
 
         let result = spawnSync('zfs', [
             'list', '-o', 'name', '-H'
@@ -161,24 +161,12 @@ class Zfs {
     diff(snapshot, fs) {
 
         let result = spawnSync('zfs', [
-            'diff', snapshot, fs
+            'diff', `${this._pool}/${snapshot}`, `${this._pool}/${fs}`
         ]);
 
         let msg = '';
 
-        switch (result.status) {
-
-            case 1:
-                msg = 'Error execution command "zfs diff".';
-                throw new ExistsError(msg);
-                break;
-
-            case 2:
-                msg = 'Invalid command line options were specified.';
-                throw new CommandError(msg);
-                break;
-
-        }
+        if (result.status !== 0) throw new CommandError(msg);
 
         return result.stdout;
 
