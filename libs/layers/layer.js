@@ -43,7 +43,7 @@ class Layer {
         diff = diff.toString().trim('\n');
 
         let lines = diff.split('\n');
-        let exp = /^([RM+])\s+(.+)$/miu;
+        let exp = /^([RM+])\s+([F@])\s+(.+)$/miu;
         let mvExp = /^(.+)\s->\s(.+)$/miu;
 
         {
@@ -57,7 +57,8 @@ class Layer {
             if (!matches) return acc;
 
             let action = matches[1];
-            let file = matches[2];
+            let type = matches[2];
+            let file = matches[3];
 
             if (file === '/') return acc;
 
@@ -93,7 +94,7 @@ class Layer {
         let diff = buffer.toString();
 
         let lines = diff.split('\n');
-        let exp = /^([R-])\s+(.+)$/miu;
+        let exp = /^([R-])\s+([BCF/@=])\s+(.+)$/miu;
         let mvExp = /^(.+)\s->\s(.+)$/miu;
 
         lines.forEach(line => {
@@ -102,7 +103,8 @@ class Layer {
             if (!matches) return;
 
             let action = matches[1];
-            let file = matches[2];
+            let type = matches[2];
+            let file = matches[3];
 
             if (action === 'R') file = file.match(mvExp)[1];
 

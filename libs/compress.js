@@ -24,6 +24,10 @@ module.exports = (src, archive, options) => {
 
     return new Promise((res, rej) => {
 
+        console.log([
+            ...cd, ...exArg, '-ca', '-f', archive, ...src
+        ].join(' '));
+
         let child = spawn('tar', [
             ...cd, ...exArg, '-ca', '-f', archive, ...src
         ]);

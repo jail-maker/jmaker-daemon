@@ -6,6 +6,7 @@ const fetch = require('./bsd-fetch.js');
 const compress = require('./compress.js');
 const ZfsStorage = require('./zfs-storage.js');
 const config = require('./config.js');
+const Layers = require('./layers');
 
 const API_VERSION = 'v1';
 
@@ -38,15 +39,26 @@ class Repository {
 
     }
 
-    async getImage(image) { }
+    async hasImage(image) {
+
+        try {
+
+            await request(`${this._origin}/images/${image}`);
+            return true;
+
+        } catch (error) {
+
+            return false;
+
+        }
+
+    }
 
     async push(image) {
 
-        console.log(image);
-
-        let zfsStorage = new ZfsStorage(config.zfsPool, image);
-
-        await compress(zfsStorage.getPath(), `/tmp/${image}.txz`);
+        let layers = new Layers(config.zfsPool);
+        let layer = layers.get(image);
+        let archive = await layer.compress();
 
         try {
 
@@ -58,13 +70,12 @@ class Repository {
                     name: image,
                     maintainer: '-',
                     version: '-',
-                    parent: null,
+                    parent: layer.parent,
                 },
             });
 
         } catch (error) {
 
-            console.log(error.statusCode);
             if (error.statusCode !== 409) throw error;
 
         }
@@ -73,7 +84,7 @@ class Repository {
             method: 'PUT',
             uri:  `${this._origin}/images/${image}/data`,
             formData: {
-                data: fs.createReadStream(`/tmp/${image}.txz`),
+                data: fs.createReadStream(archive),
             }
         });
 

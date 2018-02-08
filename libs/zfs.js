@@ -161,7 +161,7 @@ class Zfs {
     diff(snapshot, fs) {
 
         let result = spawnSync('zfs', [
-            'diff', `${this._pool}/${snapshot}`, `${this._pool}/${fs}`
+            'diff', '-F', `${this._pool}/${snapshot}`, `${this._pool}/${fs}`
         ]);
 
         let msg = '';
