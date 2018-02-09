@@ -5,6 +5,7 @@ const path = require('path');
 const Zfs = require('../zfs.js');
 const compress = require('../compress.js');
 const decompress = require('../decompress.js');
+const foldesDiff = require('../folders-diff.js');
 
 function escapeString(str) {
 
@@ -39,43 +40,29 @@ class Layer {
 
         }
 
-        let diff = zfs.diff(`${this.name}@first`, `${this.name}@last`);
+        let diff = await foldesDiff(`${this.path}/.zfs/snapshot/first`, `${this.path}/.zfs/snapshot/last`)
         diff = diff.toString().trim('\n');
 
         let lines = diff.split('\n');
-        let exp = /^([RM+])\s+([F@])\s+(.+)$/miu;
-        let mvExp = /^(.+)\s->\s(.+)$/miu;
-
-        {
-            let exp = new RegExp(escapeString(this.path), 'gmu');
-            lines = lines.map(line => line.replace(exp, ''));
-        }
+        let exp = /^\+\s*([^+].*)$/miu;
 
         let files = lines.reduce((acc, line) => {
 
             let matches = line.match(exp);
             if (!matches) return acc;
-
-            let action = matches[1];
-            let type = matches[2];
-            let file = matches[3];
-
-            if (file === '/') return acc;
-
-            if (action === 'R') file = file.match(mvExp)[2];
-            file = file.replace(/^\//, '');
+            let file = matches[1];
 
             acc.push(file);
             return acc;
 
         }, []);
 
-        files.push('.diff');
+        files.push('./.diff');
 
         let archive = '/tmp/jmaker-image.txz';
         let diffFile = path.join(this.path, '.diff');
 
-        fs.writeFileSync(diffFile, lines.join('\n'));
+        fs.writeFileSync(diffFile, diff);
 
         await compress(files, archive, {
             cd: this.path
@@ -94,24 +81,18 @@ class Layer {
         let diff = buffer.toString();
 
         let lines = diff.split('\n');
-        let exp = /^([R-])\s+([BCF/@=])\s+(.+)$/miu;
-        let mvExp = /^(.+)\s->\s(.+)$/miu;
+        let exp = /^-\s*([^-].*)$/miu;
 
         lines.forEach(line => {
 
             let matches = line.match(exp);
             if (!matches) return;
 
-            let action = matches[1];
-            let type = matches[2];
-            let file = matches[3];
-
-            if (action === 'R') file = file.match(mvExp)[1];
+            let file = matches[1];
 
             fs.unlinkSync(path.join(this.path, file));
 
         });
-
 
     }
 
