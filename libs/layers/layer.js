@@ -40,29 +40,16 @@ class Layer {
 
         }
 
-        let diff = await foldesDiff(`${this.path}/.zfs/snapshot/first`, `${this.path}/.zfs/snapshot/last`)
-        diff = diff.toString().trim('\n');
+        let snapDir = path.join(this.path, '/.zfs/snapshot');
+        let diff = await foldesDiff(`${snapDir}/first`, `${snapDir}/last`);
 
-        let lines = diff.split('\n');
-        let exp = /^\+\s*([^+].*)$/miu;
-
-        let files = lines.reduce((acc, line) => {
-
-            let matches = line.match(exp);
-            if (!matches) return acc;
-            let file = matches[1];
-
-            acc.push(file);
-            return acc;
-
-        }, []);
-
+        let files = diff.files(['A', 'C']);
         files.push('./.diff');
 
         let archive = '/tmp/jmaker-image.txz';
         let diffFile = path.join(this.path, '.diff');
 
-        fs.writeFileSync(diffFile, diff);
+        fs.writeFileSync(diffFile, diff.toString());
 
         await compress(files, archive, {
             cd: this.path
@@ -81,16 +68,15 @@ class Layer {
         let diff = buffer.toString();
 
         let lines = diff.split('\n');
-        let exp = /^-\s*([^-].*)$/miu;
+        let exp = /^D\s(.+)$/miu;
 
         lines.forEach(line => {
 
             let matches = line.match(exp);
             if (!matches) return;
 
-            let file = matches[1];
-
-            fs.unlinkSync(path.join(this.path, file));
+            let file = path.join(this.path, matches[1]);
+            fs.unlinkSync(file);
 
         });
 

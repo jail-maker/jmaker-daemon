@@ -8,12 +8,20 @@ module.exports = (archive, dst, remove = false) => {
     return new Promise((res, rej) => {
 
         let child = spawn('tar', ['-xf', archive, '-C', dst]);
+        let rejData = '';
+
+        child.stderr.on('data', data => rejData += data);
 
         child.on('exit', (code, signal) => {
 
             if (remove) fs.unlinkSync(archive);
-            if (code <= 0) res({code, signal});
-            else rej({code, signal});
+            if (code <= 0) res();
+            else {
+
+                let error = new Error(rejData);
+                rej(error);
+
+            }
 
         });
 

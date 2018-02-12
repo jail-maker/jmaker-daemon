@@ -25,13 +25,25 @@ module.exports = (src, archive, options) => {
     return new Promise((res, rej) => {
 
         let child = spawn('tar', [
-            ...cd, ...exArg, '-ca', '-f', archive, ...src
+            ...cd, ...exArg, '-ca', '-f', archive, '-T', '-'
         ]);
+
+        child.stdin.write(src.join('\n'));
+        child.stdin.end();
+
+        let rejData = '';
+
+        child.stderr.on('data', data => rejData += data);
 
         child.on('exit', (code, signal) => {
 
-            if (code <= 0) res({code, signal});
-            else rej({code, signal});
+            if (code <= 0) res();
+            else {
+
+                let error = new Error(rejData);
+                rej(error);
+
+            }
 
         });
 
