@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const uniqid = require('uniqid');
 const Zfs = require('../zfs.js');
 const compress = require('../compress.js');
 const decompress = require('../decompress.js');
@@ -46,7 +47,7 @@ class Layer {
         let files = diff.files(['A', 'C']);
         files.push('./.diff');
 
-        let archive = '/tmp/jmaker-image.txz';
+        let archive = `/tmp/jmaker-image-${uniqid()}.txz`;
         let diffFile = path.join(this.path, '.diff');
 
         fs.writeFileSync(diffFile, diff.toString());
@@ -54,6 +55,8 @@ class Layer {
         await compress(files, archive, {
             cd: this.path
         });
+
+        fs.unlinkSync(diffFile);
 
         return archive;
 
@@ -79,6 +82,8 @@ class Layer {
             fs.unlinkSync(file);
 
         });
+
+        fs.unlinkSync(diffFile);
 
     }
 
