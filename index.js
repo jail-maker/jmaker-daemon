@@ -60,30 +60,73 @@ process.on('SIGTERM', sigHandler);
 
 app.get('/images', async (req, res) => {
 
+    let {
+        offset = 0,
+        limit = 10,
+        page:currentPage = 1,
+    } = req.query;
+
+    let layers = new Layers(config.zfsPool);
+    let images = layers.list().slice(offset, limit);
+
+    let countPages = Math.ceil(images.length / limit);
+
+    let nextOffset = offset + limit;
+    nextOffset = nextOffset < images.length ? nextOffset : offset;
+
+    let prevOffset = offset - limit;
+    prevOffset = prevOffset >= 0 ? prevOffset : 0;
+
+
     res.json({
-        first: {
-            name: 'first',
-            links: { }
+        items: images.map(image => {
+            return {
+                name: image,
+                links: {
+                    self: `/images/${image}`,
+                },
+            };
+        }),
+        countAllItems: images.length,
+        countOnPage: limit,
+        countPages: countPages,
+        links: {
+            next: `/images/?offset=${nextOffset}&limit=${limit}`,
+            prev: `/images/?offset=${prevOffset}&limit=${limit}`,
         },
-        second: {
-            name: 'second',
-            links: { }
-        }
     });
 
 });
 
 app.get('/images/:image', (req, res) => {
 
-    res.status = 404;
-    res.send();
+    let layers = new Layers(config.zfsPool);
+
+    try {
+
+        let layer = layers.get(req.params.image);
+
+        res.json({
+            data: {
+                name: layer.name,
+                parent: layer.parent,
+            },
+            links: {
+                parent: layer.parent ? `/images/${layer.parent}` : null,
+            }
+        });
+
+    } catch (error) {
+
+        res.status = 404;
+        res.send();
+
+    }
 
 });
 
 app.post('/images/push-to-repo', async (req, res) => {
 
-    try {
-    
     let {
         image,
         repository = 'localhost'
@@ -95,7 +138,7 @@ app.post('/images/push-to-repo', async (req, res) => {
     let pushDeps = async image => {
 
         if (!image) return;
-        if (await repo.hasImage(image)) {console.log('!!!');return;};
+        if (await repo.hasImage(image)) return;
         let layer = layers.get(image);
         await pushDeps(layer.parent);
         await repo.push(image);
@@ -111,9 +154,6 @@ app.post('/images/push-to-repo', async (req, res) => {
 
     await pushDeps(image);
     res.send();
-    } catch (e) {
-        console.log(e);
-    }
 
 });
 
