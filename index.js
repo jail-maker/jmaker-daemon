@@ -63,7 +63,6 @@ app.get('/images', async (req, res) => {
     let {
         offset = 0,
         limit = 10,
-        page:currentPage = 1,
     } = req.query;
 
     let layers = new Layers(config.zfsPool);
@@ -76,7 +75,6 @@ app.get('/images', async (req, res) => {
 
     let prevOffset = offset - limit;
     prevOffset = prevOffset >= 0 ? prevOffset : 0;
-
 
     res.json({
         items: images.map(image => {
@@ -118,7 +116,7 @@ app.get('/images/:image', (req, res) => {
 
     } catch (error) {
 
-        res.status = 404;
+        res.status(404);
         res.send();
 
     }
@@ -147,7 +145,7 @@ app.post('/images/push-to-repo', async (req, res) => {
 
     if (!layers.has(image)) {
 
-        res.status = 404;
+        res.status(404);
         res.send();
 
     }

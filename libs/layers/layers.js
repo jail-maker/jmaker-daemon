@@ -53,6 +53,9 @@ class Layers {
         let zfs = new Zfs(this._pool);
         let layer = new Layer;
 
+        if (!zfs.has(name))
+            throw new Error(`Dataset "${name}" not found.`);
+
         let origin = zfs.get(name, 'origin');
         let matches = origin.match(/\b([^\/]+)@/u);
 
