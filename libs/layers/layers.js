@@ -85,6 +85,13 @@ class Layers {
 
     }
 
+    destroy(name) {
+
+        let zfs = new Zfs(this._pool);
+        zfs.destroy(name);
+
+    }
+
 }
 
 module.exports = Layers;

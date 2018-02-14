@@ -3,10 +3,11 @@
 const { spawn, exec } = require('child_process');
 const logsPool = require('../libs/logs-pool.js');
 const ExecutionError = require('../libs/Errors/execution-error.js');
-const zfsLayersPool = require('../libs/zfs-layers-pool.js');
 const ExecAbstract = require('../libs/exec-abstract.js');
 const mountDevfs = require('../libs/mount-devfs.js');
 const umount = require('../libs/umount.js');
+
+const chains = require('../libs/layers/chains.js');
 
 class JPreStart extends ExecAbstract {
 
@@ -14,7 +15,7 @@ class JPreStart extends ExecAbstract {
 
         let commands = this._commands;
         let log = logsPool.get(this._jailName);
-        let layers = zfsLayersPool.get(this._jailName);
+        let chain = chains.get(this._jailName);
 
         for (let i = 0; i != commands.length; i++) {
 
@@ -22,7 +23,7 @@ class JPreStart extends ExecAbstract {
             let env = Object.assign({}, process.env, this._env, cmdObj.env);
             let layerName = `${cmdObj.toString()} ${this._jailName}`;
 
-            await layers.create(layerName, async storage => {
+            await chain.layer(layerName, async storage => {
 
                 mountDevfs(storage.getPath() + '/dev');
 

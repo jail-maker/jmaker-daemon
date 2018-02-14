@@ -11,9 +11,6 @@ const fetch = require('../libs/bsd-fetch.js');
 const config = require('../libs/config.js');
 const dataJails = require('../libs/data-jails.js');
 const FolderStorage = require('../libs/folder-storage.js');
-const ZfsStorage = require('../libs/zfs-storage.js');
-const Zfs = require('../libs/zfs.js');
-const zfsLayersPool = require('../libs/zfs-layers-pool.js');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
 const Jail = require('../libs/jail.js');
@@ -32,40 +29,21 @@ const JPostStart = require('../modules/j-poststart.js');
 const Hosts = require('../modules/hosts.js');
 const ModCopy = require('../modules/copy.js');
 
+const chains = require('../libs/layers/chains.js');
+
 async function create(configBody) {
 
     let log = logsPool.get(configBody.jailName);
-    let zfs = new Zfs(config.zfsPool);
-    let layers = zfsLayersPool.create(configBody.jailName, 'empty');
-
-    if (!zfs.has('empty')) zfs.create('empty');
-
-    // await log.info('checking base... ');
-    if (configBody.base) {
-
-        await layers.create(new RawArgument(configBody.base), async storage => {
-
-            await log.info('fetching base... ');
-            let archive = `${path.join('/tmp', configBody.base)}.txz`;
-            let result = fetch(`${config.bases}/${configBody.base}.txz`, archive);
-
-            if (!result) throw new Error('error fetching file.');
-            await log.notice('done\n');
-
-            await log.info('decompression... ');
-            await decompress(archive, storage.getPath(), true);
-            await log.notice('done\n');
-
-        });
-
-    }
-
-    await log.notice('installing packages...\n');
+    let chain = chains.create(
+        configBody.jailName,
+        config.zfsPool,
+        configBody.base
+    );
 
     if (configBody.pkg.length) {
 
         let name = `${configBody.pkg.join(' ')} ${configBody.base}`;
-        await layers.create(name, async storage => {
+        await chain.layer(name, async storage => {
 
             let pkg = new Pkg(configBody.pkg);
             pkg.output(log);
@@ -79,7 +57,7 @@ async function create(configBody) {
     if (configBody.pkgRegex.length) {
 
         let name = `${configBody.pkgRegex.join(' ')} ${configBody.base}`;
-        await layers.create(name, async storage => {
+        await chain.layer(name, async storage => {
 
             let pkg = new Pkg(configBody.pkgRegex);
             pkg.output(log);
@@ -91,16 +69,8 @@ async function create(configBody) {
 
     }
 
-    await log.notice('done\n');
-
-    await log.info('copy... ');
-
     let modCopy = new ModCopy(configBody.jailName, configBody.copy);
     await modCopy.run();
-
-    await log.notice('done\n');
-
-    await log.notice('j-prestart...\n');
 
     let jPreStart = new JPreStart(
         configBody.jailName,
@@ -109,11 +79,8 @@ async function create(configBody) {
     );
 
     await jPreStart.run();
-    await log.notice('done\n');
 
-    await layers.create(new RawArgument(configBody.jailName), _ => {}, false);
-
-    return;
+    chains.delete(configBody.jailName);
 
 }
 

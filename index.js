@@ -57,7 +57,6 @@ process.on('SIGTERM', sigHandler);
 // POST file /context/ - > { id: '', meta: '' }
 // {..., context_id: ''} -> POST /jails/create
 
-
 app.get('/images', async (req, res) => {
 
     let {
