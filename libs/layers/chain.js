@@ -8,7 +8,7 @@ class Chain {
 
     constructor(pool, parent = null) {
 
-        this._pool = poolt;
+        this._pool = pool;
         this._parent = parent;
         this._counter = 1;
 
@@ -19,6 +19,7 @@ class Chain {
         if (!(name instanceof RawArgument)) {
 
             name = sha256(`${this._counter} ${name} ${this._parent}`);
+            name = name.slice(0, 12);
 
         } else {
 

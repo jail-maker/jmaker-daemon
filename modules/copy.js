@@ -34,7 +34,7 @@ class Copy {
                     copys[i] = [copys[i], copys[i]];
 
                 let [src, dst] = copys[i];
-                dst = path.join(storage.getPath(), path.resolve(dst));
+                dst = path.join(storage.path, path.resolve(dst));
 
                 console.log(src, dst);
                 copySync(src, dst);

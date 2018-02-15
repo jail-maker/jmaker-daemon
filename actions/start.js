@@ -34,43 +34,45 @@ const ModCopy = require('../modules/copy.js');
 
 const Recorder = require('../libs/recorder.js');
 
-async function start(configBody) {
+async function start(manifest) {
 
-    let log = logsPool.get(configBody.jailName);
+    let log = logsPool.get(manifest.name);
     let recorder = new Recorder;
     let jail = {};
-    let storage = new ZfsStorage(config.zfsPool, configBody.jailName);
+    let layers = new Layers(config.zfsPool);
+    let layer = layers.get(manifest.name);
+    let storage = layer;
 
-    recorderPool.set(configBody.jailName, recorder);
+    recorderPool.set(manifest.name, recorder);
 
-    if (configBody.resolvSync) {
+    if (manifest['resolv-sync']) {
 
         await log.info('resolv.conf sync... ');
 
         fs.copyFileSync(
             '/etc/resolv.conf',
-            `${storage.getPath()}/etc/resolv.conf`
+            `${storage.path}/etc/resolv.conf`
         );
 
         await log.notice('done\n');
 
     }
 
-    if (configBody.quota) storage.setQuota(configBody.quota);
-    configBody.setPath(storage.getPath());
+    if (manifest.quota) storage.setQuota(manifest.quota);
+    manifest.setPath(storage.path);
 
     {
 
         let call = {
             run: _ => {
 
-                jail = new Jail(configBody);
+                jail = new Jail(manifest);
                 dataJails.add(jail);
 
             },
             rollback: _ => {
 
-                dataJails.unset(configBody.jailName);
+                dataJails.unset(manifest.name);
 
             }
         }
@@ -101,12 +103,12 @@ async function start(configBody) {
     }
 
     await log.info('rctl... ');
-    let rctlObj = new Rctl(configBody.rctl, configBody.jailName);
+    let rctlObj = new Rctl(manifest.rctl, manifest.name);
     await recorder.run(rctlObj);
     await log.notice('done\n');
 
     await log.info('mounting... ');
-    let mounts = new Mounts(configBody.mounts, configBody.path);
+    let mounts = new Mounts(manifest.mounts, manifest.path);
     await recorder.run(mounts);
     await log.notice('done\n');
 
@@ -119,24 +121,24 @@ async function start(configBody) {
     let hosts = new Hosts(jail);
     await recorder.run(hosts);
 
-    if (configBody.cpus) {
+    if (manifest.cpus) {
 
-        let cpus = parseInt(configBody.cpus);
+        let cpus = parseInt(manifest.cpus);
         let osCpus = os.cpus().length;
         cpus = cpus < osCpus ? cpus : osCpus;
 
-        if (cpus === 1) configBody.cpuset = '0';
-        else configBody.cpuset = `0-${cpus - 1}`;
+        if (cpus === 1) manifest.cpuset = '0';
+        else manifest.cpuset = `0-${cpus - 1}`;
 
     }
 
-    if (configBody.cpuset !== false) {
+    if (manifest.cpuset !== false) {
 
         await log.info('cpuset... ');
 
         try {
 
-            let cpuset = new Cpuset(jail.info.jid, configBody.cpuset);
+            let cpuset = new Cpuset(jail.info.jid, manifest.cpuset);
             await recorder.run(cpuset);
 
         } catch (error) {
@@ -153,9 +155,9 @@ async function start(configBody) {
     await log.notice('j-poststart...\n');
 
     let jPostStart = new JPostStart(
-        configBody.jailName,
-        configBody.jPostStart,
-        configBody.env
+        manifest.name,
+        manifest['exec.j-poststart'],
+        manifest.env
     );
     await recorder.run(jPostStart);
 

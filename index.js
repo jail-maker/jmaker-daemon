@@ -16,6 +16,7 @@ const reqest = require('request-promise-native');
 const Repository = require('./libs/repository.js');
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
+const ManifestFactory = require('./libs/manifest-factory.js');
 const Rctl = require('./libs/rctl.js');
 const FolderStorage = require('./libs/folder-storage.js');
 const ZfsStorage = require('./libs/zfs-storage.js');
@@ -92,6 +93,39 @@ app.get('/images', async (req, res) => {
             prev: `/images/?offset=${prevOffset}&limit=${limit}`,
         },
     });
+
+});
+
+app.post('/images', async (req, res) => {
+
+    console.log(req.body);
+    console.log(req.files);
+
+    let body = JSON.parse(req.body.body);
+    let manifest = ManifestFactory.fromFlatData(body);
+
+    console.log(manifest);
+
+    let name = manifest.name;
+    let log = logsPool.create(name);
+
+    try {
+
+        await log.notice('create...\n');
+        await create(manifest);
+        await log.notice('finish.\n', true);
+
+    } catch (e) {
+
+        await log.crit(`\n${e.toString()}\n`, true);
+        logsPool.delete(name);
+        console.log(e);
+
+    } finally {
+
+        res.send();
+
+    }
 
 });
 
@@ -190,39 +224,15 @@ app.post('/images/download-from-repo', async (req, res) => {
 
 });
 
-app.post('/jails/create', async (req, res) => {
-
-    console.log(req.body);
-    console.log(req.files);
-
-    let configBody = new ConfigBody(JSON.parse(req.body.body));
-    let name = configBody.jailName;
-    let log = logsPool.create(name);
-
-    try {
-
-        await log.notice('create...\n');
-        await create(configBody);
-        await log.notice('finish.\n', true);
-
-    } catch (e) {
-
-        await log.crit(`\n${e.toString()}\n`, true);
-        logsPool.delete(name);
-        console.log(e);
-
-    } finally {
-
-        res.send();
-
-    }
-
-});
-
 app.post('/jails/start', async (req, res) => {
 
-    let configBody = new ConfigBody(req.body);
-    let name = configBody.jailName;
+
+    let name = req.body.name;
+    let layers = new Layers(config.zfsPool);
+    let layer = layers.get(name);
+
+    let manifestFile = path.join(layer.path, '.manifest');
+    let manifest = ManifestFactory.fromFile(manifestFile);
 
     if (dataJails.has(name)) {
 
@@ -237,8 +247,8 @@ app.post('/jails/start', async (req, res) => {
     try {
 
         await log.notice('starting...\n');
-        await start(configBody);
-        await stop(configBody.jailName);
+        await start(manifest);
+        await stop(name);
         await log.notice('finish.\n', true);
 
     } catch (e) {

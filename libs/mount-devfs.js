@@ -8,6 +8,6 @@ module.exports = (dst) => {
     let result = spawnSync('/sbin/mount', ['-t', 'devfs', 'devfs', dst]);
 
     if (result.status !== 0)
-        throw new ExecutionError('Error execution mount.');
+        throw new ExecutionError(`Error execution mount devfs to "${dst}".`);
 
 }

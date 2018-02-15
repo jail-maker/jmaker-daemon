@@ -1,6 +1,7 @@
 'use strict';
 
 const { spawn, exec } = require('child_process');
+const path = require('path');
 const logsPool = require('../libs/logs-pool.js');
 const ExecutionError = require('../libs/Errors/execution-error.js');
 const ExecAbstract = require('../libs/exec-abstract.js');
@@ -25,10 +26,18 @@ class JPreStart extends ExecAbstract {
 
             await chain.layer(layerName, async storage => {
 
-                mountDevfs(storage.getPath() + '/dev');
+                try {
+
+                    mountDevfs(path.join(storage.path, '/dev'));
+
+                } catch (error) {
+
+                    log.warn(`devfs not mounted in "${storage.name}".\n`)
+
+                }
 
                 let child = spawn(
-                    'chroot', [storage.getPath(), "sh", "-c", `${cmdObj.cmd}`], 
+                    'chroot', [storage.path, "sh", "-c", `${cmdObj.cmd}`], 
                     {
                         stdio: ['ignore', 'pipe', 'pipe'],
                         env: env,
@@ -38,7 +47,11 @@ class JPreStart extends ExecAbstract {
 
                 let { code } = await log.fromProcess(child);
 
-                umount(storage.getPath() + '/dev', true);
+                try {
+
+                    umount(storage.path + '/dev', true);
+
+                } catch (error) { }
 
                 if (code) {
 

@@ -31,56 +31,47 @@ const ModCopy = require('../modules/copy.js');
 
 const chains = require('../libs/layers/chains.js');
 
-async function create(configBody) {
+async function create(manifest) {
 
-    let log = logsPool.get(configBody.jailName);
+    let log = logsPool.get(manifest.name);
     let chain = chains.create(
-        configBody.jailName,
+        manifest.name,
         config.zfsPool,
-        configBody.base
+        manifest.from
     );
 
-    if (configBody.pkg.length) {
+    if (manifest.pkg.length) {
 
-        let name = `${configBody.pkg.join(' ')} ${configBody.base}`;
+        let name = `${manifest.pkg.join(' ')} ${manifest.from}`;
         await chain.layer(name, async storage => {
 
-            let pkg = new Pkg(configBody.pkg);
+            let pkg = new Pkg(manifest.pkg);
             pkg.output(log);
-            pkg.chroot(storage.getPath());
+            pkg.chroot(storage.path);
             await pkg.run();
 
         });
 
     }
 
-    if (configBody.pkgRegex.length) {
-
-        let name = `${configBody.pkgRegex.join(' ')} ${configBody.base}`;
-        await chain.layer(name, async storage => {
-
-            let pkg = new Pkg(configBody.pkgRegex);
-            pkg.output(log);
-            pkg.chroot(storage.getPath());
-            pkg.regex(true);
-            await pkg.run();
-
-        });
-
-    }
-
-    let modCopy = new ModCopy(configBody.jailName, configBody.copy);
+    let modCopy = new ModCopy(manifest.name, manifest.copy);
     await modCopy.run();
 
     let jPreStart = new JPreStart(
-        configBody.jailName,
-        configBody.jPreStart,
-        configBody.env
+        manifest.name,
+        manifest['exec.j-prestart'],
+        manifest.env
     );
 
     await jPreStart.run();
 
-    chains.delete(configBody.jailName);
+    chain.layer(new RawArgument(manifest.name), storage => {
+
+        manifest.toFile(path.join(storage.path, '.manifest'));
+
+    }, false);
+
+    chains.delete(manifest.name);
 
 }
 
