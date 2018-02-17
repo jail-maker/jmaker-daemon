@@ -11,16 +11,14 @@ const logsPool = require('./logs-pool.js');
 
 class Jail extends EventEmitter {
 
-    constructor(configBody) {
+    constructor(manifest) {
 
         super();
 
-        let fileData = configBody.fileData;
-
-        this.name = configBody.jailName;
-        this.configFileObj = new ConfigFile(fileData, this.name);
+        this.name = manifest.name;
+        this.configFileObj = new ConfigFile(manifest.rules, this.name);
         this.configFilePath = `/tmp/${this.name}-jail.conf`;
-        this.configBody = configBody;
+        this.manifest = manifest;
         this.info = {};
 
         this._working = false;

@@ -26,6 +26,13 @@ class Layer {
 
     }
 
+    setQuota(value) {
+
+        let zfs = new Zfs(this._pool);
+        zfs.set(this.name, 'quota', value);
+
+    }
+
     async compress() {
 
         let zfs = new Zfs(this._pool);
