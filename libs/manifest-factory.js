@@ -25,6 +25,7 @@ class ManifestFactory {
             'dependencies',
             'cpus',
             'cpuset',
+            'rctl',
             'mounts',
             'exec.j-poststart',
             'exec.j-prestart',

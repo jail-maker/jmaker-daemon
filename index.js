@@ -51,13 +51,6 @@ app.use(multiparty());
 process.on('SIGINT', sigHandler);
 process.on('SIGTERM', sigHandler);
 
-// { meta: '' } -> POST /context/  -> { id: '222', _links: []}
-// /context/222/data 404
-// POST /context/222/data
-
-// POST file /context/ - > { id: '', meta: '' }
-// {..., context_id: ''} -> POST /jails/create
-
 app.get('/images', async (req, res) => {
 
     let {
@@ -103,9 +96,6 @@ app.post('/images', async (req, res) => {
 
     let body = JSON.parse(req.body.body);
     let manifest = ManifestFactory.fromFlatData(body);
-
-    console.log(manifest);
-
     let name = manifest.name;
     let log = logsPool.create(name);
 
@@ -180,6 +170,7 @@ app.post('/images/push-to-repo', async (req, res) => {
 
         res.status(404);
         res.send();
+        return;
 
     }
 
@@ -197,6 +188,20 @@ app.post('/images/download-from-repo', async (req, res) => {
 
     let repo = new Repository(repository);
     let layers = new Layers(config.zfsPool);
+    let meta = {};
+
+    try {
+
+        meta = await repo.getMeta(image);
+
+    } catch (error) {
+
+        res.status(404)
+        res.send(`Image "${image}" not found in the repository.`);
+        return;
+
+    }
+
     let parents = await repo.getParents(image);
 
     for (let i = 0; i < parents.length; i++) {
@@ -209,16 +214,15 @@ app.post('/images/download-from-repo', async (req, res) => {
 
         repo.downloadImage(dep.name, archive);
         let layer = layers.create(dep.name, dep.parent);
-        layer.decompress(archive);
+        await layer.decompress(archive);
 
     }
 
-    let meta = await repo.getMeta(image);
     let archive = `/tmp/${meta.data.fileName}`;
     let layer = layers.create(meta.data.name, meta.data.parent);
 
     repo.downloadImage(meta.data.name, archive);
-    layer.decompress(archive);
+    await layer.decompress(archive);
 
     res.send();
 
@@ -226,18 +230,29 @@ app.post('/images/download-from-repo', async (req, res) => {
 
 app.post('/jails/start', async (req, res) => {
 
-
     let name = req.body.name;
     let layers = new Layers(config.zfsPool);
-    let layer = layers.get(name);
+    let layer = {};
+
+    try {
+
+        layer = layers.get(name);
+
+    } catch (error) {
+
+        res.status(404)
+        res.send(`Image "${image}" not found.`);
+        return;
+
+    }
 
     let manifestFile = path.join(layer.path, '.manifest');
     let manifest = ManifestFactory.fromFile(manifestFile);
 
     if (dataJails.has(name)) {
 
-        let msg = `Jail "${name}" already exists.`;
-        res.status(409).send(msg);
+        res.status(409)
+        res.send(`Jail "${name}" already exists.`);
         return;
 
     }
@@ -265,51 +280,14 @@ app.post('/jails/start', async (req, res) => {
 
 });
 
-app.post('/jails/run', async (req, res) => {
-
-    let configBody = new ConfigBody(req.body);
-    let name = configBody.jailName;
-
-    if (dataJails.has(name)) {
-
-        let msg = `Jail "${name}" already exists.`;
-        res.status(409).send(msg);
-        return;
-
-    }
-
-    let log = logsPool.create(name);
-
-    try {
-
-        await log.notice('starting...\n');
-        await create(configBody);
-        await start(configBody);
-        await stop(configBody.jailName);
-        await log.notice('finish.\n', true);
-
-    } catch (e) {
-
-        await log.crit(`\n${e.toString()}\n`, true);
-        logsPool.delete(name);
-        console.log(e);
-
-    } finally {
-
-        res.send();
-
-    }
-
-});
-
 app.delete('/jails/:name/stop', async (req, res) => {
 
     let name = req.params.name;
 
     if (!dataJails.has(name)) {
 
-        let msg = `Jail "${name}" not found.`;
-        res.status(404).send(msg);
+        res.status(404);
+        res.send(`Jail "${name}" not found.`);
         return;
 
     }
@@ -322,8 +300,8 @@ app.delete('/jails/:name/stop', async (req, res) => {
 
     } catch (error) {
 
-        let msg = `Log "${name}" not found.`;
-        res.status(500).send(msg);
+        res.status(500)
+        res.send(`Log "${name}" not found.`);
         return;
 
     }

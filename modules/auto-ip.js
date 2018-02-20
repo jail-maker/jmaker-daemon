@@ -6,6 +6,13 @@ const NotFoundError = require('../libs/Errors/not-found-error.js');
 
 class AutoIp {
 
+    visit(configFileObj) {
+
+        let rules = configFileObj.getRules();
+        this.pipeRule(rules);
+
+    }
+
     pipeRule(rules) {
 
         {

@@ -4,6 +4,13 @@ const defaultIface = require('../libs/default-iface.js');
 
 class AutoIface {
 
+    visit(configFileObj) {
+
+        let rules = configFileObj.getRules();
+        this.pipeRule(rules);
+
+    }
+
     pipeRule(rules) {
 
         let rule4 = rules['ip4.addr'];

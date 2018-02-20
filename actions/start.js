@@ -14,9 +14,11 @@ const FolderStorage = require('../libs/folder-storage.js');
 const ZfsStorage = require('../libs/zfs-storage.js');
 const Zfs = require('../libs/zfs.js');
 const zfsLayersPool = require('../libs/zfs-layers-pool.js');
+const Layers = require('../libs/layers');
 const logsPool = require('../libs/logs-pool.js');
 const Rctl = require('../libs/rctl.js');
-const Jail = require('../libs/jail.js');
+const Jail = require('../libs/jails/jail.js');
+const ruleViewVisitor = require('../libs/jails/rule-view-visitor.js');
 const recorderPool = require('../libs/recorder-pool.js');
 const RawArgument = require('../libs/raw-argument.js');
 
@@ -59,14 +61,13 @@ async function start(manifest) {
     }
 
     if (manifest.quota) storage.setQuota(manifest.quota);
-    manifest.setPath(storage.path);
 
     {
 
         let call = {
             run: _ => {
 
-                jail = new Jail(manifest);
+                jail = new Jail(manifest, storage.path);
                 dataJails.add(jail);
 
             },
@@ -90,9 +91,9 @@ async function start(manifest) {
 
                 configObj
                 // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
-                    .pipe(autoIface.pipeRule.bind(autoIface))
-                    .pipe(autoIp.pipeRule.bind(autoIp))
-                    .pipe(configObj.out.bind(configObj));
+                    .accept(autoIface)
+                    .accept(autoIp)
+                    .accept(ruleViewVisitor);
 
             },
             rollback: _ => {}
