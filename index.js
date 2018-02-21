@@ -31,6 +31,7 @@ const RawArgument = require('./libs/raw-argument.js');
 const decompress = require('./libs/decompress.js');
 const compress = require('./libs/compress.js');
 const Layers = require('./libs/layers');
+const Context = require('./libs/context.js');
 
 const dhcp = require('./modules/ip-dhcp.js');
 const autoIface = require('./modules/auto-iface.js');
@@ -94,10 +95,16 @@ app.post('/images', async (req, res) => {
     console.log(req.body);
     console.log(req.files);
 
+    let files = req.files;
     let body = JSON.parse(req.body.body);
     let manifest = ManifestFactory.fromFlatData(body);
     let name = manifest.name;
     let log = logsPool.create(name);
+
+    let context = new Context;
+    await decompress(files.context.path, context.path, true);
+    console.log(context);
+    process.exit();
 
     try {
 
@@ -113,6 +120,7 @@ app.post('/images', async (req, res) => {
 
     } finally {
 
+        context.destroy();
         res.send();
 
     }
