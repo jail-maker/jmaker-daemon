@@ -8,19 +8,21 @@ const chains = require('../libs/layers/chains.js');
 
 class Copy {
 
-    constructor(jailName, copys = []) {
+    constructor(jailName, context, copys = []) {
 
         if (!Array.prototype.isPrototypeOf(copys))
             copys = [copys];
 
         this._jailName = jailName;
         this._copys = copys;
+        this._context = context;
 
     }
 
     async run() {
 
         let copys = this._copys;
+        let context = this._context;
         let log = logsPool.get(this._jailName);
         let chain = chains.get(this._jailName);
 
@@ -34,9 +36,10 @@ class Copy {
                     copys[i] = [copys[i], copys[i]];
 
                 let [src, dst] = copys[i];
-                dst = path.join(storage.path, path.resolve(dst));
 
-                console.log(src, dst);
+                dst = path.join(storage.path, path.resolve('/', dst));
+                src = path.join(context.path, path.resolve('/', src));
+
                 copySync(src, dst);
 
             });

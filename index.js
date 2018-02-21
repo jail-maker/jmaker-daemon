@@ -103,13 +103,11 @@ app.post('/images', async (req, res) => {
 
     let context = new Context;
     await decompress(files.context.path, context.path, true);
-    console.log(context);
-    process.exit();
 
     try {
 
         await log.notice('create...\n');
-        await create(manifest);
+        await create(manifest, context);
         await log.notice('finish.\n', true);
 
     } catch (e) {

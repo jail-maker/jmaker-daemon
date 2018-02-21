@@ -20,6 +20,7 @@ class ManifestFactory {
         let keys = [
             'name',
             'from',
+            'workdir',
             'env',
             'pkg',
             'dependencies',

@@ -4,6 +4,7 @@ const uniqid = require('uniqid');
 const os = require('os');
 const path = require('path');
 const fs = require('fs');
+const { removeSync } = require('fs-extra');
 
 class Context {
 
@@ -18,7 +19,7 @@ class Context {
 
     destroy() {
 
-        fs.rmdir(this.path);
+        removeSync(this.path);
         this.destroyed = true;
 
     }

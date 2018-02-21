@@ -8,6 +8,7 @@ class Manifest {
 
         this.name = '';
         this.from = null;
+        this.workdir = '/';
         this.rules = {};
         this.pkg = {};
         this.rctl = {};

@@ -74,6 +74,22 @@ class Pkg {
         if (code !== 0)
             throw new ExecutionError('Error execution pkg.');
 
+        child = spawn(
+            'chroot',
+            [this._chroot, "sh", "-c", `pkg clean -ay`],
+            {
+                stdio: ['ignore', 'pipe', 'pipe'],
+                env: {
+                    ASSUME_ALWAYS_YES: 'yes',
+                }
+            }
+        );
+
+        code = (await this._output.fromProcess(child)).code;
+
+        if (code !== 0)
+            throw new ExecutionError('Error execution pkg.');
+
     }
 
     async rollback() {}

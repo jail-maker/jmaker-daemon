@@ -31,7 +31,7 @@ const ModCopy = require('../modules/copy.js');
 
 const chains = require('../libs/layers/chains.js');
 
-async function create(manifest) {
+async function create(manifest, context = null) {
 
     let log = logsPool.get(manifest.name);
     let chain = chains.create(
@@ -54,7 +54,7 @@ async function create(manifest) {
 
     }
 
-    let modCopy = new ModCopy(manifest.name, manifest.copy);
+    let modCopy = new ModCopy(manifest.name, context, manifest.copy);
     await modCopy.run();
 
     let jPreStart = new JPreStart(
