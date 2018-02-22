@@ -4,6 +4,7 @@ const { spawnSync, spawn } = require('child_process');
 const { mkdirSync } = require('mkdir-recursive');
 const path = require('path');
 const fs = require('fs');
+const fse = require('fs-extra');
 const os = require('os');
 const sha256 = require('js-sha256').sha256;
 
@@ -40,6 +41,17 @@ async function create(manifest, context = null) {
         manifest.from
     );
 
+    {
+        let name = `${manifest.workdir} ${manifest.from}`;
+        await chain.layer(name, async layer => {
+
+            let dir = path.resolve(manifest.workdir);
+            dir = path.join(layer.path, dir);
+            await fse.ensureDir(dir);
+
+        });
+    }
+
     if (manifest.pkg.length) {
 
         let name = `${manifest.pkg.join(' ')} ${manifest.from}`;
@@ -54,13 +66,16 @@ async function create(manifest, context = null) {
 
     }
 
-    let modCopy = new ModCopy(manifest.name, context, manifest.copy);
+    let modCopy = new ModCopy(manifest, context);
     await modCopy.run();
 
     let jPreStart = new JPreStart(
         manifest.name,
         manifest['exec.j-prestart'],
-        manifest.env
+        {
+            env: manifest.env,
+            workdir: manifest.workdir,
+        },
     );
 
     await jPreStart.run();

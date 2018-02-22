@@ -20,7 +20,7 @@ class JPostStart extends ExecAbstract {
             let command = `/usr/sbin/jexec ${this._jailName} ${cmdObj.cmd}`;
             let child = spawn(
                 '/usr/sbin/jexec',
-                [this._jailName, "sh", "-c", `${cmdObj.cmd}`],
+                [this._jailName, "sh", "-c", `cd ${this._workdir} && ${cmdObj.cmd}`],
                 {
                     stdio: ['ignore', 'pipe', 'pipe'],
                     env: env,

@@ -8,12 +8,14 @@ const chains = require('../libs/layers/chains.js');
 
 class Copy {
 
-    constructor(jailName, context, copys = []) {
+    constructor(manifest, context) {
 
+        let copys = manifest.copy;
         if (!Array.prototype.isPrototypeOf(copys))
             copys = [copys];
 
-        this._jailName = jailName;
+        this._jailName = manifest.name;
+        this._workdir = manifest.workdir;
         this._copys = copys;
         this._context = context;
 
@@ -23,6 +25,7 @@ class Copy {
 
         let copys = this._copys;
         let context = this._context;
+        let workdir = this._workdir;
         let log = logsPool.get(this._jailName);
         let chain = chains.get(this._jailName);
 
@@ -37,7 +40,7 @@ class Copy {
 
                 let [src, dst] = copys[i];
 
-                dst = path.join(storage.path, path.resolve('/', dst));
+                dst = path.join(storage.path, path.resolve(workdir, dst));
                 src = path.join(context.path, path.resolve('/', src));
 
                 copySync(src, dst);

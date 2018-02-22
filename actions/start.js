@@ -158,7 +158,10 @@ async function start(manifest) {
     let jPostStart = new JPostStart(
         manifest.name,
         manifest['exec.j-poststart'],
-        manifest.env
+        {
+            env: manifest.env,
+            workdir: manifest.workdir,
+        },
     );
     await recorder.run(jPostStart);
 

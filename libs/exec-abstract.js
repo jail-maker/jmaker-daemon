@@ -2,7 +2,12 @@
 
 class ExecAbstract {
 
-    constructor(jailName, commands = [], env = {}) {
+    constructor(jailName, commands = [], options = {}) {
+
+        let {
+            env = {},
+            workdir = '/',
+        } = options;
 
         if (!Array.prototype.isPrototypeOf(commands))
             commands = [commands];
@@ -10,6 +15,7 @@ class ExecAbstract {
         this._jailName = jailName;
         this._commands = commands;
         this._env = env;
+        this._workdir = workdir;
 
     }
 

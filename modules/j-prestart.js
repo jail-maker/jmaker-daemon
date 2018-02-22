@@ -37,7 +37,11 @@ class JPreStart extends ExecAbstract {
                 }
 
                 let child = spawn(
-                    'chroot', [storage.path, "sh", "-c", `${cmdObj.cmd}`], 
+                    'chroot',
+                    [
+                        storage.path, "sh", "-c",
+                        `cd ${this._workdir} && ${cmdObj.cmd}`,
+                    ],
                     {
                         stdio: ['ignore', 'pipe', 'pipe'],
                         env: env,
