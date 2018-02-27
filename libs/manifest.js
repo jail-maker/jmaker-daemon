@@ -15,11 +15,9 @@ class Manifest {
         this.dependencies = [];
         this.cpus = '';
         this.cpuset = '';
-        this.mounts = [];
-        this['exec.j-prestart'] = [];
-        this['exec.j-poststart'] = [];
+        this.building = [];
+        this.starting = [];
         this.quota = '';
-        this.copy = [];
         this.env = {};
         this['resolv-sync'] = true;
 

@@ -32,6 +32,8 @@ const ModCopy = require('../modules/copy.js');
 
 const chains = require('../libs/layers/chains.js');
 
+const handlers = require('../handlers');
+
 async function create(manifest, context = null) {
 
     let log = logsPool.get(manifest.name);
@@ -51,6 +53,22 @@ async function create(manifest, context = null) {
 
         });
     }
+
+    for (let obj of manifest.building) {
+
+        let command = Object.keys(obj)[0];
+        let args = obj[command];
+
+        let handler = handlers[command];
+        await handler.do({
+            manifest,
+            context,
+            args,
+        });
+
+    }
+
+    process.exit();
 
     if (manifest.pkg.length) {
 
