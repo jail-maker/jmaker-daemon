@@ -30,7 +30,6 @@ class ManifestFactory {
             'building',
             'starting',
             'quota',
-            'copy',
             'resolv-sync',
         ];
 

@@ -22,13 +22,12 @@ class Workdir {
 
         let log = logsPool.get(manifest.name);
         let chain = chains.get(manifest.name);
-        let workdir = args;
+        let workdir = path.resolve(manifest.workdir, args);
         let name = `${workdir} ${manifest.from}`;
 
         await chain.layer(name, async layer => {
 
-            let dir = path.resolve(manifest.workdir);
-            dir = path.join(layer.path, dir);
+            let dir = path.join(layer.path, workdir);
             await fse.ensureDir(dir);
 
         });
