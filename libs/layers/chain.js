@@ -3,14 +3,18 @@
 const sha256 = require('js-sha256').sha256;
 const RawArgument = require('../raw-argument.js');
 const Layers = require('./layers.js');
+const EventEmitter = require('events');
 
-class Chain {
+class Chain extends EventEmitter {
 
     constructor(pool, parent = null) {
+
+        super();
 
         this._pool = pool;
         this._parent = parent;
         this._counter = 1;
+        this._current = null;
 
     }
 
@@ -32,13 +36,18 @@ class Chain {
         if (!cacheable && layers.has(name)) layers.destroy(name);
         if (!layers.has(name)) {
 
+            let layer = layers.create(name, this._parent);
+
             try {
 
-                let layer = layers.create(name, this._parent);
+                this.emit('precall', layer);
                 await call(layer);
+                this.emit('postcall', layer);
+                this._current = layer;
 
             } catch (error) {
 
+                this.emit('fail', layer);
                 layers.destroy(name);
                 throw error;
 
@@ -48,6 +57,12 @@ class Chain {
 
         this._parent = name;
         this._counter++;
+
+    }
+
+    getCurrent() {
+
+        return this._current;
 
     }
 

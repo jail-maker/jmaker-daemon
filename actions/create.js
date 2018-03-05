@@ -40,6 +40,7 @@ async function create(manifest, context = null) {
             manifest,
             context,
             args,
+            stage: 'building',
         });
 
     }

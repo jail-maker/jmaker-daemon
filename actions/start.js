@@ -26,7 +26,7 @@ const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
 const autoIp = require('../modules/auto-ip.js');
 
-const Mounts = require('../modules/mounts.js');
+// const Mounts = require('../modules/mounts.js');
 const Cpuset = require('../modules/cpuset.js');
 const Pkg = require('../modules/pkg.js');
 const JPreStart = require('../modules/j-prestart.js');
@@ -35,6 +35,7 @@ const Hosts = require('../modules/hosts.js');
 const ModCopy = require('../modules/copy.js');
 
 const Recorder = require('../libs/recorder.js');
+const handlers = require('../handlers');
 
 async function start(manifest) {
 
@@ -108,10 +109,10 @@ async function start(manifest) {
     await recorder.run(rctlObj);
     await log.notice('done\n');
 
-    await log.info('mounting... ');
-    let mounts = new Mounts(manifest.mounts, manifest.path);
-    await recorder.run(mounts);
-    await log.notice('done\n');
+    // await log.info('mounting... ');
+    // let mounts = new Mounts(manifest.mounts, manifest.path);
+    // await recorder.run(mounts);
+    // await log.notice('done\n');
 
     await log.info(configObj.toString() + '\n');
 
@@ -152,6 +153,26 @@ async function start(manifest) {
         await log.notice('done\n');
 
     }
+
+    await log.notice('starting...\n');
+
+    for (let obj of manifest.starting) {
+
+        let command = Object.keys(obj)[0];
+        let args = obj[command];
+
+        let handler = handlers[command];
+        await handler.do({
+            manifest,
+            args,
+            stage: 'starting',
+        });
+
+    }
+
+    await log.notice('done\n');
+
+    return;
 
     await log.notice('j-poststart...\n');
 

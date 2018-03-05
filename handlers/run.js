@@ -22,6 +22,69 @@ class Run {
         let {
             manifest,
             args = '',
+            stage,
+        } = data;
+
+        switch (stage) {
+
+            case 'building':
+                await this._doBuilding(data);
+                break;
+
+            case 'starting':
+                await this._doStarting(data);
+                break;
+
+            default:
+                throw new Error('Unknown stage.');
+                break;
+
+        }
+
+    }
+
+    async _doStarting(data = {}) {
+
+        let {
+            manifest,
+            args = '',
+        } = data;
+
+        let log = logsPool.get(manifest.name);
+        let env = Object.assign({}, process.env, manifest.env);
+        let command = args;
+
+        let child = spawn(
+            '/usr/sbin/jexec',
+            [
+                manifest.name, "sh", "-c",
+                `cd ${manifest.workdir} && ${command}`
+            ],
+            {
+                stdio: ['ignore', 'pipe', 'pipe'],
+                env: env,
+                cwd: '/',
+            }
+        );
+
+        let result = await log.fromProcess(child);
+
+        if (result.code) {
+
+            console.log(result);
+
+            let msg = `Error execution command: ${command} .`;
+            throw new ExecutionError(msg);
+
+        }
+
+    }
+
+    async _doBuilding(data = {}) {
+
+        let {
+            manifest,
+            args = '',
         } = data;
 
         let log = logsPool.get(manifest.name);

@@ -1,7 +1,7 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
-const { mkdirSync } = require('mkdir-recursive');
+const { ensureDir } = require('fs-extra');
 const path = require('path');
 const ExecutionError = require('../libs/Errors/execution-error.js');
 
@@ -19,18 +19,10 @@ class Mounts {
         this._mounts.forEach(points => {
 
             let [src, dst] = points;
-            dst = path.join(this._dstPrefix, path.resolve(dst));
+            src = path.resolve('/', dst);
+            dst = path.join(storage.getPath(), path.resolve(manifest.workdir, dst));
 
-            try {
-
-                mkdirSync(dst);
-
-            } catch (error) {
-
-                if (error.code !== 'EEXIST')
-                    throw error;
-
-            }
+            ensureDir(dst);
 
             let result = spawnSync('mount_nullfs', [
                 src, dst,
