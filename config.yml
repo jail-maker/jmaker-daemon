@@ -6,5 +6,7 @@ jailsDir: "/usr/local/jmaker-server"
 cacheDir: "/var/cache/jmaker-server"
 logLevel: "info"
 zfsPool: "jmaker"
+imagesDir: "/jmaker/images/"
+volumesDir: "/jmaker/volumes/"
 zfs: true
 resolvSync: true

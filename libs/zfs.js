@@ -36,10 +36,15 @@ class Zfs {
 
     }
 
-    create(name) {
+    create(name, options = {}) {
+
+        options = Object.keys(options)
+            .map(opt => `${opt}=${options[opt]}`);
+
+        if (options.length) options = ['-o', ...options];
 
         let result = spawnSync('zfs', [
-            'create', `${this._pool}/${name}`
+            'create', ...options, `${this._pool}/${name}`
         ]);
 
         let msg = '';
