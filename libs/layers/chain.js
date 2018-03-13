@@ -7,12 +7,13 @@ const EventEmitter = require('events');
 
 class Chain extends EventEmitter {
 
-    constructor(pool, parent = null) {
+    constructor({pool, parent = null, location = '/'}) {
 
         super();
 
         this._pool = pool;
         this._parent = parent;
+        this._location = location;
         this._counter = 1;
         this._current = null;
 
@@ -31,7 +32,7 @@ class Chain extends EventEmitter {
 
         }
 
-        let layers = new Layers(this._pool);
+        let layers = new Layers(this._pool, this._location);
 
         if (!cacheable && layers.has(name)) layers.destroy(name);
         if (!layers.has(name)) {

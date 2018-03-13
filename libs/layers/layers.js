@@ -5,9 +5,10 @@ const Layer = require('./layer.js');
 
 class Layers {
 
-    constructor(pool) {
+    constructor(pool, location = '/') {
 
         this._pool = pool;
+        this._location = location;
 
     }
 
@@ -17,7 +18,7 @@ class Layers {
 
         if (parent === null) {
 
-            zfs.create(name);
+            zfs.create(name, { mountpoint: this._location });
 
         } else {
 

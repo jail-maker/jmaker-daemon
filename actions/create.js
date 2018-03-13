@@ -45,7 +45,7 @@ async function create(manifest, context = null) {
 
     }
 
-    chain.layer(new RawArgument(manifest.name), storage => {
+    await chain.layer(new RawArgument(manifest.name), async storage => {
 
         manifest.toFile(path.join(storage.path, '.manifest'));
 
