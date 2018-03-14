@@ -7,7 +7,7 @@ const EventEmitter = require('events');
 
 class Chain extends EventEmitter {
 
-    constructor({pool, parent = null, location = '/'}) {
+    constructor({ pool, parent = null, location = '/' }) {
 
         super();
 

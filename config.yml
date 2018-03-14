@@ -1,12 +1,7 @@
 ---
 port: 3346
 host: "127.0.0.1"
-bases: "http://jmaker-bases.websm.io"
-jailsDir: "/usr/local/jmaker-server"
-cacheDir: "/var/cache/jmaker-server"
 logLevel: "info"
 zfsPool: "jmaker"
-imagesDir: "/jmaker/images/"
-volumesDir: "/jmaker/volumes/"
-zfs: true
-resolvSync: true
+imagesLocation: "/jmaker/images/"
+volumesLocation: "/jmaker/volumes/"

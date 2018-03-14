@@ -2,6 +2,7 @@
 
 const Zfs = require('../zfs.js');
 const Layer = require('./layer.js');
+const path = require('path');
 
 class Layers {
 
@@ -15,10 +16,11 @@ class Layers {
     create(name, parent = null) {
 
         let zfs = new Zfs(this._pool);
+        let mountpoint = path.join(this._location, name);
 
         if (parent === null) {
 
-            zfs.create(name, { mountpoint: this._location });
+            zfs.create(name, { mountpoint });
 
         } else {
 
@@ -33,7 +35,7 @@ class Layers {
 
             }
 
-            zfs.clone(parent, 'last', name);
+            zfs.clone(parent, 'last', name, { mountpoint });
 
         }
 

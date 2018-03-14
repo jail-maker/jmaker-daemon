@@ -13,13 +13,9 @@ class Config {
         this.port = 3346;
         this.host = '127.0.0.1';
         this.logLevel = 'info';
-        this.jailsDir = path.resolve(__dirname + '/../jails');
-        this.cacheDir = path.resolve(__dirname + '/../cache');
         this.zfsPool = 'jmaker';
-        this.imagesDir = '/jmaker/images/';
-        this.volumesDir = '/jmaker/volumes/';
-        this.zfs = false;
-        this.bases = '';
+        this.imagesLocation = '/jmaker/images/';
+        this.volumesLocation = '/jmaker/volumes/';
 
     }
 
@@ -31,9 +27,9 @@ class Config {
 
     }
 
-    setJailsDir(value) { this.jailsDir = path.resolve(value); }
+    setImagesLocation(value) { this.imagesLocation = path.resolve('/', value); }
 
-    setCacheDir(value) { this.cacheDir = path.resolve(value); }
+    setVolumesLocation(value) { this.volumesLocation = path.resolve('/', value); }
 
 }
 

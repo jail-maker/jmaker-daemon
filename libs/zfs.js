@@ -101,10 +101,15 @@ class Zfs {
 
     }
 
-    clone(fs, snap, newFs) {
+    clone(fs, snap, newFs, options = {}) {
+
+        options = Object.keys(options)
+            .map(opt => `${opt}=${options[opt]}`);
+
+        if (options.length) options = ['-o', ...options];
 
         let result = spawnSync('zfs', [
-            'clone', `${this._pool}/${fs}@${snap}`, `${this._pool}/${newFs}`
+            'clone', ...options, `${this._pool}/${fs}@${snap}`, `${this._pool}/${newFs}`
         ]);
 
         return result.status ? false : true;

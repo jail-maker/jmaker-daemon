@@ -59,7 +59,7 @@ app.get('/images', async (req, res) => {
         limit = 10,
     } = req.query;
 
-    let layers = new Layers(config.zfsPool);
+    let layers = new Layers(config.zfsPool, config.imagesLocation);
     let images = layers.list().slice(offset, limit);
 
     let countPages = Math.ceil(images.length / limit);
@@ -127,7 +127,7 @@ app.post('/images', async (req, res) => {
 
 app.get('/images/:image', (req, res) => {
 
-    let layers = new Layers(config.zfsPool);
+    let layers = new Layers(config.zfsPool, config.imagesLocation);
 
     try {
 
@@ -160,7 +160,7 @@ app.post('/images/push-to-repo', async (req, res) => {
     } = req.body;
 
     let repo = new Repository(repository);
-    let layers = new Layers(config.zfsPool);
+    let layers = new Layers(config.zfsPool, config.imagesLocation);
 
     let pushDeps = async image => {
 
@@ -193,7 +193,7 @@ app.post('/images/download-from-repo', async (req, res) => {
     } = req.body;
 
     let repo = new Repository(repository);
-    let layers = new Layers(config.zfsPool);
+    let layers = new Layers(config.zfsPool, config.imagesLocation);
     let meta = {};
 
     try {
@@ -237,7 +237,7 @@ app.post('/images/download-from-repo', async (req, res) => {
 app.post('/jails/start', async (req, res) => {
 
     let name = req.body.name;
-    let layers = new Layers(config.zfsPool);
+    let layers = new Layers(config.zfsPool, config.imagesLocation);
     let layer = {};
 
     try {
