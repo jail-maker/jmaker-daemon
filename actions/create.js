@@ -15,7 +15,6 @@ async function create(manifest, context = null) {
     let log = logsPool.get(manifest.name);
     let chain = chains.create({
         name: manifest.name,
-        pool: config.zfsPool,
         layer: manifest.from,
         location: config.imagesLocation,
     });

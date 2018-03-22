@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const uniqid = require('uniqid');
-const Zfs = require('../zfs.js');
+const zfs = require('../zfs.js');
 const compress = require('../compress.js');
 const decompress = require('../decompress.js');
 const foldesDiff = require('../folders-diff.js');
@@ -19,7 +19,6 @@ class Layer {
 
     constructor() {
 
-        this._pool = '';
         this.name = '';
         this.path = '';
         this.parent = null;
@@ -28,14 +27,11 @@ class Layer {
 
     setQuota(value) {
 
-        let zfs = new Zfs(this._pool);
         zfs.set(this.name, 'quota', value);
 
     }
 
     async compress() {
-
-        let zfs = new Zfs(this._pool);
 
         try {
 
@@ -96,7 +92,6 @@ class Layer {
 
     destroy() {
 
-        let zfs = new Zfs(this._pool);
         zfs.destroy(this.name);
 
     }

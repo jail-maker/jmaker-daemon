@@ -64,7 +64,7 @@ class Mount {
 
         let log = logsPool.get(manifest.name);
         let chain = chains.get(manifest.name);
-        let volumes = new Layers(config.zfsPool, config.volumesLocation);
+        let volumes = new Layers(config.volumesLocation);
 
         args = this._normalizeArgs(args);
 
@@ -120,7 +120,7 @@ class Mount {
             args = {},
         } = data;
 
-        let layers = new Layers(config.zfsPool, config.volumesLocation);
+        let layers = new Layers(config.volumesLocation);
         let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
 

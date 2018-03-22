@@ -19,9 +19,6 @@ const ConfigBody = require('./libs/config-body.js');
 const ManifestFactory = require('./libs/manifest-factory.js');
 const Rctl = require('./libs/rctl.js');
 const FolderStorage = require('./libs/folder-storage.js');
-const ZfsStorage = require('./libs/zfs-storage.js');
-const ZfsLayers = require('./libs/zfs-layers.js');
-const Zfs = require('./libs/zfs.js');
 const Channel = require('./libs/channel.js');
 const config = require('./libs/config.js');
 const dataJails = require('./libs/data-jails.js');
@@ -59,7 +56,7 @@ app.get('/images', async (req, res) => {
         limit = 10,
     } = req.query;
 
-    let layers = new Layers(config.zfsPool, config.imagesLocation);
+    let layers = new Layers(config.imagesLocation);
     let images = layers.list().slice(offset, limit);
 
     let countPages = Math.ceil(images.length / limit);
@@ -127,7 +124,7 @@ app.post('/images', async (req, res) => {
 
 app.get('/images/:image', (req, res) => {
 
-    let layers = new Layers(config.zfsPool, config.imagesLocation);
+    let layers = new Layers(config.imagesLocation);
 
     try {
 
@@ -154,13 +151,15 @@ app.get('/images/:image', (req, res) => {
 
 app.post('/images/push-to-repo', async (req, res) => {
 
+    console.log('!!!');
+
     let {
         image,
         repository = 'localhost'
     } = req.body;
 
     let repo = new Repository(repository);
-    let layers = new Layers(config.zfsPool, config.imagesLocation);
+    let layers = new Layers(config.imagesLocation);
 
     let pushDeps = async image => {
 
@@ -193,7 +192,7 @@ app.post('/images/download-from-repo', async (req, res) => {
     } = req.body;
 
     let repo = new Repository(repository);
-    let layers = new Layers(config.zfsPool, config.imagesLocation);
+    let layers = new Layers(config.imagesLocation);
     let meta = {};
 
     try {
@@ -237,7 +236,7 @@ app.post('/images/download-from-repo', async (req, res) => {
 app.post('/jails/start', async (req, res) => {
 
     let name = req.body.name;
-    let layers = new Layers(config.zfsPool, config.imagesLocation);
+    let layers = new Layers(config.imagesLocation);
     let layer = {};
 
     try {

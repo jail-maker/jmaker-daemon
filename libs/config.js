@@ -27,10 +27,6 @@ class Config {
 
     }
 
-    setImagesLocation(value) { this.imagesLocation = path.resolve('/', value); }
-
-    setVolumesLocation(value) { this.volumesLocation = path.resolve('/', value); }
-
 }
 
 let argv = minimist(process.argv.slice(2));

@@ -8,13 +8,6 @@ const NotFoundError = require('./Errors/not-found-error.js');
 
 class Zfs {
 
-    constructor(pool) {
-
-        this._checkPool(pool);
-        this._pool = pool;
-
-    }
-
     _checkPool(pool) {
 
         let result = spawnSync('zpool', [
@@ -44,7 +37,7 @@ class Zfs {
         if (options.length) options = ['-o', ...options];
 
         let result = spawnSync('zfs', [
-            'create', ...options, `${this._pool}/${name}`
+            'create', ...options, name,
         ]);
 
         let msg = '';
@@ -52,12 +45,12 @@ class Zfs {
         switch (result.status) {
 
             case 1:
-                msg = 'Dataset all ready exists.';
+                msg = `An error occurred. Dataset: ${name}`;
                 throw new ExistsError(msg);
                 break;
 
             case 2:
-                msg = 'Invalid command line options were specified.';
+                msg = `Invalid command line options were specified. Dataset: ${name}`;
                 throw new CommandError(msg);
                 break;
 
@@ -70,7 +63,7 @@ class Zfs {
         let name = (snap !== null) ? `${fs}@${snap}` : fs;
 
         let result = spawnSync('zfs', [
-            'destroy', '-R', '-f', `${this._pool}/${name}`
+            'destroy', '-R', '-f', name
         ]);
 
         return result.status ? false : true;
@@ -80,7 +73,7 @@ class Zfs {
     snapshot(fs, name) {
 
         let result = spawnSync('zfs', [
-            'snapshot', `${this._pool}/${fs}@${name}`
+            'snapshot', `${fs}@${name}`
         ]);
 
         let msg = '';
@@ -109,7 +102,7 @@ class Zfs {
         if (options.length) options = ['-o', ...options];
 
         let result = spawnSync('zfs', [
-            'clone', ...options, `${this._pool}/${fs}@${snap}`, `${this._pool}/${newFs}`
+            'clone', ...options, `${fs}@${snap}`, `${newFs}`
         ]);
 
         return result.status ? false : true;
@@ -119,7 +112,7 @@ class Zfs {
     get(name, option) {
 
         let result = spawnSync('zfs', [
-            'get', '-o', 'value', '-H', option, `${this._pool}/${name}`
+            'get', '-o', 'value', '-H', option, name
         ]);
 
         return result.stdout.toString().trim();
@@ -129,7 +122,7 @@ class Zfs {
     set(name, option, value) {
 
         let result = spawnSync('zfs', [
-            'set', `${option}=${value}`, `${this._pool}/${name}`
+            'set', `${option}=${value}`, name
         ]);
 
         return result.status ? false : true;
@@ -139,14 +132,14 @@ class Zfs {
     has(name) {
 
         let result = spawnSync('zfs', [
-            'list', '-o', 'name', '-H', `${this._pool}/${name}`
+            'list', '-o', 'name', '-H', `${name}`
         ]);
 
         return (result.status === 0) ? true : false;
 
     }
 
-    list() {
+    list(pool = '') {
 
         let result = spawnSync('zfs', [
             'list', '-o', 'name', '-H'
@@ -157,7 +150,7 @@ class Zfs {
             .trim()
             .split(/\n/);
 
-        let match = this._pool.replace(/(\W)/, '\\$1');
+        let match = pool.replace(/(\W)/, '\\$1');
         let exp = new RegExp(`^${match}\\b`);
 
         return pools.filter(item => {
@@ -171,7 +164,7 @@ class Zfs {
     diff(snapshot, fs) {
 
         let result = spawnSync('zfs', [
-            'diff', '-F', `${this._pool}/${snapshot}`, `${this._pool}/${fs}`
+            'diff', '-F', snapshot, fs
         ]);
 
         let msg = '';
@@ -184,4 +177,4 @@ class Zfs {
 
 }
 
-module.exports = Zfs;
+module.exports = new Zfs;

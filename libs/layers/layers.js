@@ -1,32 +1,32 @@
 'use strict';
 
-const Zfs = require('../zfs.js');
+const zfs = require('../zfs.js');
 const Layer = require('./layer.js');
 const path = require('path');
 
 class Layers {
 
-    constructor(pool, location = '/') {
+    constructor(location = 'zroot') {
 
-        this._pool = pool;
         this._location = location;
 
     }
 
     create(name, parent = null) {
 
-        let zfs = new Zfs(this._pool);
-        let mountpoint = path.join(this._location, name);
+        name = path.join(this._location, name);
 
         if (parent === null) {
 
-            zfs.create(name, { mountpoint });
+            zfs.create(name);
 
         } else {
 
+            let from = path.join(this._location, parent);
+
             try {
 
-                zfs.snapshot(parent, 'last');
+                zfs.snapshot(from, 'last');
 
             } catch (error) {
 
@@ -35,14 +35,13 @@ class Layers {
 
             }
 
-            zfs.clone(parent, 'last', name, { mountpoint });
+            zfs.clone(from, 'last', name);
 
         }
 
         zfs.snapshot(name, 'first');
 
         let layer = new Layer;
-        layer._pool = this._pool;
         layer.name = name;
         layer.path = zfs.get(name, 'mountpoint');
         layer.parent = parent;
@@ -53,8 +52,9 @@ class Layers {
 
     get(name) {
 
-        let zfs = new Zfs(this._pool);
         let layer = new Layer;
+
+        name = path.join(this._location, name);
 
         if (!zfs.has(name))
             throw new Error(`Dataset "${name}" not found.`);
@@ -62,7 +62,6 @@ class Layers {
         let origin = zfs.get(name, 'origin');
         let matches = origin.match(/\b([^\/]+)@/u);
 
-        layer._pool = this._pool;
         layer.name = name;
         layer.path = zfs.get(name, 'mountpoint');
         layer.parent = matches ? matches[1] : null;
@@ -73,16 +72,15 @@ class Layers {
 
     has(name) {
 
-        let zfs = new Zfs(this._pool);
+        name = path.join(this._location, name);
         return zfs.has(name);
 
     }
 
-    list() {
+    list(pool) {
 
-        let zfs = new Zfs(this._pool);
         return zfs.list()
-            .map(item => item.replace(this._pool, ''))
+            .map(item => item.replace(pool, ''))
             .map(item => item.replace('/', ''))
             .filter(item => item !== '');
 
@@ -90,7 +88,7 @@ class Layers {
 
     destroy(name) {
 
-        let zfs = new Zfs(this._pool);
+        name = path.join(this._location, name);
         zfs.destroy(name);
 
     }
