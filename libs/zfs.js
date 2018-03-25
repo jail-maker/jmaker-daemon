@@ -109,6 +109,30 @@ class Zfs {
 
     }
 
+    promote(clone) {
+
+        let result = spawnSync('zfs', [
+            'promote', clone,
+        ]);
+
+        let msg = '';
+
+        switch (result.status) {
+
+            case 1:
+                msg = `An error occurred. Dataset: ${clone}`;
+                throw new ExistsError(msg);
+                break;
+
+            case 2:
+                msg = `Invalid command line options were specified. Dataset: ${clone}`;
+                throw new CommandError(msg);
+                break;
+
+        }
+
+    }
+
     get(name, option) {
 
         let result = spawnSync('zfs', [
