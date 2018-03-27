@@ -10,9 +10,9 @@ class Chains {
 
     }
 
-    create({ name, layer = null, location = '/' }) {
+    create({ name, head = null, location = '/' }) {
 
-        let chain = new Chain({ parent: layer, location });
+        let chain = new Chain({ head, location });
         this._pool[name] = chain;
 
         return this._pool[name];

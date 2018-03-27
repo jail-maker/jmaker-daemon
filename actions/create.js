@@ -15,7 +15,7 @@ async function create(manifest, context = null) {
     let log = logsPool.get(manifest.name);
     let chain = chains.create({
         name: manifest.name,
-        layer: manifest.from,
+        head: manifest.from,
         location: config.imagesLocation,
     });
 
@@ -51,6 +51,7 @@ async function create(manifest, context = null) {
 
     }, false);
 
+    chain.squash();
     chains.delete(manifest.name);
 
 }

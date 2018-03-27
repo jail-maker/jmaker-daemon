@@ -151,8 +151,6 @@ app.get('/images/:image', (req, res) => {
 
 app.post('/images/push-to-repo', async (req, res) => {
 
-    console.log('!!!');
-
     let {
         image,
         repository = 'localhost'

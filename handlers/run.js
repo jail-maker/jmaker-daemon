@@ -1,6 +1,7 @@
 'use strict';
 
 const { spawn, exec } = require('child_process');
+const { ensureDir } = require('fs-extra');
 const path = require('path');
 const logsPool = require('../libs/logs-pool.js');
 const ExecutionError = require('../libs/Errors/execution-error.js');
@@ -96,13 +97,17 @@ class Run {
 
         await chain.layer(layerName, async storage => {
 
+            let mountPath = path.join(storage.path, '/dev');
+            await ensureDir(mountPath);
+
             try {
 
-                mountDevfs(path.join(storage.path, '/dev'));
+                mountDevfs(mountPath);
 
             } catch (error) {
 
                 log.warn(`devfs not mounted in "${storage.name}".\n`)
+                log.warn(`mount path: ${mountPath}.\n`)
 
             }
 

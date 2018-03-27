@@ -4,6 +4,9 @@ const zfs = require('../zfs.js');
 const Layer = require('./layer.js');
 const path = require('path');
 
+const FIRST = 'first';
+const LAST = 'last';
+
 class Layers {
 
     constructor(location = 'zroot') {
@@ -26,7 +29,7 @@ class Layers {
 
             try {
 
-                zfs.snapshot(from, 'last');
+                zfs.snapshot(from, LAST);
 
             } catch (error) {
 
@@ -35,16 +38,15 @@ class Layers {
 
             }
 
-            zfs.clone(from, 'last', name);
+            zfs.clone(from, LAST, name);
 
         }
 
-        zfs.snapshot(name, 'first');
+        zfs.snapshot(name, FIRST);
 
         let layer = new Layer;
         layer.name = name;
         layer.path = zfs.get(name, 'mountpoint');
-        layer.parent = parent;
 
         return layer;
 
@@ -59,12 +61,8 @@ class Layers {
         if (!zfs.has(name))
             throw new Error(`Dataset "${name}" not found.`);
 
-        let origin = zfs.get(name, 'origin');
-        let matches = origin.match(/\b([^\/]+)@/u);
-
         layer.name = name;
         layer.path = zfs.get(name, 'mountpoint');
-        layer.parent = matches ? matches[1] : null;
 
         return layer;
 

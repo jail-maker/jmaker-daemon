@@ -8,7 +8,10 @@ const compress = require('../compress.js');
 const decompress = require('../decompress.js');
 const foldesDiff = require('../folders-diff.js');
 
-function escapeString(str) {
+const FIRST = 'first';
+const LAST = 'last';
+
+const escapeString = str => {
 
     let exp = /([\W])/gu;
     return str.replace(exp, '\\$1');
@@ -21,7 +24,6 @@ class Layer {
 
         this.name = '';
         this.path = '';
-        this.parent = null;
 
     }
 
@@ -35,7 +37,7 @@ class Layer {
 
         try {
 
-            zfs.snapshot(this.name, 'last');
+            zfs.snapshot(this.name, LAST);
 
         } catch (error) {
 
@@ -45,7 +47,7 @@ class Layer {
         }
 
         let snapDir = path.join(this.path, '/.zfs/snapshot');
-        let diff = await foldesDiff(`${snapDir}/first`, `${snapDir}/last`);
+        let diff = await foldesDiff(`${snapDir}/${FIRST}`, `${snapDir}/${LAST}`);
 
         let files = diff.files(['A', 'C']);
         files.push('./.diff');
@@ -90,9 +92,26 @@ class Layer {
 
     }
 
+    get parent() {
+
+        let origin = zfs.get(this.name, 'origin');
+        let matches = origin.match(/\b([^\/]+)@/u);
+        return matches ? matches[1] : null;
+
+    }
+
     destroy() {
 
         zfs.destroy(this.name);
+
+    }
+
+    promote() {
+
+        zfs.destroy(this.name, LAST);
+        zfs.destroy(this.name, FIRST);
+        zfs.promote(this.name);
+        zfs.destroy(this.name, LAST);
 
     }
 

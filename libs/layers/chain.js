@@ -7,11 +7,12 @@ const EventEmitter = require('events');
 
 class Chain extends EventEmitter {
 
-    constructor({ parent = null, location = '/' }) {
+    constructor({ head = null, location = '/' }) {
 
         super();
 
-        this._parent = parent;
+        this._head = head;
+        this._parent = head;
         this._location = location;
         this._counter = 1;
         this._current = null;
@@ -63,6 +64,23 @@ class Chain extends EventEmitter {
     getCurrent() {
 
         return this._current;
+
+    }
+
+    squash() {
+
+        let layers = new Layers(this._location);
+        let head = this._head;
+        let current = this._current;
+        let parent = layers.get(current.parent);
+
+        while (current.parent !== head) {
+
+            let parent = layers.get(current.parent);
+            current.promote();
+            parent.destroy();
+
+        }
 
     }
 
