@@ -47,7 +47,8 @@ class Layer {
         }
 
         let snapDir = path.join(this.path, '/.zfs/snapshot');
-        let diff = await foldesDiff(`${snapDir}/${FIRST}`, `${snapDir}/${LAST}`);
+        // let diff = await foldesDiff(`${snapDir}/${FIRST}`, `${snapDir}/${LAST}`);
+        let diff = await foldesDiff(`${snapDir}/${LAST}/`, `${snapDir}/${FIRST}/`);
 
         let files = diff.files(['A', 'C']);
         files.push('./.diff');

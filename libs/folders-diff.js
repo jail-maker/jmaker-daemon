@@ -5,21 +5,15 @@ const fs = require('fs');
 
 const ACTIONS = {'+': 'A', '-': 'D'};
 
-const diff = (...folders) => {
+const diff = (src, dst) => {
 
     return new Promise((res, rej) => {
 
         let resData = '';
         let rejData = '';
 
-        let command = folders
-            .map(folder => `<(cd ${folder} && find ./ -type flc -exec sha256 -r {} \\; | sort)`)
-            .join(' ');
-
-        command = `diff -u ${command}`;
-
-        let child = spawn('bash', [
-            '-c', command
+        let child = spawn('rsync', [
+            '-nav', '--delete', src, dst,
         ]);
 
         child.stdout.on('data', data => resData += data);
@@ -93,28 +87,39 @@ module.exports = async (...folders) => {
         .toString()
         .trim('\n');
 
-    let exp = /^([\+\-])\s*\w+\s([^+].*)$/miu;
+    let symlinks = /^(.+) -> (.+)$/imu;
+    let deleting = /^deleting (.+)$/imu;
 
-    let ret = diffOut.split('\n').reduce((acc, line, key) => {
+    let ret = diffOut.split('\n').slice(1, -3).reduce((acc, line, key) => {
 
-        let matches = line.match(exp);
-        if (!matches) return acc;
+        if (line.slice(-1) === '/') return acc;
 
-        let action = matches[1];
-        let file = matches[2];
+        let matches = line.match(deleting);
 
-        if (acc[file]) {
+        if (matches) {
 
-            acc[file] = 'C';
+            let file = `./${matches[1]}`;
+            acc[file] = 'D';
             return acc;
 
         }
 
-        acc[file] = ACTIONS[action];
+        matches = line.match(symlinks);
+
+        if (matches) {
+
+            let file = `./${matches[1]}`;
+            acc[file] = 'A';
+            return acc;
+
+        }
+
+        let file = `./${line}`;
+        acc[file] = 'A';
         return acc;
 
-    }, new DiffOut); 
+    }, new DiffOut);
 
     return ret;
 
-};
+}

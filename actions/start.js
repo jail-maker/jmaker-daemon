@@ -42,7 +42,7 @@ async function start(manifest) {
     let log = logsPool.get(manifest.name);
     let recorder = new Recorder;
     let jail = {};
-    let layers = new Layers(config.zfsPool);
+    let layers = new Layers(config.imagesLocation);
     let layer = layers.get(manifest.name);
     let storage = layer;
 

@@ -120,7 +120,8 @@ class Mount {
             args = {},
         } = data;
 
-        let layers = new Layers(config.volumesLocation);
+        let layers = new Layers(config.imagesLocation);
+        let volumes = new Layers(config.volumesLocation);
         let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
 
@@ -136,9 +137,9 @@ class Mount {
         dst = path.resolve(manifest.workdir, dst);
         dst = path.join(layer.path, dst);
 
-        let volume = layers.has(args.name)
-            ? layers.get(args.name)
-            : layers.create(args.name);
+        let volume = volumes.has(args.name)
+            ? volumes.get(args.name)
+            : volumes.create(args.name);
 
         let src = volume.path;
 
