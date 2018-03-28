@@ -9,6 +9,6 @@ module.exports = (dst, force = false) => {
     let result = spawnSync('/sbin/umount', [force, dst]);
 
     if (result.status !== 0)
-        throw new ExecutionError('Error execution mount.');
+        throw new ExecutionError('Error execution umount.');
 
 }

@@ -8,16 +8,17 @@ class Recorder {
 
     }
 
-    async run(record, allRollback = true) {
+    async run({record, allRollback = true, argv = []}) {
 
         try {
 
-            await record.run();
-            this._pool.push(record);
+            let result = await record.run(...argv);
+            this._pool.push({ record, argv });
+            return result;
 
         } catch (error) {
 
-            await record.rollback();
+            await record.rollback(...argv);
             if (allRollback) await this.rollback();
             throw error;
 
@@ -29,11 +30,11 @@ class Recorder {
 
         while (this._pool.length) {
 
-            let rec = this._pool.pop();
+            let { record, argv } = this._pool.pop();
 
             try {
 
-                await rec.rollback();
+                await record.rollback(...argv);
 
             } catch (error) {
 

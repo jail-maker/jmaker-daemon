@@ -26,7 +26,6 @@ const dhcp = require('../modules/ip-dhcp.js');
 const autoIface = require('../modules/auto-iface.js');
 const autoIp = require('../modules/auto-ip.js');
 
-// const Mounts = require('../modules/mounts.js');
 const Cpuset = require('../modules/cpuset.js');
 const Pkg = require('../modules/pkg.js');
 const JPreStart = require('../modules/j-prestart.js');
@@ -65,7 +64,7 @@ async function start(manifest) {
 
     {
 
-        let call = {
+        let record = {
             run: _ => {
 
                 jail = new Jail(manifest, storage.path);
@@ -79,7 +78,7 @@ async function start(manifest) {
             }
         }
 
-        await recorder.run(call);
+        await recorder.run({ record });
 
     }
 
@@ -87,7 +86,7 @@ async function start(manifest) {
 
     {
 
-        let call = {
+        let record = {
             run: _ => {
 
                 configObj
@@ -100,28 +99,23 @@ async function start(manifest) {
             rollback: _ => {}
         };
 
-        await recorder.run(call);
+        await recorder.run({ record });
 
     }
 
     await log.info('rctl... ');
     let rctlObj = new Rctl(manifest.rctl, manifest.name);
-    await recorder.run(rctlObj);
+    await recorder.run({ record: rctlObj });
     await log.notice('done\n');
-
-    // await log.info('mounting... ');
-    // let mounts = new Mounts(manifest.mounts, manifest.path);
-    // await recorder.run(mounts);
-    // await log.notice('done\n');
 
     await log.info(configObj.toString() + '\n');
 
     await log.notice('jail starting...\n');
-    await recorder.run(jail);
+    await recorder.run({ record: jail });
     await log.notice('done\n');
 
     let hosts = new Hosts(jail);
-    await recorder.run(hosts);
+    await recorder.run({ record: hosts });
 
     if (manifest.cpus) {
 
@@ -141,7 +135,7 @@ async function start(manifest) {
         try {
 
             let cpuset = new Cpuset(jail.info.jid, manifest.cpuset);
-            await recorder.run(cpuset);
+            await recorder.run({ record: cpuset });
 
         } catch (error) {
 
@@ -164,6 +158,7 @@ async function start(manifest) {
         let handler = handlers[command];
         await handler.do({
             manifest,
+            recorder,
             args,
             stage: 'starting',
         });
@@ -171,23 +166,6 @@ async function start(manifest) {
     }
 
     await log.notice('done\n');
-
-    return;
-
-    await log.notice('j-poststart...\n');
-
-    let jPostStart = new JPostStart(
-        manifest.name,
-        manifest['exec.j-poststart'],
-        {
-            env: manifest.env,
-            workdir: manifest.workdir,
-        },
-    );
-    await recorder.run(jPostStart);
-
-    await log.notice('done\n');
-    return;
 
 }
 

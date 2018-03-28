@@ -1,13 +1,15 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
-const { ensureDir } = require('fs-extra');
+const { ensureDirSync } = require('fs-extra');
 const path = require('path');
 const sha256 = require('js-sha256').sha256;
 const config = require('../libs/config.js');
 const logsPool = require('../libs/logs-pool.js');
 const Layers = require('../libs/layers');
 const chains = require('../libs/layers/chains.js');
+const mountNullfs = require('../libs/mount-nullfs.js');
+const umount = require('../libs/umount.js');
 
 class Mount {
 
@@ -86,12 +88,8 @@ class Mount {
         chain.on('precall', layer => {
 
             let absoluteDst = path.join(layer.path, dst);
-            ensureDir(absoluteDst);
-
-            let result = spawnSync('mount_nullfs', [ src, absoluteDst ]);
-
-            if (result.status !== 0)
-                throw new Error('Error execution mount_nullfs.');
+            ensureDirSync(absoluteDst);
+            mountNullfs(src, absoluteDst);
 
         });
 
@@ -118,6 +116,7 @@ class Mount {
         let {
             manifest,
             args = {},
+            recorder,
         } = data;
 
         let layers = new Layers(config.imagesLocation);
@@ -143,14 +142,16 @@ class Mount {
 
         let src = volume.path;
 
-        ensureDir(dst);
 
-        let result = spawnSync('mount_nullfs', [
-            src, dst,
-        ]);
+        let record = {
+            run: _ => {
+                ensureDirSync(dst);
+                mountNullfs(src, dst); 
+            },
+            rollback: _ => { umount(dst, true); },
+        };
 
-        if (result.status !== 0)
-            throw new Error('Error execution mount_nullfs.');
+        await recorder.run({ record });
 
     }
 
