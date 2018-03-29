@@ -72,6 +72,24 @@ class Log extends EventEmitter {
 
     }
 
+    fromPty(child) {
+
+        return new Promise((res, rej) => {
+
+            child.on('data', data => {
+
+                this.info(data);
+
+            });
+
+            child.on('exit', (code, signal) => {
+                res({code, signal});
+            });
+
+        });
+
+    }
+
     fromProcess(child) {
 
         return new Promise((res, rej) => {

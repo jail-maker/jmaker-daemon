@@ -27,6 +27,8 @@
     "json-query": "^2.2.2",
     "minimist": "^1.2.0",
     "mkdir-recursive": "^0.3.0",
+    "node-pty": "^0.7.4",
+    "pty": "^0.0.0",
     "random-mac": "^0.0.4",
     "redis": "^2.8.0",
     "request": "^2.83.0",

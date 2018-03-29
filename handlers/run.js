@@ -1,6 +1,6 @@
 'use strict';
 
-const { spawn, exec } = require('child_process');
+const { spawn } = require('node-pty');
 const { ensureDir } = require('fs-extra');
 const path = require('path');
 const logsPool = require('../libs/logs-pool.js');
@@ -62,13 +62,13 @@ class Run {
                 `cd ${manifest.workdir} && ${command}`
             ],
             {
-                stdio: ['ignore', 'pipe', 'pipe'],
+                name: 'xterm-color',
                 env: env,
                 cwd: '/',
             }
         );
 
-        let result = await log.fromProcess(child);
+        let result = await log.fromPty(child);
 
         if (result.code) {
 
@@ -118,13 +118,13 @@ class Run {
                     `cd ${manifest.workdir} && ${command}`,
                 ],
                 {
-                    stdio: ['ignore', 'pipe', 'pipe'],
+                    name: 'xterm-color',
                     env: env,
                     cwd: '/',
                 }
             );
 
-            let { code } = await log.fromProcess(child);
+            let { code } = await log.fromPty(child);
 
             try {
 
