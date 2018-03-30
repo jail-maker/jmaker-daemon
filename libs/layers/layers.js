@@ -75,10 +75,10 @@ class Layers {
 
     }
 
-    list(pool) {
+    list() {
 
-        return zfs.list()
-            .map(item => item.replace(pool, ''))
+        return zfs.list(this._location)
+            .map(item => item.replace(this._location, ''))
             .map(item => item.replace('/', ''))
             .filter(item => item !== '');
 
