@@ -62,6 +62,7 @@ class Mount {
         let {
             manifest,
             args = {},
+            scope,
         } = data;
 
         let log = logsPool.get(manifest.name);
@@ -95,17 +96,21 @@ class Mount {
 
         chain.on('postcall', layer => {
 
-            let result = spawnSync('umount', [
-                '-f', path.join(layer.path, dst)
-            ]);
+            umount(path.join(layer.path, dst), true);
 
         });
 
         chain.on('fail', layer => {
 
-            let result = spawnSync('umount', [
-                '-f', path.join(layer.path, dst)
-            ]);
+            umount(path.join(layer.path, dst), true);
+
+        });
+
+        scope.on('int', _ => {
+
+            console.log('umount');
+            let layer = chain.getCurrent();
+            umount(path.join(layer.path, dst), true);
 
         });
 

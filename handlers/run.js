@@ -86,6 +86,7 @@ class Run {
         let {
             manifest,
             args = '',
+            scope,
         } = data;
 
         let log = logsPool.get(manifest.name);
@@ -103,6 +104,7 @@ class Run {
             try {
 
                 mountDevfs(mountPath);
+                scope.on('int', _ => umount(mountPath, true));
 
             } catch (error) {
 

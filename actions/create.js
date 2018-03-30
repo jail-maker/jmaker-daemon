@@ -9,9 +9,11 @@ const RawArgument = require('../libs/raw-argument.js');
 
 const chains = require('../libs/layers/chains.js');
 const handlers = require('../handlers');
+const RuntimeScope = require('../libs/runtime-scope.js');
 
 async function create(manifest, context = null) {
 
+    let scope = new RuntimeScope;
     let log = logsPool.get(manifest.name);
     let chain = chains.create({
         name: manifest.name,
@@ -39,6 +41,7 @@ async function create(manifest, context = null) {
         await handler.do({
             manifest,
             context,
+            scope,
             args,
             stage: 'building',
         });
@@ -53,6 +56,7 @@ async function create(manifest, context = null) {
 
     chain.squash();
     chains.delete(manifest.name);
+    scope.close();
 
 }
 
