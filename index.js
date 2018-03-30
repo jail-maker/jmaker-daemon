@@ -17,6 +17,7 @@ const Repository = require('./libs/repository.js');
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
 const ManifestFactory = require('./libs/manifest-factory.js');
+const Manifest = require('./libs/manifest.js');
 const Rctl = require('./libs/rctl.js');
 const FolderStorage = require('./libs/folder-storage.js');
 const Channel = require('./libs/channel.js');
@@ -146,6 +147,58 @@ app.get('/images/:image', (req, res) => {
         res.send();
 
     }
+
+});
+
+app.get('/images/:image/manifest', (req, res) => {
+
+    let image = req.params.image;
+    let layers = new Layers(config.imagesLocation);
+
+    if (!layers.has(image)) {
+
+        res.status(404);
+        res.send();
+        return;
+
+    }
+
+    let layer = layers.get(image);
+    let manifestFile = path.join(layer.path, '.manifest');
+    let manifest = {};
+
+    try {
+
+        manifest = ManifestFactory.fromFile(manifestFile);
+
+    } catch (error) {
+
+        manifest = new Manifest;
+        manifest.name = image;
+        manifest.from = layer.parent;
+
+    }
+    res.json(manifest);
+
+});
+
+app.get('/images/:image/data', async (req, res) => {
+
+    let image = req.params.image;
+    let layers = new Layers(config.imagesLocation);
+
+    if (!layers.has(image)) {
+
+        res.status(404);
+        res.send();
+        return;
+
+    }
+
+    let layer = layers.get(image);
+    let archive = await layer.compress();
+    let stream = fs.createReadStream(archive);
+    res.send(stream);
 
 });
 
