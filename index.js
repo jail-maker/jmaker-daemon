@@ -3,6 +3,7 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
+const tempWrite = require('temp-write');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
@@ -45,6 +46,7 @@ const stop = require('./actions/stop.js');
 const sigHandler = require('./actions/sig-handler.js');
 
 app.use(bodyParser.json());
+app.use(bodyParser.raw({ type: 'application/x-xz', limit: '500mb' }));
 app.use(multiparty());
 
 process.on('SIGINT', sigHandler);
@@ -88,7 +90,7 @@ app.get('/images', async (req, res) => {
 
 });
 
-app.post('/images', async (req, res) => {
+app.post('/image-builder', async (req, res) => {
 
     console.log(req.body);
     console.log(req.files);
@@ -100,7 +102,7 @@ app.post('/images', async (req, res) => {
     let log = logsPool.create(name);
 
     let context = new Context;
-    await decompress(files.context.path, context.path, true);
+    await decompress(files.context.path, context.path, {remove: true});
 
     try {
 
@@ -120,6 +122,15 @@ app.post('/images', async (req, res) => {
         res.send();
 
     }
+
+});
+
+app.post('/image-importer', async (req, res) => {
+
+    let file = await tempWrite(req.body, 'jmaker-image.txz');
+
+    await decompress(file, context.path, {remove: true});
+    res.status(503).send();
 
 });
 
@@ -182,7 +193,13 @@ app.get('/images/:image/manifest', (req, res) => {
 
 });
 
-app.get('/images/:image/data', async (req, res) => {
+app.delete('/images/:image', (req, res) => {
+
+    res.status(503).send();
+
+});
+
+app.get('/images/:image/exported', async (req, res) => {
 
     let image = req.params.image;
     let layers = new Layers(config.imagesLocation);

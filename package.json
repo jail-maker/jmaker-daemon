@@ -28,12 +28,13 @@
     "minimist": "^1.2.0",
     "mkdir-recursive": "^0.3.0",
     "node-pty": "^0.7.4",
-    "pty": "^0.0.0",
     "random-mac": "^0.0.4",
     "redis": "^2.8.0",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
     "shell-tar": "^1.0.15",
+    "temp-write": "^3.4.0",
+    "tempfile": "^2.0.0",
     "uniqid": "^4.1.1",
     "ws": "^3.3.2"
   }

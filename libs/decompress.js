@@ -3,11 +3,11 @@
 const {spawn, spawnSync} = require("child_process");
 const fs = require("fs");
 
-module.exports = (archive, dst, remove = false) => {
+module.exports = (archive, dst, {remove = false, files = []}) => {
 
     return new Promise((res, rej) => {
 
-        let child = spawn('tar', ['-xf', archive, '-C', dst]);
+        let child = spawn('tar', ['-xf', archive, ...files, '-C', dst]);
         let rejData = '';
 
         child.stderr.on('data', data => rejData += data);
