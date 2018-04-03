@@ -144,7 +144,7 @@ app.post('/image-importer', async (req, res) => {
     } catch (error) {
 
         console.log(error);
-        res.status(404).send();
+        res.status(400).send();
         return;
 
     }
