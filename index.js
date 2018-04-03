@@ -132,15 +132,16 @@ app.post('/image-importer', async (req, res) => {
 
     let layers = new Layers(config.imagesLocation);
     let imageFile = await tempWrite(req.body, `jmaker-image-${uniqid()}.txz`);
-    let tempdir = await tempdir();
-    let manifestFile = path.join(tempdir, '.manifest');
+    let tmpDir = await tempdir();
+    let manifestFile = path.join(tmpDir, '.manifest');
 
-    await decompress(imageFile, tempdir, {files: ['.manifest']});
+    await decompress(imageFile, tmpDir, {files: ['.manifest']});
     let manifest = ManifestFactory.fromFile(manifestFile);
     let layer = layers.create(manifest.name, manifest.from);
     await layer.decompress(imageFile);
 
-    res.status(503).send();
+    // res.status(503).send();
+    res.send();
 
 });
 
