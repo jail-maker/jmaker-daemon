@@ -262,7 +262,19 @@ app.get('/images/:image/manifest', (req, res) => {
 
 app.delete('/images/:image', (req, res) => {
 
-    res.status(503).send();
+    let image = req.params.image;
+    let layers = new Layers(config.imagesLocation);
+
+    if (!layers.has(image)) {
+
+        res.status(404);
+        res.send(`Image ${image} not found.`);
+        return;
+
+    }
+
+    Layers.destroy(image);
+    res.send();
 
 });
 
@@ -274,7 +286,7 @@ app.get('/images/:image/exported', async (req, res) => {
     if (!layers.has(image)) {
 
         res.status(404);
-        res.send();
+        res.send(`Image ${image} not found.`);
         return;
 
     }
