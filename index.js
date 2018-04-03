@@ -134,14 +134,46 @@ app.post('/image-importer', async (req, res) => {
     let imageFile = await tempWrite(req.body, `jmaker-image-${uniqid()}.txz`);
     let tmpDir = await tempdir();
     let manifestFile = path.join(tmpDir, '.manifest');
+    let manifest = {};
 
-    await decompress(imageFile, tmpDir, {files: ['.manifest']});
-    let manifest = ManifestFactory.fromFile(manifestFile);
-    let layer = layers.create(manifest.name, manifest.from);
-    await layer.decompress(imageFile);
+    try {
 
-    // res.status(503).send();
-    res.send();
+        await decompress(imageFile, tmpDir, {files: ['.manifest']});
+        manifest = ManifestFactory.fromFile(manifestFile);
+
+    } catch (error) {
+
+        console.log(error);
+        res.status(404).send();
+        return;
+
+    }
+
+    if (layers.has(manifest.name)) {
+
+        res.status(409).send();
+        return;
+
+    }
+
+    if (manifest.from && !layers.has(manifest.from)) {
+
+        res.status(404).send();
+        return;
+
+    }
+
+    try {
+
+        let layer = layers.create(manifest.name, manifest.from);
+        await layer.decompress(imageFile);
+        res.send();
+
+    } catch (error) {
+
+        res.status(500).send();
+
+    }
 
 });
 
