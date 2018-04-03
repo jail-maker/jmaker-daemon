@@ -10,6 +10,8 @@ const uniqid = require('uniqid');
 const path = require('path');
 const url = require('url');
 const fs = require('fs');
+const fse = require('fs-extra');
+const mime = require('mime');
 const http = require('http');
 const express = require('express');
 const WebSocket = require('ws');
@@ -130,48 +132,70 @@ app.post('/image-builder', async (req, res) => {
 
 app.post('/image-importer', async (req, res) => {
 
+    let tmpDir = undefined;
+    let imageFile = undefined;
+    let manifestFile = undefined;
     let layers = new Layers(config.imagesLocation);
-    let imageFile = await tempWrite(req.body, `jmaker-image-${uniqid()}.txz`);
-    let tmpDir = await tempdir();
-    let manifestFile = path.join(tmpDir, '.manifest');
-    let manifest = {};
+    let mimeType = req.get('content-type');
+    let ext = mime.getExtension(mimeType);
 
-    try {
+    if (!req.body.length) {
 
-        await decompress(imageFile, tmpDir, {files: ['.manifest']});
-        manifest = ManifestFactory.fromFile(manifestFile);
-
-    } catch (error) {
-
-        console.log(error);
-        res.status(400).send();
-        return;
-
-    }
-
-    if (layers.has(manifest.name)) {
-
-        res.status(409).send();
-        return;
-
-    }
-
-    if (manifest.from && !layers.has(manifest.from)) {
-
-        res.status(404).send();
+        res.status(400).send("Image file not found.");
         return;
 
     }
 
     try {
 
-        let layer = layers.create(manifest.name, manifest.from);
-        await layer.decompress(imageFile);
-        res.send();
+        imageFile = await tempWrite(req.body, `jmaker-image-${uniqid()}.${ext}`);
+        tmpDir = await tempdir();
+        manifestFile = path.join(tmpDir, '.manifest');
 
-    } catch (error) {
+        let manifest = {};
 
-        res.status(500).send();
+        try {
+
+            await decompress(imageFile, tmpDir, {files: ['.manifest']});
+            manifest = ManifestFactory.fromFile(manifestFile);
+
+        } catch (error) {
+
+            res.status(400).send("Bad image format.");
+            return;
+
+        }
+
+        if (layers.has(manifest.name)) {
+
+            res.status(409).send(`Image ${manifest.name} already exists.`);
+            return;
+
+        }
+
+        if (manifest.from && !layers.has(manifest.from)) {
+
+            res.status(404).send(`Image ${manifest.from} not found.`);
+            return;
+
+        }
+
+        try {
+
+            let layer = layers.create(manifest.name, manifest.from);
+            await layer.decompress(imageFile);
+            res.send();
+
+        } catch (error) {
+
+            res.status(500).send();
+
+        }
+
+    } finally {
+
+        if (imageFile) fse.removeSync(imageFile);
+        if (tmpDir) fse.removeSync(tmpDir);
 
     }
 
