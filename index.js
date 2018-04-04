@@ -256,6 +256,7 @@ app.get('/images/:image/manifest', (req, res) => {
         manifest.from = layer.parent;
 
     }
+
     res.json(manifest);
 
 });
@@ -294,10 +295,13 @@ app.get('/images/:image/exported', async (req, res) => {
     let layer = layers.get(image);
     let archive = await layer.compress();
     res.attachment(archive).sendFile(archive);
+    fse.removeSync(archive);
 
 });
 
 app.post('/images/push-to-repo', async (req, res) => {
+
+    res.status(503).send('deprecated');
 
     let {
         image,
@@ -331,6 +335,8 @@ app.post('/images/push-to-repo', async (req, res) => {
 });
 
 app.post('/images/download-from-repo', async (req, res) => {
+
+    res.status(503).send('deprecated');
 
     let {
         image,
