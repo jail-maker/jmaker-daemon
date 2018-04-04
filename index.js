@@ -293,8 +293,7 @@ app.get('/images/:image/exported', async (req, res) => {
 
     let layer = layers.get(image);
     let archive = await layer.compress();
-    let stream = fs.createReadStream(archive);
-    res.send(stream);
+    res.attachment(archive).send();
 
 });
 
