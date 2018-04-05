@@ -1,5 +1,6 @@
 'use strict';
 
+const intProcessEmitter = require('./interrupt-process-emitter.js');
 const EventEmitter = require('events');
 
 class RuntimeScope extends EventEmitter {
@@ -8,28 +9,14 @@ class RuntimeScope extends EventEmitter {
 
         super();
 
-        console.log('new scope');
-        process.on('SIGINT', this.int);
-        process.on('SIGTERM', this.int);
-
-    }
-
-    int() {
-
-        console.log('int');
-        console.log('int');
-        console.log('int');
-        console.log('int');
-        console.log('int');
-        this.emit('int');
+        intProcessEmitter.prependListener('int', _ => this.emit('int'));
 
     }
 
     close() {
 
         console.log('close scope');
-        process.removeListener('SIGINT', this.int);
-        process.removeListener('SIGTERM', this.int);
+        intProcessEmitter.removeListener('int', this.int);
         this.removeAllListeners('int');
 
     }

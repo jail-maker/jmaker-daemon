@@ -19,6 +19,7 @@ const bodyParser = require('body-parser');
 const multiparty = require('connect-multiparty');
 const reqest = require('request-promise-native');
 
+const intProcessEmitter = require('./libs/interrupt-process-emitter.js');
 const Repository = require('./libs/repository.js');
 const fetch = require('./libs/bsd-fetch.js');
 const ConfigBody = require('./libs/config-body.js');
@@ -48,14 +49,24 @@ const wss = new WebSocket.Server({ server });
 const create = require('./actions/create.js');
 const start = require('./actions/start.js');
 const stop = require('./actions/stop.js');
-const sigHandler = require('./actions/sig-handler.js');
 
 app.use(bodyParser.json());
 app.use(bodyParser.raw({ type: 'application/x-xz', limit: '500mb' }));
 app.use(multiparty());
 
-process.on('SIGINT', sigHandler);
-process.on('SIGTERM', sigHandler);
+intProcessEmitter.prependListener('int', async _ => {
+
+    try {
+
+        await Promise.all(dataJails.getNames().map(stop));
+
+    } catch (error) {
+
+        console.log(error);
+
+    }
+
+});
 
 app.get('/images', async (req, res) => {
 
@@ -294,8 +305,8 @@ app.get('/images/:image/exported', async (req, res) => {
 
     let layer = layers.get(image);
     let archive = await layer.compress();
-    res.attachment(archive).sendFile(archive);
-    fse.removeSync(archive);
+    res.attachment(archive)
+        .sendFile(archive, {}, _ => fse.removeSync(archive));
 
 });
 
