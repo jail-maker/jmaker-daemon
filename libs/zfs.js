@@ -37,7 +37,7 @@ class Zfs {
         if (options.length) options = ['-o', ...options];
 
         let result = spawnSync('zfs', [
-            'create', ...options, name,
+            'create', '-p', ...options, name,
         ]);
 
         let msg = '';
