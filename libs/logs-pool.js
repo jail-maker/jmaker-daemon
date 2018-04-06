@@ -1,7 +1,7 @@
 'use strict';
 
 const Log = require('./log.js');
-const NotFoundError = require('./Errors/not-found-error.js');
+const NotFoundError = require('./errors/not-found-error.js');
 
 class LogsPool {
 

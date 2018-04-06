@@ -2,7 +2,7 @@
 
 const { spawnSync, spawn } = require('child_process');
 const jsonQuery = require('json-query');
-const ExecutionError = require('./Errors/execution-error.js');
+const ExecutionError = require('./errors/execution-error.js');
 const Iface = require('../libs/iface.js');
 const Ip4Addr = require('../libs/ip4addr.js');
 const Ipv6TypesAddresses = require('../libs/ipv6-types-addresses.js');

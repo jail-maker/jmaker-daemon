@@ -3,7 +3,7 @@
 const { spawnSync } = require('child_process');
 const { ensureDir } = require('fs-extra');
 const path = require('path');
-const ExecutionError = require('../libs/Errors/execution-error.js');
+const ExecutionError = require('../libs/errors/execution-error.js');
 
 class Mounts {
 

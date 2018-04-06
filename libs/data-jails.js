@@ -1,7 +1,7 @@
 'use strict';
 
-const NotFoundError = require('./Errors/not-found-error.js');
-const ExistsError = require('./Errors/exists-error.js');
+const NotFoundError = require('./errors/not-found-error.js');
+const ExistsError = require('./errors/exists-error.js');
 
 class DataJails {
 

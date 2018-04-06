@@ -4,7 +4,6 @@ const fs = require('fs');
 const request = require('request-promise-native');
 const fetch = require('./bsd-fetch.js');
 const compress = require('./compress.js');
-const ZfsStorage = require('./zfs-storage.js');
 const config = require('./config.js');
 const Layers = require('./layers');
 

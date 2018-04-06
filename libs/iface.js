@@ -4,8 +4,8 @@ const { spawn, spawnSync } = require('child_process');
 const jsonQuery = require('json-query');
 const Ip4Addr = require('./ip4addr.js');
 const Ip6Addr = require('./ip6addr.js');
-const NotFoundError = require('./Errors/not-found-error.js');
-const ExistsError = require('./Errors/exists-error.js');
+const NotFoundError = require('./errors/not-found-error.js');
+const ExistsError = require('./errors/exists-error.js');
 const Ipv6TypesAddresses = require('./ipv6-types-addresses.js');
 
 class Iface {

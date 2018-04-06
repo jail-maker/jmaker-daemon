@@ -3,7 +3,7 @@
 const { spawn, exec } = require('child_process');
 const path = require('path');
 const logsPool = require('../libs/logs-pool.js');
-const ExecutionError = require('../libs/Errors/execution-error.js');
+const ExecutionError = require('../libs/errors/execution-error.js');
 const ExecAbstract = require('../libs/exec-abstract.js');
 const mountDevfs = require('../libs/mount-devfs.js');
 const umount = require('../libs/umount.js');

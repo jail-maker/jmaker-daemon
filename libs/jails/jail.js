@@ -4,7 +4,7 @@ const { spawnSync, spawn } = require('child_process');
 const EventEmitter = require('events');
 const fs = require('fs');
 
-const ExecutionError = require('../Errors/execution-error.js');
+const ExecutionError = require('../errors/execution-error.js');
 
 const ConfigFile = require('./config-file.js');
 const logsPool = require('../logs-pool.js');

@@ -2,7 +2,7 @@
 
 const { spawn, spawnSync } = require('child_process')
 const RctlRule = require('./rctl-rule.js');
-const ExecutionError = require('../libs/Errors/execution-error.js');
+const ExecutionError = require('../libs/errors/execution-error.js');
 
 class Rctl {
 

@@ -8,10 +8,10 @@ share/jmaker-server/actions/stop.js
 share/jmaker-server/actions/sig-handler.js
 share/jmaker-server/actions/start.js
 share/jmaker-server/index.js
-share/jmaker-server/libs/Errors/command-error.js
-share/jmaker-server/libs/Errors/execution-error.js
-share/jmaker-server/libs/Errors/exists-error.js
-share/jmaker-server/libs/Errors/not-found-error.js
+share/jmaker-server/libs/errors/command-error.js
+share/jmaker-server/libs/errors/execution-error.js
+share/jmaker-server/libs/errors/exists-error.js
+share/jmaker-server/libs/errors/not-found-error.js
 share/jmaker-server/libs/config-body.js
 share/jmaker-server/libs/bsd-fetch.js
 share/jmaker-server/libs/config-file.js

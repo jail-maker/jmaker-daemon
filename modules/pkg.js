@@ -2,7 +2,7 @@
 
 const { spawn } = require('child_process');
 const logsPool = require('../libs/logs-pool.js');
-const ExecutionError = require('../libs/Errors/execution-error.js');
+const ExecutionError = require('../libs/errors/execution-error.js');
 
 class Pkg {
 

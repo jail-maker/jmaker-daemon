@@ -1,7 +1,7 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
-const ExecutionError = require('../libs/Errors/execution-error.js');
+const ExecutionError = require('../libs/errors/execution-error.js');
 
 class Cpuset {
 

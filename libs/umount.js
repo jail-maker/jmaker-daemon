@@ -1,7 +1,7 @@
 'use strict';
 
 const {spawn, spawnSync} = require('child_process');
-const ExecutionError = require('./Errors/execution-error.js');
+const ExecutionError = require('./errors/execution-error.js');
 
 module.exports = (dst, force = false) => {
 

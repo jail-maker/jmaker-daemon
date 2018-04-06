@@ -2,7 +2,7 @@
 
 const { spawnSync, spawn } = require('child_process');
 const defaultIface = require('../libs/default-iface.js');
-const NotFoundError = require('../libs/Errors/not-found-error.js');
+const NotFoundError = require('../libs/errors/not-found-error.js');
 
 class AutoIp {
 

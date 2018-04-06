@@ -2,9 +2,9 @@
 
 const { spawn, spawnSync } = require('child_process');
 
-const ExistsError = require('./Errors/exists-error.js');
-const CommandError = require('./Errors/command-error.js');
-const NotFoundError = require('./Errors/not-found-error.js');
+const ExistsError = require('./errors/exists-error.js');
+const CommandError = require('./errors/command-error.js');
+const NotFoundError = require('./errors/not-found-error.js');
 
 class Zfs {
 
