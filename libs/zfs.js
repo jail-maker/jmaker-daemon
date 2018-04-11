@@ -238,6 +238,54 @@ class Zfs {
 
     }
 
+    rename(from, to, options = {}) {
+
+        let {
+            force = true,
+            parents = true,
+            remount = true,
+            recursively = true,
+        } = options;
+
+        let forceArg = force ? ['-f'] : [];
+        let parentsArg = parents ? ['-p'] : [];
+        let remountArg = !remount ? ['-u'] : [];
+        let recursivelyArg = recursively ? ['-r'] : [];
+
+        let result = spawnSync('zfs', [
+            'rename',
+            ...forceArg,
+            ...parentsArg,
+            ...remountArg,
+            ...recursivelyArg,
+            from, to
+        ]);
+
+        let msg = '';
+
+        switch (result.status) {
+
+            case 1:
+                msg = `An error occurred. Rename: from "${from}" to "${to}"`;
+                break;
+
+            case 2:
+                msg = 'Invalid command line options were specified. ' ;
+                msg += `Rename: from "${from}" to "${to}"`;
+                break;
+
+        }
+
+        if (result.status) {
+
+            let error = new CommandError(msg);
+            error.exitStatus = result.status;
+            throw error;
+
+        }
+
+    }
+
     diff(snapshot, fs) {
 
         let result = spawnSync('zfs', [
