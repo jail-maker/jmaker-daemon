@@ -11,10 +11,50 @@ const chains = require('../libs/layers/chains.js');
 const handlers = require('../handlers');
 const RuntimeScope = require('../libs/runtime-scope.js');
 
+const Layers = require('../libs/layers/layers.js');
+
 async function create(manifest, context = null) {
 
     let scope = new RuntimeScope;
     let log = logsPool.get(manifest.name);
+
+    let layers = new Layers(config.imagesLocation);
+    let layer = layers.createIfNotExists(manifest.name, manifest.from);
+
+    layer.snapshot();
+
+    try {
+
+        let dir = path.resolve(manifest.workdir);
+        dir = path.join(layer.path, dir);
+        await fse.ensureDir(dir);
+
+    } catch (error) {
+
+        layer.rollback();
+        throw error;
+
+    }
+
+    for (let obj of manifest.building) {
+
+        let command = Object.keys(obj)[0];
+        let args = obj[command];
+
+        let handler = handlers[command];
+        await handler.do({
+            manifest,
+            context,
+            scope,
+            args,
+            stage: 'building',
+        });
+
+    }
+
+    // ===================================================
+
+
     let chain = chains.create({
         name: manifest.name,
         head: manifest.from,

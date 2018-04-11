@@ -15,6 +15,13 @@ class Layers {
 
     }
 
+    createIfNotExists(name, ...args) {
+
+        if (this.has(name)) return this.get(name);
+        else return this.create(name, ...args);
+
+    }
+
     create(name, parent = null) {
 
         name = path.join(this._location, name);

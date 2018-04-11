@@ -9,6 +9,7 @@ const ExecAbstract = require('../libs/exec-abstract.js');
 const mountDevfs = require('../libs/mount-devfs.js');
 const umount = require('../libs/umount.js');
 const chains = require('../libs/layers/chains.js');
+const Layers = require('../libs/layers/layers.js');
 
 class Run {
 
@@ -89,16 +90,19 @@ class Run {
             scope,
         } = data;
 
+        let layers = new Layers(config.imagesLocation);
+        let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
-        let chain = chains.get(manifest.name);
         let command = args;
 
         let env = Object.assign({}, process.env, manifest.env);
         let layerName = `${command} ${manifest.name}`;
 
-        await chain.layer(layerName, async storage => {
+        layer.snapshot();
 
-            let mountPath = path.join(storage.path, '/dev');
+        try {
+
+            let mountPath = path.join(layer.path, '/dev');
             await ensureDir(mountPath);
 
             try {
@@ -116,7 +120,7 @@ class Run {
             let child = spawn(
                 'chroot',
                 [
-                    storage.path, "sh", "-c",
+                    layer.path, "sh", "-c",
                     `cd ${manifest.workdir} && ${command}`,
                 ],
                 {
@@ -130,7 +134,7 @@ class Run {
 
             try {
 
-                umount(storage.path + '/dev', true);
+                umount(layer.path + '/dev', true);
 
             } catch (error) { }
 
@@ -141,7 +145,67 @@ class Run {
 
             }
 
-        });
+        } catch (error) {
+
+            layer.rollback();
+
+        }
+
+        // ======
+
+        // let log = logsPool.get(manifest.name);
+        // let chain = chains.get(manifest.name);
+        // let command = args;
+
+        // let env = Object.assign({}, process.env, manifest.env);
+        // let layerName = `${command} ${manifest.name}`;
+
+        // await chain.layer(layerName, async storage => {
+
+        //     let mountPath = path.join(storage.path, '/dev');
+        //     await ensureDir(mountPath);
+
+        //     try {
+
+        //         mountDevfs(mountPath);
+        //         scope.on('int', _ => umount(mountPath, true));
+
+        //     } catch (error) {
+
+        //         log.warn(`devfs not mounted in "${storage.name}".\n`)
+        //         log.warn(`mount path: ${mountPath}.\n`)
+
+        //     }
+
+        //     let child = spawn(
+        //         'chroot',
+        //         [
+        //             storage.path, "sh", "-c",
+        //             `cd ${manifest.workdir} && ${command}`,
+        //         ],
+        //         {
+        //             name: 'xterm-color',
+        //             env: env,
+        //             cwd: '/',
+        //         }
+        //     );
+
+        //     let { code } = await log.fromPty(child);
+
+        //     try {
+
+        //         umount(storage.path + '/dev', true);
+
+        //     } catch (error) { }
+
+        //     if (code) {
+
+        //         let msg = `Error execution command: ${command} .`;
+        //         throw new ExecutionError(msg);
+
+        //     }
+
+        // });
 
     }
 

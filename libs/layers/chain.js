@@ -19,6 +19,26 @@ class Chain extends EventEmitter {
 
     }
 
+    async snapshot(call = _ => {}) {
+
+        if (!this._current) throw new Error('Current layer is undefined.');
+
+        let layer = this._current;
+        layer.snapshot();
+
+        try {
+
+            await call(layer);
+
+        } catch (error) {
+
+            layer.rollback();
+            throw error;
+
+        }
+
+    }
+
     async layer(name, call = _ => {}, cacheable = true) {
 
         if (!(name instanceof RawArgument)) {

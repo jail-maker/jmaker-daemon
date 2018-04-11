@@ -8,6 +8,8 @@ const compress = require('../compress.js');
 const decompress = require('../decompress.js');
 const foldesDiff = require('../folders-diff.js');
 
+const NotFoundError = require('../errors/not-found-error.js');
+
 const FIRST = 'first';
 const LAST = 'last';
 
@@ -30,6 +32,27 @@ class Layer {
     setQuota(value) {
 
         zfs.set(this.name, 'quota', value);
+
+    }
+
+    snapshot(name = null) {
+
+        if (!name) name = (new Date).toISOString();
+        zfs.snapshot(this.name, name);
+
+    }
+
+    rollback(name = null) {
+
+        if (name) zfs.rollback(this.name, name);
+        else {
+
+            let name = this.lastSnapshot;
+            if (!name) throw new NotFoundError('Not found last snapshot.');
+
+            zfs.rollback(this.name, name);
+
+        }
 
     }
 
@@ -92,11 +115,60 @@ class Layer {
 
     }
 
+    get firstSnapshot() {
+
+        let snapshots = zfs.list({
+            prefix: this.name,
+            type: 'snapshot',
+            sortAsc: 'creation',
+        });
+
+        if (snapshots.length) {
+
+            return snapshots[0].split('@')[1];
+
+        } else return undefined;
+
+    }
+
+    get lastSnapshot() {
+
+        let snapshots = zfs.list({
+            prefix: this.name,
+            type: 'snapshot',
+            sortDesc: 'creation',
+        });
+
+        if (snapshots.length) {
+
+            return snapshots[0].split('@')[1];
+
+        } else return undefined;
+
+    }
+
+    get snapshots() {
+
+        return zfs.list({
+            prefix: this.name,
+            type: 'snapshot',
+            sortAsc: 'creation',
+        })
+            .map(snap => snap.split('@')[1]);
+
+    }
+
     get parent() {
 
         let origin = zfs.get(this.name, 'origin');
         let matches = origin.match(/\b([^\/]+)@/u);
         return matches ? matches[1] : null;
+
+    }
+
+    hasSnapshot(name) {
+
+        return this.snapshots.includes(name);
 
     }
 
