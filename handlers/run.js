@@ -148,6 +148,7 @@ class Run {
         } catch (error) {
 
             layer.rollback();
+            throw error;
 
         }
 

@@ -52,51 +52,55 @@ async function create(manifest, context = null) {
 
     }
 
+    scope.close();
+
+    return;
+
     // ===================================================
 
 
-    let chain = chains.create({
-        name: manifest.name,
-        head: manifest.from,
-        location: config.imagesLocation,
-    });
+    // let chain = chains.create({
+    //     name: manifest.name,
+    //     head: manifest.from,
+    //     location: config.imagesLocation,
+    // });
 
-    {
-        let name = `${manifest.workdir} ${manifest.from}`;
-        await chain.layer(name, async layer => {
+    // {
+    //     let name = `${manifest.workdir} ${manifest.from}`;
+    //     await chain.layer(name, async layer => {
 
-            let dir = path.resolve(manifest.workdir);
-            dir = path.join(layer.path, dir);
-            await fse.ensureDir(dir);
+    //         let dir = path.resolve(manifest.workdir);
+    //         dir = path.join(layer.path, dir);
+    //         await fse.ensureDir(dir);
 
-        });
-    }
+    //     });
+    // }
 
-    for (let obj of manifest.building) {
+    // for (let obj of manifest.building) {
 
-        let command = Object.keys(obj)[0];
-        let args = obj[command];
+    //     let command = Object.keys(obj)[0];
+    //     let args = obj[command];
 
-        let handler = handlers[command];
-        await handler.do({
-            manifest,
-            context,
-            scope,
-            args,
-            stage: 'building',
-        });
+    //     let handler = handlers[command];
+    //     await handler.do({
+    //         manifest,
+    //         context,
+    //         scope,
+    //         args,
+    //         stage: 'building',
+    //     });
 
-    }
+    // }
 
-    await chain.layer(new RawArgument(manifest.name), async storage => {
+    // await chain.layer(new RawArgument(manifest.name), async storage => {
 
-        manifest.toFile(path.join(storage.path, '.manifest'));
+    //     manifest.toFile(path.join(storage.path, '.manifest'));
 
-    }, false);
+    // }, false);
 
-    chain.squash();
-    chains.delete(manifest.name);
-    scope.close();
+    // chain.squash();
+    // chains.delete(manifest.name);
+    // scope.close();
 
 }
 
