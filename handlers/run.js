@@ -10,6 +10,7 @@ const mountDevfs = require('../libs/mount-devfs.js');
 const umount = require('../libs/umount.js');
 const chains = require('../libs/layers/chains.js');
 const Layers = require('../libs/layers/layers.js');
+const config = require('../libs/config.js');
 
 class Run {
 

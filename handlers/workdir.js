@@ -5,6 +5,7 @@ const path = require('path');
 const logsPool = require('../libs/logs-pool.js');
 const chains = require('../libs/layers/chains.js');
 const Layers = require('../libs/layers/layers.js');
+const config = require('../libs/config.js');
 
 class Workdir {
 
