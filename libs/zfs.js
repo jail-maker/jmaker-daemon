@@ -94,6 +94,37 @@ class Zfs {
 
     }
 
+    rollback(fs, name) {
+
+        let snapshot = `${fs}@${name}`;
+        let result = spawnSync('zfs', [
+            'rollback', '-Rf', snapshot
+        ]);
+
+        let msg = '';
+
+        switch (result.status) {
+
+            case 1:
+                msg = `An error occurred. Snapshot: ${snapshot}`;
+                break;
+
+            case 2:
+                msg = `Invalid command line options were specified. Snapshot: ${snapshot}`;
+                break;
+
+        }
+
+        if (result.status) {
+
+            let error = new CommandError(msg);
+            error.exitStatus = result.status;
+            throw error;
+
+        }
+
+    }
+
     clone(fs, snap, newFs, options = {}) {
 
         options = Object.keys(options)
@@ -163,25 +194,47 @@ class Zfs {
 
     }
 
-    list(pool = '') {
+    list(options = {}) {
+
+        let {
+            prefix = '',
+            sortAsc = [],
+            sortDesc = [],
+            type = ['filesystem'],
+            display = ['name'],
+            parsableNumbers = true,
+        } = options;
+
+        let sortAscArgs = sortAsc.reduce((acc, item) => [...acc, '-s', item], []);
+        let sortDescArgs = sortDesc.reduce((acc, item) => [...acc, '-S', item], []);
+
+        let typeArg = type.length ? ['-t', type.join(',')] : [];
+        let displayArg = display.length ? ['-o', display.join(',')] : [];
+
+        let parsableNumbersArg = parsableNumbers ? ['-p'] : [];
 
         let result = spawnSync('zfs', [
-            'list', '-o', 'name', '-H'
+            'list', '-H',
+            ...parsableNumbersArg,
+            ...sortAscArgs,
+            ...sortDescArgs,
+            ...typeArg,
+            ...displayArg,
         ]);
 
-        let pools = result.stdout
+        let output = result.stdout
             .toString()
             .trim()
-            .split(/\n/);
+            .split('\n')
+            .map(line => {
+                let ret = line.split('\t');
+                return ret.length > 1 ? ret : line;
+            });
 
-        let match = pool.replace(/(\W)/, '\\$1');
+        let match = prefix.replace(/(\W)/, '\\$1');
         let exp = new RegExp(`^${match}\\b`);
 
-        return pools.filter(item => {
-
-            return exp.test(item);
-
-        });
+        return output.filter(item => exp.test(item));
 
     }
 

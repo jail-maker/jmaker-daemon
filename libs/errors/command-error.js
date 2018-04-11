@@ -7,6 +7,7 @@ class CommandError extends Error {
         super(message);
         this.name = 'CommandError';
         this.code = 'ECOMMAND';
+        this.exitStatus = undefined;
 
     }
 
