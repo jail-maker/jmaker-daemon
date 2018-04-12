@@ -18,6 +18,7 @@ class Workdir {
     async do(data = {}) {
 
         let {
+            index,
             manifest,
             args = [],
         } = data;
@@ -26,21 +27,14 @@ class Workdir {
         let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
         let workdir = path.resolve(manifest.workdir, args);
-        let name = `${workdir} ${manifest.from}`;
+        let name = `${index} ${workdir} ${manifest.from}`;
 
-        layer.snapshot();
-
-        try {
+        await layer.commit(name, async _ => {
 
             let dir = path.join(layer.path, workdir);
             await fse.ensureDir(dir);
 
-        } catch (error) {
-
-            layer.rollback();
-            throw error;
-
-        }
+        });
 
         manifest.workdir = workdir;
 

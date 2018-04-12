@@ -66,7 +66,8 @@ class Mount {
         } = data;
 
         let log = logsPool.get(manifest.name);
-        let chain = chains.get(manifest.name);
+        let layers = new Layers(config.imagesLocation);
+        let layer = layers.get(manifest.name);
         let volumes = new Layers(config.volumesLocation);
 
         args = this._normalizeArgs(args);
@@ -80,37 +81,24 @@ class Mount {
         let dst = args.path;
         dst = path.resolve(manifest.workdir, dst);
 
-        let volume = volumes.has(args.name)
-            ? volumes.get(args.name)
-            : volumes.create(args.name);
-
+        let volume = volumes.createIfNotExists(args.name);
         let src = volume.path;
+        let absoluteDst = path.join(layer.path, dst);
 
-        chain.on('precall', layer => {
-
-            let absoluteDst = path.join(layer.path, dst);
-            ensureDirSync(absoluteDst);
-            mountNullfs(src, absoluteDst);
-
-        });
-
-        chain.on('postcall', layer => {
-
-            umount(path.join(layer.path, dst), true);
-
-        });
-
-        chain.on('fail', layer => {
-
-            umount(path.join(layer.path, dst), true);
-
-        });
+        ensureDirSync(absoluteDst);
+        mountNullfs(src, absoluteDst);
 
         scope.on('int', _ => {
 
             console.log('umount');
-            let layer = chain.getCurrent();
-            umount(path.join(layer.path, dst), true);
+            umount(absoluteDst, true);
+
+        });
+
+        scope.on('close', _ => {
+
+            console.log('umount');
+            umount(absoluteDst, true);
 
         });
 

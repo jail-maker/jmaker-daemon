@@ -21,28 +21,26 @@ async function create(manifest, context = null) {
     let layers = new Layers(config.imagesLocation);
     let layer = layers.createIfNotExists(manifest.name, manifest.from);
 
-    layer.snapshot();
+    {
+        let name = `${manifest.workdir} ${manifest.from}`;
+        await layer.commit(name, async _ => {
 
-    try {
+            let dir = path.resolve(manifest.workdir);
+            dir = path.join(layer.path, dir);
+            await fse.ensureDir(dir);
 
-        let dir = path.resolve(manifest.workdir);
-        dir = path.join(layer.path, dir);
-        await fse.ensureDir(dir);
-
-    } catch (error) {
-
-        layer.rollback();
-        throw error;
-
+        });
     }
 
-    for (let obj of manifest.building) {
+    for (let index in manifest.building) {
 
+        let obj = manifest.building[index];
         let command = Object.keys(obj)[0];
         let args = obj[command];
 
         let handler = handlers[command];
         await handler.do({
+            index,
             manifest,
             context,
             scope,
@@ -51,6 +49,12 @@ async function create(manifest, context = null) {
         });
 
     }
+
+    await layer.commit('create manifest', async _ => {
+
+        manifest.toFile(path.join(layer.path, '.manifest'));
+
+    }, false);
 
     scope.close();
 

@@ -3,10 +3,12 @@
 const fs = require('fs');
 const path = require('path');
 const uniqid = require('uniqid');
+const sha256 = require('js-sha256').sha256;
 const zfs = require('../zfs.js');
 const compress = require('../compress.js');
 const decompress = require('../decompress.js');
 const foldesDiff = require('../folders-diff.js');
+const RawArgument = require('../raw-argument.js');
 
 const NotFoundError = require('../errors/not-found-error.js');
 
@@ -32,6 +34,36 @@ class Layer {
     setQuota(value) {
 
         zfs.set(this.name, 'quota', value);
+
+    }
+
+    async commit(name, action = _ => {}) {
+
+        if (!(name instanceof RawArgument)) {
+
+            name = sha256(name);
+            name = name.slice(0, 12);
+
+        } else {
+
+            name = name.getData();
+
+        }
+
+        if (this.hasSnapshot(name)) return;
+
+        this.snapshot(name);
+
+        try {
+
+            await action(this);
+
+        } catch (error) {
+
+            this.rollback();
+            throw error;
+
+        }
 
     }
 
@@ -119,8 +151,8 @@ class Layer {
 
         let snapshots = zfs.list({
             prefix: this.name,
-            type: 'snapshot',
-            sortAsc: 'creation',
+            type: ['snapshot'],
+            sortAsc: ['creation'],
         });
 
         if (snapshots.length) {
@@ -135,8 +167,8 @@ class Layer {
 
         let snapshots = zfs.list({
             prefix: this.name,
-            type: 'snapshot',
-            sortDesc: 'creation',
+            type: ['snapshot'],
+            sortDesc: ['creation'],
         });
 
         if (snapshots.length) {
@@ -151,8 +183,8 @@ class Layer {
 
         return zfs.list({
             prefix: this.name,
-            type: 'snapshot',
-            sortAsc: 'creation',
+            type: ['snapshot'],
+            sortAsc: ['creation'],
         })
             .map(snap => snap.split('@')[1]);
 

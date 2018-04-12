@@ -18,6 +18,7 @@ class Copy {
     async do(data = {}) {
 
         let {
+            index,
             manifest,
             context,
             args = [],
@@ -29,9 +30,8 @@ class Copy {
         if (typeof(args) === 'string') 
             args = [args, args];
 
-        layer.snapshot();
-
-        try {
+        let name = `${index} ${args.join(' ')} ${manifest.name}`;
+        await layer.commit(name, async _ => {
 
             let [src, dst] = args;
 
@@ -40,30 +40,7 @@ class Copy {
 
             copySync(src, dst);
 
-        } catch (error) {
-
-            layer.rollback();
-
-        }
-
-        // let log = logsPool.get(manifest.name);
-        // let chain = chains.get(manifest.name);
-
-        // if (typeof(args) === 'string') 
-        //     args = [args, args];
-
-        // let name = `${args.join(' ')} ${manifest.name}`;
-
-        // await chain.layer(name, async storage => {
-
-        //     let [src, dst] = args;
-
-        //     src = path.join(context.path, path.resolve('/', src));
-        //     dst = path.join(storage.path, path.resolve(manifest.workdir, dst));
-
-        //     copySync(src, dst);
-
-        // });
+        });
 
     }
 

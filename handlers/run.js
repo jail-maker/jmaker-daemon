@@ -86,6 +86,7 @@ class Run {
     async _doBuilding(data = {}) {
 
         let {
+            index,
             manifest,
             args = '',
             scope,
@@ -97,11 +98,9 @@ class Run {
         let command = args;
 
         let env = Object.assign({}, process.env, manifest.env);
-        let layerName = `${command} ${manifest.name}`;
+        let commitName = `${index} ${command} ${manifest.name}`;
 
-        layer.snapshot();
-
-        try {
+        await layer.commit(commitName, async _ => {
 
             let mountPath = path.join(layer.path, '/dev');
             await ensureDir(mountPath);
@@ -146,68 +145,7 @@ class Run {
 
             }
 
-        } catch (error) {
-
-            layer.rollback();
-            throw error;
-
-        }
-
-        // ======
-
-        // let log = logsPool.get(manifest.name);
-        // let chain = chains.get(manifest.name);
-        // let command = args;
-
-        // let env = Object.assign({}, process.env, manifest.env);
-        // let layerName = `${command} ${manifest.name}`;
-
-        // await chain.layer(layerName, async storage => {
-
-        //     let mountPath = path.join(storage.path, '/dev');
-        //     await ensureDir(mountPath);
-
-        //     try {
-
-        //         mountDevfs(mountPath);
-        //         scope.on('int', _ => umount(mountPath, true));
-
-        //     } catch (error) {
-
-        //         log.warn(`devfs not mounted in "${storage.name}".\n`)
-        //         log.warn(`mount path: ${mountPath}.\n`)
-
-        //     }
-
-        //     let child = spawn(
-        //         'chroot',
-        //         [
-        //             storage.path, "sh", "-c",
-        //             `cd ${manifest.workdir} && ${command}`,
-        //         ],
-        //         {
-        //             name: 'xterm-color',
-        //             env: env,
-        //             cwd: '/',
-        //         }
-        //     );
-
-        //     let { code } = await log.fromPty(child);
-
-        //     try {
-
-        //         umount(storage.path + '/dev', true);
-
-        //     } catch (error) { }
-
-        //     if (code) {
-
-        //         let msg = `Error execution command: ${command} .`;
-        //         throw new ExecutionError(msg);
-
-        //     }
-
-        // });
+        });
 
     }
 
