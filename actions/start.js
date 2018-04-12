@@ -111,9 +111,6 @@ async function start(manifest) {
     await recorder.run({ record: jail });
     await log.notice('done\n');
 
-    let hosts = new Hosts(jail);
-    await recorder.run({ record: hosts });
-
     if (manifest.cpus) {
 
         let cpus = parseInt(manifest.cpus);
@@ -147,13 +144,15 @@ async function start(manifest) {
 
     await log.notice('starting...\n');
 
-    for (let obj of manifest.starting) {
+    for (let index in manifest.starting) {
 
+        let obj = manifest.starting[index];
         let command = Object.keys(obj)[0];
         let args = obj[command];
 
         let handler = handlers[command];
         await handler.do({
+            index,
             manifest,
             recorder,
             args,
