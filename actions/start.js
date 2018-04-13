@@ -27,7 +27,6 @@ const Cpuset = require('../modules/cpuset.js');
 const Pkg = require('../modules/pkg.js');
 const JPreStart = require('../modules/j-prestart.js');
 const JPostStart = require('../modules/j-poststart.js');
-const Hosts = require('../modules/hosts.js');
 const ModCopy = require('../modules/copy.js');
 
 const Recorder = require('../libs/recorder.js');
