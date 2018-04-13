@@ -56,6 +56,7 @@ async function create(manifest, context = null) {
 
     }, false);
 
+    layer.snapshot('last');
     scope.close();
 
     return;

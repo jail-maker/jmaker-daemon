@@ -90,14 +90,14 @@ class Mount {
 
         scope.on('int', _ => {
 
-            console.log('umount');
+            console.log(`umount volume: ${dst}`);
             umount(absoluteDst, true);
 
         });
 
         scope.on('close', _ => {
 
-            console.log('umount');
+            console.log(`umount volume: ${dst}`);
             umount(absoluteDst, true);
 
         });

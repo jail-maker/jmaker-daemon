@@ -394,7 +394,7 @@ app.post('/images/download-from-repo', async (req, res) => {
 
 });
 
-app.post('/jails/start', async (req, res) => {
+app.post('/jails', async (req, res) => {
 
     let name = req.body.name;
     let layers = new Layers(config.imagesLocation);
@@ -446,7 +446,7 @@ app.post('/jails/start', async (req, res) => {
 
 });
 
-app.delete('/jails/:name/stop', async (req, res) => {
+app.delete('/jails/:name', async (req, res) => {
 
     let name = req.params.name;
 

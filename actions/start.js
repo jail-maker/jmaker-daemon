@@ -44,6 +44,16 @@ async function start(manifest) {
 
     recorderPool.set(manifest.name, recorder);
 
+    if (!storage.hasSnapshot('start')) {
+
+        storage.snapshot('start');
+
+    } else {
+
+        storage.rollback('start');
+
+    }
+
     if (manifest['resolv-sync']) {
 
         await log.info('resolv.conf sync... ');

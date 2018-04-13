@@ -11,6 +11,7 @@ const umount = require('../libs/umount.js');
 const chains = require('../libs/layers/chains.js');
 const Layers = require('../libs/layers/layers.js');
 const config = require('../libs/config.js');
+const RuntimeScope = require('../libs/runtime-scope.js');
 
 class Run {
 
@@ -89,7 +90,6 @@ class Run {
             index,
             manifest,
             args = '',
-            scope,
         } = data;
 
         let layers = new Layers(config.imagesLocation);
@@ -102,13 +102,13 @@ class Run {
 
         await layer.commit(commitName, async _ => {
 
+            let scope = new RuntimeScope;
             let mountPath = path.join(layer.path, '/dev');
             await ensureDir(mountPath);
 
             try {
 
                 mountDevfs(mountPath);
-                scope.on('int', _ => umount(mountPath, true));
 
             } catch (error) {
 
@@ -116,6 +116,9 @@ class Run {
                 log.warn(`mount path: ${mountPath}.\n`)
 
             }
+
+            scope.on('int', _ => umount(mountPath, true));
+            scope.on('close', _ => umount(mountPath, true));
 
             let child = spawn(
                 'chroot',
@@ -132,20 +135,18 @@ class Run {
 
             let { code } = await log.fromPty(child);
 
-            try {
-
-                umount(layer.path + '/dev', true);
-
-            } catch (error) { }
-
             if (code) {
 
+                scope.close();
                 let msg = `Error execution command: ${command} .`;
                 throw new ExecutionError(msg);
 
             }
 
+            scope.close();
+
         });
+
 
     }
 

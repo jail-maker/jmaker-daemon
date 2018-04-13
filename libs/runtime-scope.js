@@ -9,7 +9,7 @@ class RuntimeScope extends EventEmitter {
 
         super();
 
-        intProcessEmitter.prependListener('int', _ => this.int);
+        intProcessEmitter.prependListener('int', this.int.bind(this));
 
     }
 
@@ -21,10 +21,9 @@ class RuntimeScope extends EventEmitter {
 
     close() {
 
-        console.log('close scope');
         this.emit('close');
         this.removeAllListeners('close');
-        intProcessEmitter.removeListener('int', this.int);
+        intProcessEmitter.removeListener('int', this.int.bind(this));
         this.removeAllListeners('int');
 
     }
