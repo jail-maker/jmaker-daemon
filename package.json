@@ -28,6 +28,8 @@
     "mime": "^2.2.2",
     "minimist": "^1.2.0",
     "mkdir-recursive": "^0.3.0",
+    "nedb": "^1.8.0",
+    "nedb-promise": "^2.0.1",
     "node-pty": "^0.7.4",
     "random-mac": "^0.0.4",
     "redis": "^2.8.0",
@@ -38,6 +40,7 @@
     "tempdir": "^2.0.0",
     "tempfile": "^2.0.0",
     "uniqid": "^4.1.1",
+    "uuid": "^3.2.1",
     "ws": "^3.3.2"
   }
 }
