@@ -16,7 +16,7 @@ class Config {
         this.zfsPool = 'jmaker';
         this.imagesLocation = '/jmaker/images/';
         this.volumesLocation = '/jmaker/volumes/';
-        this.dbFile = './data.json';
+        this.dbFolder = './';
 
     }
 
