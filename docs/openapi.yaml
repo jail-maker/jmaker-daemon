@@ -1,0 +1,13 @@
+---
+openapi: 3.0.1
+
+info:
+  title: "jmaker-server"
+  version: 1.0.0
+
+paths:
+  /images:
+    get:
+      responses:
+        '200':
+          description: "Show list of images"
