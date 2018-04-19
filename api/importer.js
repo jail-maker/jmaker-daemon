@@ -3,6 +3,9 @@
 const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
+const tempWrite = require('temp-write');
+const tempfile = require('tempfile');
+const tempdir = require('tempdir');
 const Router = require('koa-better-router');
 const Layers = require('../libs/layers');
 const config = require('../libs/config');
@@ -11,7 +14,7 @@ const Manifest = require('../libs/manifest');
 
 const routes = Router().loadMethods();
 
-routes.post('/image-importer', async (ctx) => {
+routes.post('/containers/importer', async (ctx) => {
 
     let rawBody = ctx.request.rawBody;
     let tmpDir = undefined;

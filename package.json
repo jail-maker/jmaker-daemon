@@ -19,7 +19,6 @@
   "dependencies": {
     "chalk": "^2.3.0",
     "connect-multiparty": "^2.1.0",
-    "express": "^4.16.2",
     "fs-extra": "kolgotko/node-fs-extra#067c1cd",
     "ioredis": "^3.2.2",
     "js-sha256": "^0.9.0",
@@ -27,6 +26,7 @@
     "json-query": "^2.2.2",
     "koa": "^2.5.0",
     "koa-better-router": "^2.1.1",
+    "koa-body": "^2.5.0",
     "mime": "^2.2.2",
     "minimist": "^1.2.0",
     "mkdir-recursive": "^0.3.0",
@@ -37,7 +37,6 @@
     "redis": "^2.8.0",
     "request": "^2.83.0",
     "request-promise-native": "^1.0.5",
-    "shell-tar": "^1.0.15",
     "temp-write": "^3.4.0",
     "tempdir": "^2.0.0",
     "tempfile": "^2.0.0",

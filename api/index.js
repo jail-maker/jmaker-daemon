@@ -2,15 +2,19 @@
 
 const Router = require('koa-better-router');
 
-const images = require('./images');
-const jails = require('./jails');
-const jails = require('./image-importer');
-const jails = require('./image-builder');
+const importer = require('./importer');
+const builder = require('./builder');
+const started = require('./started');
+const container = require('./container');
+const list = require('./list');
 
 const routes = Router();
 
-routes.extend(images);
-jails.extend(routes);
+routes.extend(list);
+routes.extend(container);
+routes.extend(importer);
+routes.extend(builder);
+routes.extend(started);
 
 module.exports = routes;
 

@@ -6,8 +6,98 @@ info:
   version: 1.0.0
 
 paths:
-  /images:
+  /containers/list:
     get:
+      description: ''
       responses:
         '200':
-          description: "Show list of images"
+          description: ''
+
+  /containers/list/{name}:
+    get:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+    delete:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+    parameters:
+      - $ref: '#/components/parameters/containerName'
+
+  /containers/list/{name}/manifest:
+    get:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+    parameters:
+      - $ref: '#/components/parameters/containerName'
+
+  /containers/list/{name}/runtime:
+    get:
+      description: ''
+      responses:
+        '200':
+          description: ''
+        '404':
+          description: ''
+
+    parameters:
+      - $ref: '#/components/parameters/containerName'
+
+  /containers/list/{name}/exported:
+    get:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+    parameters:
+      - $ref: '#/components/parameters/containerName'
+
+  /containers/importer:
+    post:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+  /containers/builder:
+    post:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+  /containers/started:
+    post:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+  /containers/started/{name}:
+    delete:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
+    parameters:
+      - $ref: '#/components/parameters/containerName'
+
+
+components:
+  parameters:
+    containerName:
+      name: 'name'
+      required: true
+      in: 'path'
+      schema:
+        type: string
