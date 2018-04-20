@@ -8,12 +8,27 @@ const body = require('koa-body');
 const getRawBody = require('raw-body');
 const Router = require('koa-better-router');
 const api = require('./api');
+const intProcessEmitter = require('./libs/interrupt-process-emitter');
 
-const config = require('./libs/config.js');
+const config = require('./libs/config');
+const stop = require('./libs/stop');
 
 const app = new Koa();
 const server = http.createServer(app.callback());
 
+intProcessEmitter.prependListener('int', async _ => {
+
+    try {
+
+        await Promise.all(dataJails.getNames().map(stop));
+
+    } catch (error) {
+
+        console.log(error);
+
+    }
+
+});
 
 app.use(body({ multipart: true }));
 app.use(async (ctx, next) => {

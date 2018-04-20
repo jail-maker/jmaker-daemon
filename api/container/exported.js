@@ -31,8 +31,8 @@ routes.get('/containers/list/:name/exported', async (ctx) => {
     stream.on('close', _ => fse.removeSync(archive));
     stream.on('error', _ => fse.removeSync(archive));
 
-    ctx.set('content-disposition', `attachment; filename="${image}.tar.xz"`);
-    ctx.set('content-type', 'application/x-xz');
+    ctx.set('content-disposition', `attachment; filename="${image}.tar"`);
+    ctx.set('content-type', 'application/x-tar');
     ctx.body = stream;
 
 });
