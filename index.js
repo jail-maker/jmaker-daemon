@@ -9,9 +9,10 @@ const getRawBody = require('raw-body');
 const Router = require('koa-better-router');
 const api = require('./api');
 const intProcessEmitter = require('./libs/interrupt-process-emitter');
+const dataJails = require('./libs/data-jails');
 
 const config = require('./libs/config');
-const stop = require('./libs/stop');
+const stop = require('./actions/stop');
 
 const app = new Koa();
 const server = http.createServer(app.callback());

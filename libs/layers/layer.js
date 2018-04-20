@@ -4,13 +4,14 @@ const fs = require('fs');
 const path = require('path');
 const uniqid = require('uniqid');
 const sha256 = require('js-sha256').sha256;
-const zfs = require('../zfs.js');
-const compress = require('../compress.js');
-const decompress = require('../decompress.js');
-const foldesDiff = require('../folders-diff.js');
-const RawArgument = require('../raw-argument.js');
+const zfs = require('../zfs');
+const compress = require('../compress');
+const compressStream = require('../compress-stream');
+const decompress = require('../decompress');
+const foldesDiff = require('../folders-diff');
+const RawArgument = require('../raw-argument');
 
-const NotFoundError = require('../errors/not-found-error.js');
+const NotFoundError = require('../errors/not-found-error');
 
 const FIRST = 'first';
 const LAST = 'last';
@@ -88,7 +89,46 @@ class Layer {
 
     }
 
-    async compress() {
+    async getDiff() {
+
+        let snapDir = path.join(this.path, '/.zfs/snapshot');
+        let diff = await foldesDiff(`${snapDir}/${this.lastSnapshot}/`, `${snapDir}/${FIRST}/`);
+
+        return diff;
+
+    }
+
+    async compress(file) {
+
+        try {
+
+            zfs.snapshot(this.name, LAST);
+
+        } catch (error) {
+
+            if (error.name !== 'ExistsError')
+                throw error;
+
+        }
+
+        let diff = await this.getDiff();
+
+        let files = diff.files(['A', 'C']);
+        files.push('./.diff');
+
+        let diffFile = path.join(this.path, '.diff');
+
+        fs.writeFileSync(diffFile, diff.toString());
+
+        await compress(files, file, {
+            cd: this.path
+        });
+
+        fs.unlinkSync(diffFile);
+
+    }
+
+    async _compress() {
 
         try {
 
@@ -119,6 +159,38 @@ class Layer {
         fs.unlinkSync(diffFile);
 
         return archive;
+
+    }
+
+    async compressStream() {
+
+        try {
+
+            zfs.snapshot(this.name, LAST);
+
+        } catch (error) {
+
+            if (error.name !== 'ExistsError')
+                throw error;
+
+        }
+
+        let diff = await this.getDiff();
+
+        let files = diff.files(['A', 'C']);
+        files.push('./.diff');
+
+        let diffFile = path.join(this.path, '.diff');
+
+        fs.writeFileSync(diffFile, diff.toString());
+
+        return compressStream(files, {
+            cd: this.path
+        }, _ => {
+
+            fs.unlinkSync(diffFile);
+
+        });
 
     }
 
