@@ -3,15 +3,15 @@
 const { spawn } = require('node-pty');
 const { ensureDir } = require('fs-extra');
 const path = require('path');
-const logsPool = require('../libs/logs-pool.js');
-const ExecutionError = require('../libs/errors/execution-error.js');
-const ExecAbstract = require('../libs/exec-abstract.js');
-const mountDevfs = require('../libs/mount-devfs.js');
-const umount = require('../libs/umount.js');
-const chains = require('../libs/layers/chains.js');
-const Layers = require('../libs/layers/layers.js');
-const config = require('../libs/config.js');
-const RuntimeScope = require('../libs/runtime-scope.js');
+const logsPool = require('../libs/logs-pool');
+const ExecutionError = require('../libs/errors/execution-error');
+const ExecAbstract = require('../libs/exec-abstract');
+const mountDevfs = require('../libs/mount-devfs');
+const umount = require('../libs/umount');
+const chains = require('../libs/layers/chains');
+const Layers = require('../libs/layers/layers');
+const config = require('../libs/config');
+const RuntimeScope = require('../libs/runtime-scope');
 
 class Run {
 

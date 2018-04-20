@@ -1,7 +1,7 @@
 'use strict';
 
-const dataJails = require('../libs/data-jails.js');
-const stop = require('./stop.js');
+const dataJails = require('../libs/data-jails');
+const stop = require('./stop');
 
 module.exports = async _ => {
 

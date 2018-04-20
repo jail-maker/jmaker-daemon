@@ -4,12 +4,12 @@ const { spawnSync } = require('child_process');
 const { ensureDirSync } = require('fs-extra');
 const path = require('path');
 const sha256 = require('js-sha256').sha256;
-const config = require('../libs/config.js');
-const logsPool = require('../libs/logs-pool.js');
+const config = require('../libs/config');
+const logsPool = require('../libs/logs-pool');
 const Layers = require('../libs/layers');
-const chains = require('../libs/layers/chains.js');
-const mountNullfs = require('../libs/mount-nullfs.js');
-const umount = require('../libs/umount.js');
+const chains = require('../libs/layers/chains');
+const mountNullfs = require('../libs/mount-nullfs');
+const umount = require('../libs/umount');
 
 class Mount {
 

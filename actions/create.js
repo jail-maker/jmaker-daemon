@@ -3,15 +3,15 @@
 const path = require('path');
 const fse = require('fs-extra');
 
-const config = require('../libs/config.js');
-const logsPool = require('../libs/logs-pool.js');
-const RawArgument = require('../libs/raw-argument.js');
+const config = require('../libs/config');
+const logsPool = require('../libs/logs-pool');
+const RawArgument = require('../libs/raw-argument');
 
-const chains = require('../libs/layers/chains.js');
+const chains = require('../libs/layers/chains');
 const handlers = require('../handlers');
-const RuntimeScope = require('../libs/runtime-scope.js');
+const RuntimeScope = require('../libs/runtime-scope');
 
-const Layers = require('../libs/layers/layers.js');
+const Layers = require('../libs/layers/layers');
 
 async function create(manifest, context = null) {
 

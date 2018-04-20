@@ -1,6 +1,6 @@
 'use strict';
 
-const recorderPool = require('../libs/recorder-pool.js');
+const recorderPool = require('../libs/recorder-pool');
 
 async function stop(jailName) {
 

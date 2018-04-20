@@ -2,10 +2,10 @@
 
 const fse = require('fs-extra');
 const path = require('path');
-const logsPool = require('../libs/logs-pool.js');
-const chains = require('../libs/layers/chains.js');
-const Layers = require('../libs/layers/layers.js');
-const config = require('../libs/config.js');
+const logsPool = require('../libs/logs-pool');
+const chains = require('../libs/layers/chains');
+const Layers = require('../libs/layers/layers');
+const config = require('../libs/config');
 
 class Workdir {
 

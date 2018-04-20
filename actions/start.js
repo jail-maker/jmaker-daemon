@@ -7,29 +7,29 @@ const fs = require('fs');
 const os = require('os');
 const sha256 = require('js-sha256').sha256;
 
-const fetch = require('../libs/bsd-fetch.js');
-const config = require('../libs/config.js');
-const dataJails = require('../libs/data-jails.js');
-const Zfs = require('../libs/zfs.js');
+const fetch = require('../libs/bsd-fetch');
+const config = require('../libs/config');
+const dataJails = require('../libs/data-jails');
+const Zfs = require('../libs/zfs');
 const Layers = require('../libs/layers');
-const logsPool = require('../libs/logs-pool.js');
-const Rctl = require('../libs/rctl.js');
-const Jail = require('../libs/jails/jail.js');
-const ruleViewVisitor = require('../libs/jails/rule-view-visitor.js');
-const recorderPool = require('../libs/recorder-pool.js');
-const RawArgument = require('../libs/raw-argument.js');
+const logsPool = require('../libs/logs-pool');
+const Rctl = require('../libs/rctl');
+const Jail = require('../libs/jails/jail');
+const ruleViewVisitor = require('../libs/jails/rule-view-visitor');
+const recorderPool = require('../libs/recorder-pool');
+const RawArgument = require('../libs/raw-argument');
 
-const dhcp = require('../modules/ip-dhcp.js');
-const autoIface = require('../modules/auto-iface.js');
-const autoIp = require('../modules/auto-ip.js');
+const dhcp = require('../modules/ip-dhcp');
+const autoIface = require('../modules/auto-iface');
+const autoIp = require('../modules/auto-ip');
 
-const Cpuset = require('../modules/cpuset.js');
-const Pkg = require('../modules/pkg.js');
-const JPreStart = require('../modules/j-prestart.js');
-const JPostStart = require('../modules/j-poststart.js');
-const ModCopy = require('../modules/copy.js');
+const Cpuset = require('../modules/cpuset');
+const Pkg = require('../modules/pkg');
+const JPreStart = require('../modules/j-prestart');
+const JPostStart = require('../modules/j-poststart');
+const ModCopy = require('../modules/copy');
 
-const Recorder = require('../libs/recorder.js');
+const Recorder = require('../libs/recorder');
 const handlers = require('../handlers');
 
 async function start(manifest) {
