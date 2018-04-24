@@ -19,7 +19,7 @@ const uniqid = require('uniqid');
 
 const routes = Router().loadMethods();
 
-routes.post('/containers/new-builder', async (ctx, next) => {
+routes.post('/containers/builder', async (ctx, next) => {
 
     let rawBody = ctx.request.rawBody;
     let mimeType = ctx.get('content-type');
