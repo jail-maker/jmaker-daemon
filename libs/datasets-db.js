@@ -12,5 +12,7 @@ let db = new Db({
 });
 
 db.persistence.compactDatafile();
+db.ensureIndex({ fieldName: 'id', unique: true });
+db.ensureIndex({ fieldName: 'name', unique: true });
 
 module.exports = DbPromise.fromInstance(db);

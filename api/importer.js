@@ -7,10 +7,15 @@ const tempWrite = require('temp-write');
 const tempfile = require('tempfile');
 const tempdir = require('tempdir');
 const Router = require('koa-better-router');
+const uuid4 = require('uuid/v4');
+const mime = require('mime')
+const uniqid = require('uniqid');
 const Layers = require('../libs/layers');
 const config = require('../libs/config');
 const ManifestFactory = require('../libs/manifest-factory');
 const Manifest = require('../libs/manifest');
+const decompress = require('../libs/decompress');
+const datasets = require('../libs/datasets-db');
 
 const routes = Router().loadMethods();
 
@@ -47,13 +52,18 @@ routes.post('/containers/importer', async (ctx) => {
 
         } catch (error) {
 
-            res.status = 400;
+            console.log(error);
+            ctx.status = 400;
             ctx.body = "Bad image format.";
             return;
 
         }
 
-        if (layers.has(manifest.name)) {
+        let dataset = await datasets.findOne({ name: manifest.name });
+        let parent = await datasets.findOne({ name: manifest.from });
+        let parentId = parent ? parent.id : null;
+
+        if (dataset) {
 
             ctx.status = 409;
             ctx.body = `Image ${manifest.name} already exists.`;
@@ -61,7 +71,7 @@ routes.post('/containers/importer', async (ctx) => {
 
         }
 
-        if (manifest.from && !layers.has(manifest.from)) {
+        if (manifest.from && !parentId) {
 
             ctx.status = 404;
             ctx.body = `Image ${manifest.from} not found.`;
@@ -69,13 +79,20 @@ routes.post('/containers/importer', async (ctx) => {
 
         }
 
+        let id = uuid4();
+        await datasets.insert({
+            id,
+            name: manifest.name,
+        });
+
         try {
 
-            let layer = layers.create(manifest.name, manifest.from);
+            let layer = layers.create(id, parentId);
             await layer.decompress(imageFile);
 
         } catch (error) {
 
+            console.log(error);
             ctx.status = 500;
             return;
 
@@ -87,6 +104,8 @@ routes.post('/containers/importer', async (ctx) => {
         if (tmpDir) fse.removeSync(tmpDir);
 
     }
+
+    ctx.status = 200;
 
 });
 

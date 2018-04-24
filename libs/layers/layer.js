@@ -199,7 +199,20 @@ class Layer {
         await decompress(archive, this.path);
 
         let diffFile = path.join(this.path, '.diff');
-        let buffer = fs.readFileSync(diffFile);
+
+        let buffer = null;
+
+        try {
+
+            buffer = fs.readFileSync(diffFile);
+
+        } catch (error) {
+
+            if (error.code === 'ENOENT') return;
+            else throw error;
+
+        }
+
         let diff = buffer.toString();
 
         let lines = diff.split('\n');

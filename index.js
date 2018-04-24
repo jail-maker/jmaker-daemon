@@ -34,7 +34,7 @@ intProcessEmitter.prependListener('int', async _ => {
 app.use(body({ multipart: true }));
 app.use(async (ctx, next) => {
 
-    ctx.request.rawBody = await getRawBody(ctx.req, { limit: '500mb' });
+    ctx.request.rawBody = await getRawBody(ctx.req, { limit: '800mb' });
     await next();
 
 });

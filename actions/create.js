@@ -10,6 +10,7 @@ const RawArgument = require('../libs/raw-argument');
 const chains = require('../libs/layers/chains');
 const handlers = require('../handlers');
 const RuntimeScope = require('../libs/runtime-scope');
+const datasets = require('../libs/datasets-db');
 
 const Layers = require('../libs/layers/layers');
 
