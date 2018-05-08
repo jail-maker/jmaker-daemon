@@ -60,14 +60,13 @@ class Mount {
     async _doBuilding(data = {}) {
 
         let {
+            layer,
             manifest,
             args = {},
             scope,
         } = data;
 
         let log = logsPool.get(manifest.name);
-        let layers = new Layers(config.imagesLocation);
-        let layer = layers.get(manifest.name);
         let volumes = new Layers(config.volumesLocation);
 
         args = this._normalizeArgs(args);

@@ -87,13 +87,12 @@ class Run {
     async _doBuilding(data = {}) {
 
         let {
+            layer,
             index,
             manifest,
             args = '',
         } = data;
 
-        let layers = new Layers(config.imagesLocation);
-        let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
         let command = args;
 

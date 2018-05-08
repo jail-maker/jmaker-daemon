@@ -18,9 +18,13 @@ async function create(manifest, context = null) {
 
     let scope = new RuntimeScope;
     let log = logsPool.get(manifest.name);
+    let dataset = await datasets.findOne({ name: manifest.name });
+    let parent = await datasets.findOne({ name: manifest.from });
+    let datasetId = dataset ? dataset.id : uuid4();
+    let parentId = parent ? parent.id : null;
 
     let layers = new Layers(config.imagesLocation);
-    let layer = layers.createIfNotExists(manifest.name, manifest.from);
+    let layer = layers.createIfNotExists(datasetId, parentId);
 
     {
         let name = `${manifest.workdir} ${manifest.from}`;
@@ -42,6 +46,7 @@ async function create(manifest, context = null) {
         let handler = handlers[command];
         await handler.do({
             index,
+            layer,
             manifest,
             context,
             scope,
@@ -61,52 +66,6 @@ async function create(manifest, context = null) {
     scope.close();
 
     return;
-
-    // ===================================================
-
-
-    // let chain = chains.create({
-    //     name: manifest.name,
-    //     head: manifest.from,
-    //     location: config.imagesLocation,
-    // });
-
-    // {
-    //     let name = `${manifest.workdir} ${manifest.from}`;
-    //     await chain.layer(name, async layer => {
-
-    //         let dir = path.resolve(manifest.workdir);
-    //         dir = path.join(layer.path, dir);
-    //         await fse.ensureDir(dir);
-
-    //     });
-    // }
-
-    // for (let obj of manifest.building) {
-
-    //     let command = Object.keys(obj)[0];
-    //     let args = obj[command];
-
-    //     let handler = handlers[command];
-    //     await handler.do({
-    //         manifest,
-    //         context,
-    //         scope,
-    //         args,
-    //         stage: 'building',
-    //     });
-
-    // }
-
-    // await chain.layer(new RawArgument(manifest.name), async storage => {
-
-    //     manifest.toFile(path.join(storage.path, '.manifest'));
-
-    // }, false);
-
-    // chain.squash();
-    // chains.delete(manifest.name);
-    // scope.close();
 
 }
 

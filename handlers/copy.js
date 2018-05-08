@@ -18,14 +18,12 @@ class Copy {
     async do(data = {}) {
 
         let {
+            layer,
             index,
             manifest,
             context,
             args = [],
         } = data;
-
-        let layers = new Layers(config.imagesLocation);
-        let layer = layers.get(manifest.name);
 
         if (typeof(args) === 'string') 
             args = [args, args];

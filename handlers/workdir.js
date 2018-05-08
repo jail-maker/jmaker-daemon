@@ -18,13 +18,12 @@ class Workdir {
     async do(data = {}) {
 
         let {
+            layer,
             index,
             manifest,
             args = [],
         } = data;
 
-        let layers = new Layers(config.imagesLocation);
-        let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
         let workdir = path.resolve(manifest.workdir, args);
         let name = `${index} ${workdir} ${manifest.from}`;
