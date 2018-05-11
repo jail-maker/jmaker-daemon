@@ -31,6 +31,7 @@ class Workdir {
         await layer.commit(name, async _ => {
 
             let dir = path.join(layer.path, workdir);
+            console.log('workdir:', dir);
             await fse.ensureDir(dir);
 
         });

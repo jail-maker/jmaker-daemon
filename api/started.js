@@ -14,30 +14,46 @@ const start = require('../actions/start');
 const stop = require('../actions/stop');
 
 const dataJails = require('../libs/data-jails');
+const datasets = require('../libs/datasets-db');
 
 const routes = Router().loadMethods();
 
 routes.post('/containers/started', async (ctx) => {
 
+    console.log('/containers/started');
+
     let body = ctx.request.body;
     let name = body.name;
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+
+    if (!datasets) {
+
+        ctx.status = 404;
+        ctx.body = `Container "${name}" not found.`;
+        return;
+
+    }
+
     let layers = new Layers(config.imagesLocation);
     let layer = {};
 
     try {
 
-        layer = layers.get(name);
+        layer = layers.get(dataset.id);
 
     } catch (error) {
 
-        ctx.status = 404;
-        ctx.body = `Image "${image}" not found.`;
+        ctx.status = 500;
+        ctx.body = `Files/dataset for container "${name}" not found.`;
         return;
 
     }
 
     let manifestFile = path.join(layer.path, '.manifest');
     let manifest = ManifestFactory.fromFile(manifestFile);
+
+    console.log('manifest:');
+    console.dir(manifest);
 
     if (dataJails.has(name)) {
 
@@ -111,4 +127,3 @@ routes.delete('/containers/started/:name', async (ctx) => {
 });
 
 module.exports = routes;
-

@@ -7,31 +7,11 @@ class ManifestFactory {
 
     static fromFile(file) {
 
+        let manifest = new Manifest;
         let buffer = fs.readFileSync(file);
         let data = JSON.parse(buffer.toString());
-        return Object.assign(new Manifest, data);
 
-    }
-
-    static fromFlatData(data) {
-
-        let manifest = new Manifest;
-
-        let keys = [
-            'name',
-            'from',
-            'workdir',
-            'env',
-            'pkg',
-            'dependencies',
-            'cpus',
-            'cpuset',
-            'rctl',
-            'building',
-            'starting',
-            'quota',
-            'resolv-sync',
-        ];
+        let keys = Object.keys(manifest);
 
         keys.forEach(key => {
 
@@ -40,8 +20,24 @@ class ManifestFactory {
 
         });
 
-        manifest.rules = data;
+        Object.assign(manifest.rules, data);
+        return manifest;
 
+    }
+
+    static fromFlatData(data) {
+
+        let manifest = new Manifest;
+        let keys = Object.keys(manifest);
+
+        keys.forEach(key => {
+
+            manifest[key] = data[key];
+            delete(data[key]);
+
+        });
+
+        Object.assign(manifest.rules, data);
         return manifest;
 
     }

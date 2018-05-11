@@ -106,6 +106,7 @@ class Mount {
     async _doStarting(data = {}) {
 
         let {
+            layer,
             manifest,
             args = {},
             recorder,
@@ -113,7 +114,6 @@ class Mount {
 
         let layers = new Layers(config.imagesLocation);
         let volumes = new Layers(config.volumesLocation);
-        let layer = layers.get(manifest.name);
         let log = logsPool.get(manifest.name);
 
         args = this._normalizeArgs(args);

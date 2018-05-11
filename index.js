@@ -5,7 +5,6 @@
 const http = require('http');
 const Koa = require('koa');
 const body = require('koa-body');
-const getRawBody = require('raw-body');
 const Router = require('koa-better-router');
 const api = require('./api');
 const intProcessEmitter = require('./libs/interrupt-process-emitter');
@@ -32,12 +31,6 @@ intProcessEmitter.prependListener('int', async _ => {
 });
 
 app.use(body({ multipart: true }));
-app.use(async (ctx, next) => {
-
-    ctx.request.rawBody = await getRawBody(ctx.req, { limit: '800mb' });
-    await next();
-
-});
 app.use(api.middleware());
 
 server.timeout = null;

@@ -1,7 +1,7 @@
 'use strict';
 
 const { writeFileSync } = require('fs');
-const Rule = require('./rule.js');
+const Rule = require('./rule');
 
 class ConfigFile {
 

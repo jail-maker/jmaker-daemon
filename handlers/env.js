@@ -15,7 +15,9 @@ class Env {
             args = [],
         } = data;
 
-        Object.assign(manifest.env, args);
+        console.log('set env:', args);
+        manifest.env = Object.assign(manifest.env, args);
+        console.log('new env:', manifest.env);
 
     }
 

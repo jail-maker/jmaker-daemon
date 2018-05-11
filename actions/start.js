@@ -31,25 +31,26 @@ const ModCopy = require('../modules/copy');
 
 const Recorder = require('../libs/recorder');
 const handlers = require('../handlers');
+const datasets = require('../libs/datasets-db');
 
 async function start(manifest) {
 
     let log = logsPool.get(manifest.name);
     let recorder = new Recorder;
     let jail = {};
+    let dataset = await datasets.findOne({ name: manifest.name });
     let layers = new Layers(config.imagesLocation);
-    let layer = layers.get(manifest.name);
-    let storage = layer;
+    let layer = layers.get(dataset.id);
 
     recorderPool.set(manifest.name, recorder);
 
-    if (!storage.hasSnapshot('start')) {
+    if (!layer.hasSnapshot('start')) {
 
-        storage.snapshot('start');
+        layer.snapshot('start');
 
     } else {
 
-        storage.rollback('start');
+        layer.rollback('start');
 
     }
 
@@ -59,21 +60,21 @@ async function start(manifest) {
 
         fs.copyFileSync(
             '/etc/resolv.conf',
-            `${storage.path}/etc/resolv.conf`
+            `${layer.path}/etc/resolv.conf`
         );
 
         await log.notice('done\n');
 
     }
 
-    if (manifest.quota) storage.setQuota(manifest.quota);
+    if (manifest.quota) layer.setQuota(manifest.quota);
 
     {
 
         let record = {
             run: _ => {
 
-                jail = new Jail(manifest, storage.path);
+                jail = new Jail(manifest, layer.path);
                 dataJails.add(jail);
 
             },
@@ -162,6 +163,7 @@ async function start(manifest) {
         let handler = handlers[command];
         await handler.do({
             index,
+            layer,
             manifest,
             recorder,
             args,

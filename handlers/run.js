@@ -52,6 +52,7 @@ class Run {
         let {
             manifest,
             args = '',
+            layer,
         } = data;
 
         let log = logsPool.get(manifest.name);
@@ -103,6 +104,8 @@ class Run {
 
             let scope = new RuntimeScope;
             let mountPath = path.join(layer.path, '/dev');
+
+            console.log('devfs:', mountPath);
             await ensureDir(mountPath);
 
             try {
@@ -119,6 +122,7 @@ class Run {
             scope.on('int', _ => umount(mountPath, true));
             scope.on('close', _ => umount(mountPath, true));
 
+            console.dir(env);
             let child = spawn(
                 'chroot',
                 [
@@ -131,6 +135,8 @@ class Run {
                     cwd: '/',
                 }
             );
+
+            console.log('exec:', `chroot ${layer.path} sh -c cd ${manifest.workdir} && ${command}`);
 
             let { code } = await log.fromPty(child);
 

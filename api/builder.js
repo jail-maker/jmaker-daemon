@@ -7,6 +7,7 @@ const tempWrite = require('temp-write');
 const tempfile = require('tempfile');
 const tempdir = require('tempdir');
 const Router = require('koa-better-router');
+const getRawBody = require('raw-body');
 const config = require('../libs/config');
 const ManifestFactory = require('../libs/manifest-factory');
 const Manifest = require('../libs/manifest');
@@ -21,7 +22,7 @@ const routes = Router().loadMethods();
 
 routes.post('/containers/builder', async (ctx, next) => {
 
-    let rawBody = ctx.request.rawBody;
+    let rawBody = await getRawBody(ctx.req, { limit: '800mb' });
     let mimeType = ctx.get('content-type');
     let ext = mime.getExtension(mimeType);
 
@@ -39,13 +40,15 @@ routes.post('/containers/builder', async (ctx, next) => {
     } catch (error) {
 
         ctx.status = 400;
-        ctx.body = "Bad format.";
+        ctx.body = "Bad container file format.";
         return;
 
     }
 
     let name = manifest.name;
     let log = logsPool.create(name);
+
+    console.dir('manifest:', manifest);
 
     try {
 

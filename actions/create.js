@@ -32,6 +32,7 @@ async function create(manifest, context = null) {
 
             let dir = path.resolve(manifest.workdir);
             dir = path.join(layer.path, dir);
+            console.log('ensure workdir:', dir);
             await fse.ensureDir(dir);
 
         });
