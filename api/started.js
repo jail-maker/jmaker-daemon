@@ -24,6 +24,7 @@ routes.post('/containers/started', async (ctx) => {
 
     let body = ctx.request.body;
     let name = body.name;
+    let rules = body.rules;
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
 
     if (!datasets) {
@@ -51,6 +52,7 @@ routes.post('/containers/started', async (ctx) => {
 
     let manifestFile = path.join(layer.path, '.manifest');
     let manifest = ManifestFactory.fromFile(manifestFile);
+    Object.assign(manifest.rules, rules);
 
     console.log('manifest:');
     console.dir(manifest);
@@ -117,8 +119,12 @@ routes.delete('/containers/started/:name', async (ctx) => {
 
         logsPool.delete(name);
 
+        ctx.status = 200;
+        ctx.body = `container "${name}" stoped.`;
+
     } catch (error) {
 
+        ctx.status = 500;
         await log.crit(`\n${error.toString()}\n`, true);
         console.log(error);
 

@@ -134,7 +134,6 @@ class Mount {
 
         let src = volume.path;
 
-
         let record = {
             run: _ => {
                 ensureDirSync(dst);

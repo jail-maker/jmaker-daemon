@@ -28,29 +28,6 @@ class Jail extends EventEmitter {
 
     }
 
-    async stop() {
-
-        this.emit('beforeStop', this);
-
-        let log = logsPool.get(this.name);
-        let child = spawn('jail', [
-            '-r', '-f', this.configFilePath, this.name,
-        ], {
-            stdio: ['ignore', 'pipe', 'pipe']
-        });
-
-        this.emit('stop', this);
-
-        await log.fromProcess(child);
-
-        fs.unlinkSync(this.configFilePath);
-
-        this._working = false;
-
-        this.emit('afterStop', this);
-
-    }
-
     async start() {
 
         this.emit('beforeStart', this);
@@ -74,6 +51,30 @@ class Jail extends EventEmitter {
         this.emit('afterStart', this);
 
     }
+
+    async stop() {
+
+        this.emit('beforeStop', this);
+
+        let log = logsPool.get(this.name);
+        let child = spawn('jail', [
+            '-r', '-f', this.configFilePath, this.name,
+        ], {
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        this.emit('stop', this);
+
+        await log.fromProcess(child);
+
+        fs.unlinkSync(this.configFilePath);
+
+        this._working = false;
+
+        this.emit('afterStop', this);
+
+    }
+
 
     async run() {
 

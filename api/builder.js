@@ -26,6 +26,8 @@ routes.post('/containers/builder', async (ctx, next) => {
     let mimeType = ctx.get('content-type');
     let ext = mime.getExtension(mimeType);
 
+    console.log(mimeType);
+
     let context = new Context;
     let tarFile = await tempWrite(rawBody, `jmaker-context-${uniqid()}.${ext}`);
     let manifestFile = path.join(context.path, '.manifest');
@@ -39,6 +41,7 @@ routes.post('/containers/builder', async (ctx, next) => {
 
     } catch (error) {
 
+        console.log(error);
         ctx.status = 400;
         ctx.body = "Bad container file format.";
         return;
