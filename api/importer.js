@@ -54,7 +54,7 @@ routes.post('/containers/importer', async (ctx) => {
 
             console.log(error);
             ctx.status = 400;
-            ctx.body = "Bad image format.";
+            ctx.body = "Bad image file format.";
             return;
 
         }

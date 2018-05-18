@@ -8,25 +8,35 @@ const Layers = require('../../libs/layers');
 const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
 const Manifest = require('../../libs/manifest');
+const datasets = require('../../libs/datasets-db');
 
 const routes = Router().loadMethods();
 
-routes.delete('/containers/list/:name', (ctx) => {
+routes.delete('/containers/list/:name', async (ctx) => {
 
-    let image = ctx.params.image;
+    let containerName = ctx.params.name;
     let layers = new Layers(config.imagesLocation);
+    let dataset = await datasets.findOne({ name: containerName });
 
-    if (!layers.has(image)) {
+    if (!dataset) {
 
         ctx.status = 404;
-        ctx.body = `Image ${image} not found.`;
+        ctx.body = `Container "${image}" not found.`;
+        return;
+
+    } else if (!layers.has(dataset.id)) {
+
+        ctx.status = 500;
+        ctx.body = `Dataset "${dataset.id}" not found.`;
         return;
 
     }
 
-    Layers.destroy(image);
+    Layers.destroy(dataset.id);
+
+    ctx.status = 200;
+    ctx.body = `Dataset "${dataset.id}" was removed.`;
 
 });
 
 module.exports = routes;
-
