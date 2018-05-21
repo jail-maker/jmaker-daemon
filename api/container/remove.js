@@ -21,7 +21,7 @@ routes.delete('/containers/list/:name', async (ctx) => {
     if (!dataset) {
 
         ctx.status = 404;
-        ctx.body = `Container "${image}" not found.`;
+        ctx.body = `Container "${containerName}" not found.`;
         return;
 
     } else if (!layers.has(dataset.id)) {
@@ -32,7 +32,8 @@ routes.delete('/containers/list/:name', async (ctx) => {
 
     }
 
-    Layers.destroy(dataset.id);
+    layers.destroy(dataset.id);
+    await datasets.remove({ name: containerName }, {});
 
     ctx.status = 200;
     ctx.body = `Dataset "${dataset.id}" was removed.`;

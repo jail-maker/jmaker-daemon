@@ -71,17 +71,19 @@ routes.post('/containers/started', async (ctx) => {
 
         await log.notice('starting...\n');
         await start(manifest);
-        await stop(name);
-        await log.notice('finish.\n', true);
 
     } catch (error) {
 
         await log.crit(`\n${error.toString()}\n`, true);
-        logsPool.delete(name);
         console.log(error);
 
-    }
+    } finally {
 
+        await stop(name);
+        await log.notice('finish.\n', true);
+        logsPool.delete(name);
+
+    }
 
 });
 

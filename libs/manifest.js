@@ -23,6 +23,12 @@ class Manifest {
 
     }
 
+    clone() {
+
+        return Object.assign(new Manifest, this);
+
+    }
+
     toFile(file) {
 
         fs.writeFileSync(file, JSON.stringify(this));

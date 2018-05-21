@@ -2,6 +2,7 @@
 
 const path = require('path');
 const fse = require('fs-extra');
+const uuid4 = require('uuid/v4');
 
 const config = require('../libs/config');
 const logsPool = require('../libs/logs-pool');
@@ -16,6 +17,7 @@ const Layers = require('../libs/layers/layers');
 
 async function create(manifest, context = null) {
 
+    let clonedManifest = manifest.clone();
     let scope = new RuntimeScope;
     let log = logsPool.get(manifest.name);
     let dataset = await datasets.findOne({ name: manifest.name });
@@ -59,7 +61,7 @@ async function create(manifest, context = null) {
 
     await layer.commit('create manifest', async _ => {
 
-        manifest.toFile(path.join(layer.path, '.manifest'));
+        clonedManifest.toFile(path.join(layer.path, '.manifest'));
 
     }, false);
 
