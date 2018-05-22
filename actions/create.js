@@ -65,6 +65,8 @@ async function create(manifest, context = null) {
 
     }, false);
 
+    await datasets.insert({ id: datasetId, name: manifest.name });
+
     layer.snapshot('last');
     scope.close();
 
