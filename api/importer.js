@@ -6,6 +6,7 @@ const fse = require('fs-extra');
 const tempWrite = require('temp-write');
 const tempfile = require('tempfile');
 const tempdir = require('tempdir');
+const getRawBody = require('raw-body');
 const Router = require('koa-better-router');
 const uuid4 = require('uuid/v4');
 const mime = require('mime')
@@ -21,7 +22,7 @@ const routes = Router().loadMethods();
 
 routes.post('/containers/importer', async (ctx) => {
 
-    let rawBody = ctx.request.rawBody;
+    let rawBody = await getRawBody(ctx.req, { limit: '800mb' });
     let tmpDir = undefined;
     let imageFile = undefined;
     let manifestFile = undefined;

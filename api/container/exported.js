@@ -14,15 +14,15 @@ const routes = Router().loadMethods();
 
 routes.get('/containers/list/:name/exported', async (ctx) => {
 
-    let image = ctx.params.name;
+    let name = ctx.params.name;
     let layers = new Layers(config.imagesLocation);
 
-    let dataset = await datasets.findOne({ name: image });
+    let dataset = await datasets.findOne({ name: name });
 
     if (!dataset) {
 
         ctx.status = 404;
-        ctx.body = `Image ${image} not found.`;
+        ctx.body = `Image ${name} not found.`;
         return;
 
     }
@@ -30,15 +30,17 @@ routes.get('/containers/list/:name/exported', async (ctx) => {
     if (!layers.has(dataset.id)) {
 
         ctx.status = 500;
-        ctx.body = `Data for ${image} not found.`;
+        ctx.body = `Data for ${name} not found.`;
         return;
 
     }
 
     let layer = layers.get(dataset.id);
+    console.log(layer.lastSnapshot);
+    console.log(layer.getDiff());
     let stream = await layer.compressStream();
 
-    ctx.set('content-disposition', `attachment; filename="${image}.tar"`);
+    ctx.set('content-disposition', `attachment; filename="${name}.tar"`);
     ctx.set('content-type', 'application/x-tar');
     ctx.body = stream;
 

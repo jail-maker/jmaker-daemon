@@ -4,6 +4,7 @@ const { spawnSync } = require('child_process');
 const { ensureDirSync } = require('fs-extra');
 const path = require('path');
 const sha256 = require('js-sha256').sha256;
+const uuidv5 = require("uuid/v5");
 const config = require('../libs/config');
 const logsPool = require('../libs/logs-pool');
 const Layers = require('../libs/layers');
@@ -75,7 +76,7 @@ class Mount {
             throw new Error('volume path is undefined.');
 
         if (args.name === undefined)
-            args.name = sha256(`${manifest.name} ${args.path}`).slice(0, 12);
+            args.name = uuidv5(`${manifest.name} ${args.path}`, uuidv5.DNS);
 
         let dst = args.path;
         dst = path.resolve(manifest.workdir, dst);
@@ -122,7 +123,7 @@ class Mount {
             throw new Error('volume path is undefined.');
 
         if (args.name === undefined)
-            args.name = sha256(`${manifest.name} ${args.path}`).slice(0, 12);
+            args.name = uuidv5(`${manifest.name} ${args.path}`, uuidv5.DNS);
 
         let dst = args.path;
         dst = path.resolve(manifest.workdir, dst);

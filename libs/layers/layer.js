@@ -219,12 +219,13 @@ class Layer {
         let snapshots = zfs.list({
             prefix: this.name,
             type: ['snapshot'],
-            sortDesc: ['creation'],
+            sortAsc: ['creation'],
         });
 
         if (snapshots.length) {
 
-            return snapshots[0].split('@')[1];
+            let index = snapshots.length - 1;
+            return snapshots[index].split('@')[1];
 
         } else return undefined;
 
