@@ -30,6 +30,12 @@ intProcessEmitter.prependListener('int', async _ => {
 
 });
 
+app.on('error', (err, ctx) => {
+
+    console.log('server error', err, ctx)
+
+});
+
 app.use(body({ multipart: true }));
 app.use(api.middleware());
 

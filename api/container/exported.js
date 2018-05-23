@@ -9,6 +9,7 @@ const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
 const Manifest = require('../../libs/manifest');
 const datasets = require('../../libs/datasets-db');
+const PassThrough = require('stream').PassThrough;
 
 const routes = Router().loadMethods();
 
@@ -36,13 +37,13 @@ routes.get('/containers/list/:name/exported', async (ctx) => {
     }
 
     let layer = layers.get(dataset.id);
-    console.log(layer.lastSnapshot);
-    console.log(layer.getDiff());
     let stream = await layer.compressStream();
 
     ctx.set('content-disposition', `attachment; filename="${name}.tar"`);
     ctx.set('content-type', 'application/x-tar');
-    ctx.body = stream;
+
+    // See: https://github.com/koajs/koa/pull/612 for more information.
+    ctx.body = stream.on('error', ctx.onerror).pipe(PassThrough());
 
 });
 
