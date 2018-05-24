@@ -32,11 +32,13 @@ const ModCopy = require('../modules/copy');
 const Recorder = require('../libs/recorder');
 const handlers = require('../handlers');
 const datasets = require('../libs/datasets-db');
+const CommandInvoker = require('../libs/command-invoker.js');
 
 async function start(manifest) {
 
     let log = logsPool.get(manifest.name);
     let recorder = new Recorder;
+    let invoker = new CommandInvoker;
     let jail = {};
     let dataset = await datasets.findOne({ name: manifest.name });
     let layers = new Layers(config.imagesLocation);
@@ -154,20 +156,37 @@ async function start(manifest) {
 
     await log.notice('starting...\n');
 
+    // for (let index in manifest.starting) {
+
+    //     let obj = manifest.starting[index];
+    //     let command = Object.keys(obj)[0];
+    //     let args = obj[command];
+
+    //     let handler = handlers[command];
+    //     await handler.do({
+    //         index,
+    //         layer,
+    //         manifest,
+    //         recorder,
+    //         args,
+    //         stage: 'starting',
+    //     });
+
+    // }
+
     for (let index in manifest.starting) {
 
         let obj = manifest.starting[index];
-        let command = Object.keys(obj)[0];
-        let args = obj[command];
+        let commandName = Object.keys(obj)[0];
+        let args = obj[commandName];
 
-        let handler = handlers[command];
-        await handler.do({
+        let commandPath = `../launcher-commands/${commandName}-command`;
+        let CommandClass = require(commandPath);
+        let command = new CommandClass({
             index,
             layer,
             manifest,
-            recorder,
             args,
-            stage: 'starting',
         });
 
     }

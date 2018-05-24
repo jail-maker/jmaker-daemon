@@ -14,19 +14,26 @@ const RuntimeScope = require('../libs/runtime-scope');
 const datasets = require('../libs/datasets-db');
 
 const Layers = require('../libs/layers/layers');
+const CommandInvoker = require('../libs/command-invoker.js');
 
 async function create(manifest, context = null) {
 
     let clonedManifest = manifest.clone();
     let scope = new RuntimeScope;
+    let invoker = new CommandInvoker;
     let log = logsPool.get(manifest.name);
     let dataset = await datasets.findOne({ name: manifest.name });
     let parent = await datasets.findOne({ name: manifest.from });
     let datasetId = dataset ? dataset.id : uuid4();
     let parentId = parent ? parent.id : null;
-
     let layers = new Layers(config.imagesLocation);
     let layer = layers.createIfNotExists(datasetId, parentId);
+
+    if (!dataset) {
+
+        await datasets.insert({ id: datasetId, name: manifest.name });
+
+    }
 
     {
         let name = `${manifest.workdir} ${manifest.from}`;
@@ -40,22 +47,43 @@ async function create(manifest, context = null) {
         });
     }
 
+    // for (let index in manifest.building) {
+
+    //     let obj = manifest.building[index];
+    //     let command = Object.keys(obj)[0];
+    //     let args = obj[command];
+
+    //     let handler = handlers[command];
+    //     await handler.do({
+    //         index,
+    //         layer,
+    //         manifest,
+    //         context,
+    //         scope,
+    //         args,
+    //         stage: 'building',
+    //     });
+
+    // }
+
     for (let index in manifest.building) {
 
         let obj = manifest.building[index];
-        let command = Object.keys(obj)[0];
-        let args = obj[command];
+        let commandName = Object.keys(obj)[0];
+        let args = obj[commandName];
 
-        let handler = handlers[command];
-        await handler.do({
+        let commandPath = `../builder-commands/${commandName}-command`;
+        let CommandClass = require(commandPath);
+        let command = new CommandClass({
             index,
             layer,
             manifest,
             context,
             scope,
             args,
-            stage: 'building',
         });
+
+        await invoker.submit(command);
 
     }
 
@@ -64,8 +92,6 @@ async function create(manifest, context = null) {
         clonedManifest.toFile(path.join(layer.path, '.manifest'));
 
     }, false);
-
-    await datasets.insert({ id: datasetId, name: manifest.name });
 
     layer.snapshot('last');
     scope.close();
