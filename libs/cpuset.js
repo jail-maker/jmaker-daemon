@@ -1,18 +1,21 @@
 'use strict';
 
 const { spawnSync } = require('child_process');
-const ExecutionError = require('../libs/errors/execution-error.js');
+const ExecutionError = require('./errors/execution-error');
+const CommandInterface = require('./command-interface');
 
-class Cpuset {
+class Cpuset extends CommandInterface {
 
-    constructor(jid, value) {
+    constructor({ jid, value }) {
+
+        super();
 
         this._jid = jid;
         this._value = value;
 
     }
 
-    async run() {
+    async exec() {
 
         let result = spawnSync('cpuset', [
             '-l', this._value, '-j', this._jid
@@ -23,7 +26,7 @@ class Cpuset {
 
     }
 
-    async rollback() { }
+    async unExec() { }
 
 }
 

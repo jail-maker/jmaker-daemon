@@ -1,18 +1,27 @@
 'use strict';
 
 const { spawn, spawnSync } = require('child_process')
-const RctlRule = require('./rctl-rule.js');
-const ExecutionError = require('../libs/errors/execution-error.js');
+const RctlRule = require('./rctl-rule');
+const ExecutionError = require('./errors/execution-error');
+const CommandInterface = require('./command-interface');
 
-class Rctl {
+class Rctl extends CommandInterface {
 
-    constructor(rulset, jailName) {
+    constructor({rulset, jailName}) {
+
+        super();
 
         this._rulset = rulset;
         this._jailName = jailName;
         this._rules = [];
 
-        for (let key in rulset) {
+        this._rulsetParse();
+
+    }
+
+    _rulsetParse() {
+
+        for (let key in this._rulset) {
 
             let resource = key;
             let actions = rulset[key];
@@ -20,10 +29,10 @@ class Rctl {
             for (let action in actions) {
 
                 let data = {
-                    resource: resource,
-                    action: action,
+                    resource,
+                    action,
                     value: actions[action],
-                    jailName: jailName,
+                    jailName: this._jailName,
                 };
 
                 this._rules.push(new RctlRule(data));
@@ -34,7 +43,7 @@ class Rctl {
 
     }
 
-    async run() {
+    async exec() {
 
         this._rules.forEach(rule => {
 
@@ -49,7 +58,7 @@ class Rctl {
 
     }
 
-    async rollback() {
+    async unExec() {
 
         this._rules.forEach(rule => {
 

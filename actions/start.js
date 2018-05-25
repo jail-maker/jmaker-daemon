@@ -16,20 +16,15 @@ const logsPool = require('../libs/logs-pool');
 const Rctl = require('../libs/rctl');
 const Jail = require('../libs/jails/jail');
 const ruleViewVisitor = require('../libs/jails/rule-view-visitor');
-const recorderPool = require('../libs/recorder-pool');
+const invokersPool = require('../libs/invokers-pool');
 const RawArgument = require('../libs/raw-argument');
 
 const dhcp = require('../modules/ip-dhcp');
 const autoIface = require('../modules/auto-iface');
 const autoIp = require('../modules/auto-ip');
 
-const Cpuset = require('../modules/cpuset');
-const Pkg = require('../modules/pkg');
-const JPreStart = require('../modules/j-prestart');
-const JPostStart = require('../modules/j-poststart');
-const ModCopy = require('../modules/copy');
+const Cpuset = require('../libs/cpuset');
 
-const Recorder = require('../libs/recorder');
 const handlers = require('../handlers');
 const datasets = require('../libs/datasets-db');
 const CommandInvoker = require('../libs/command-invoker.js');
@@ -37,14 +32,13 @@ const CommandInvoker = require('../libs/command-invoker.js');
 async function start(manifest) {
 
     let log = logsPool.get(manifest.name);
-    let recorder = new Recorder;
     let invoker = new CommandInvoker;
     let jail = {};
     let dataset = await datasets.findOne({ name: manifest.name });
     let layers = new Layers(config.imagesLocation);
     let layer = layers.get(dataset.id);
 
-    recorderPool.set(manifest.name, recorder);
+    invokersPool.set(manifest.name, invoker);
 
     if (!layer.hasSnapshot('start')) {
 
@@ -73,21 +67,21 @@ async function start(manifest) {
 
     {
 
-        let record = {
-            run: _ => {
+        let command = {
+            exec: async _ => {
 
-                jail = new Jail(manifest, layer.path);
+                jail = new Jail({ manifest, path: layer.path });
                 dataJails.add(jail);
 
             },
-            rollback: _ => {
+            unExec: async _ => {
 
                 dataJails.unset(manifest.name);
 
-            }
-        }
+            },
+        };
 
-        await recorder.run({ record });
+        await invoker.submitOrUndoAll(command);
 
     }
 
@@ -95,8 +89,8 @@ async function start(manifest) {
 
     {
 
-        let record = {
-            run: _ => {
+        let command = {
+            exec: async _ => {
 
                 configObj
                 // .pipe(dhcp.getPipeRule(jail).bind(dhcp))
@@ -105,23 +99,34 @@ async function start(manifest) {
                     .accept(ruleViewVisitor);
 
             },
-            rollback: _ => {}
+            unExec: async _ => {}
         };
 
-        await recorder.run({ record });
+        await invoker.submitOrUndoAll(command);
 
     }
 
     await log.info('rctl... ');
-    let rctlObj = new Rctl(manifest.rctl, manifest.name);
-    await recorder.run({ record: rctlObj });
+    let rctlObj = new Rctl({
+        rulset: manifest.rctl,
+        jailName: manifest.name
+    });
+    await invoker.submitOrUndoAll(rctlObj);
     await log.notice('done\n');
 
     await log.info(configObj.toString() + '\n');
 
-    await log.notice('jail starting...\n');
-    await recorder.run({ record: jail });
-    await log.notice('done\n');
+    {
+        await log.notice('jail starting...\n');
+
+        let command = {
+            exec: async _ => jail.start(),
+            unExec: async _ => jail.stop(),
+        };
+
+        await invoker.submitOrUndoAll(command);
+        await log.notice('done\n');
+    }
 
     if (manifest.cpus) {
 
@@ -141,11 +146,11 @@ async function start(manifest) {
         try {
 
             let cpuset = new Cpuset(jail.info.jid, manifest.cpuset);
-            await recorder.run({ record: cpuset });
+            await invoker.submitOrUndoAll(cpuset);
 
         } catch (error) {
 
-            await recorder.rollback();
+            await invoker.undoAll();
             throw error;
 
         }
@@ -155,24 +160,6 @@ async function start(manifest) {
     }
 
     await log.notice('starting...\n');
-
-    // for (let index in manifest.starting) {
-
-    //     let obj = manifest.starting[index];
-    //     let command = Object.keys(obj)[0];
-    //     let args = obj[command];
-
-    //     let handler = handlers[command];
-    //     await handler.do({
-    //         index,
-    //         layer,
-    //         manifest,
-    //         recorder,
-    //         args,
-    //         stage: 'starting',
-    //     });
-
-    // }
 
     for (let index in manifest.starting) {
 
@@ -188,6 +175,8 @@ async function start(manifest) {
             manifest,
             args,
         });
+
+        await invoker.submitOrUndoAll(command);
 
     }
 

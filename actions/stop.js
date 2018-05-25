@@ -1,14 +1,11 @@
 'use strict';
 
-const recorderPool = require('../libs/recorder-pool');
+const invokersPool = require('../libs/invokers-pool');
 
 async function stop(jailName) {
 
-    let recorder = recorderPool.get(jailName);
-
-    await recorder.rollback();
-
-    return;
+    let invoker = invokersPool.get(jailName);
+    await invoker.undoAll();
 
 }
 

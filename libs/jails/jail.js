@@ -4,14 +4,14 @@ const { spawnSync, spawn } = require('child_process');
 const EventEmitter = require('events');
 const fs = require('fs');
 
-const ExecutionError = require('../errors/execution-error.js');
+const ExecutionError = require('../errors/execution-error');
 
-const ConfigFile = require('./config-file.js');
-const logsPool = require('../logs-pool.js');
+const ConfigFile = require('./config-file');
+const logsPool = require('../logs-pool');
 
 class Jail extends EventEmitter {
 
-    constructor(manifest, path) {
+    constructor({manifest, path}) {
 
         super();
 
@@ -72,19 +72,6 @@ class Jail extends EventEmitter {
         this._working = false;
 
         this.emit('afterStop', this);
-
-    }
-
-
-    async run() {
-
-        await this.start();
-
-    }
-
-    async rollback() {
-
-        await this.stop();
 
     }
 
