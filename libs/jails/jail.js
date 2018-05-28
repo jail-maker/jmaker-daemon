@@ -22,7 +22,6 @@ class Jail extends EventEmitter {
         this.configFileObj = new ConfigFile(this.name, rules);
         this.configFilePath = `/tmp/${this.name}-jail.conf`;
         this.manifest = manifest;
-        this.info = {};
 
         this._working = false;
 
@@ -43,8 +42,6 @@ class Jail extends EventEmitter {
         let { code } = await log.fromProcess(child);
         let msg = 'Error execution jail.';
         if (code !== 0) throw new ExecutionError(msg);
-
-        this._loadInfo();
 
         this._working = true;
 
@@ -75,15 +72,22 @@ class Jail extends EventEmitter {
 
     }
 
-    _loadInfo() {
+    get info() {
 
-        let result = spawnSync('jls', [
-            '-j', this.name, '-n', '--libxo=json',
-        ]);
+        try {
 
-        let jsonData = JSON.parse(result.output[1].toString());
+            let result = spawnSync('jls', [
+                '-j', this.name, '-n', '--libxo=json',
+            ]);
 
-        this.info = jsonData['jail-information'].jail[0];
+            let jsonData = JSON.parse(result.output[1].toString());
+            return jsonData['jail-information'].jail[0];
+
+        } catch (error) {
+
+            return {};
+
+        }
 
     }
 

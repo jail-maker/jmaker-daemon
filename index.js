@@ -40,7 +40,7 @@ app.use(body({ multipart: true }));
 app.use(api.middleware());
 
 server.timeout = null;
-server.listen(config.port, config.host, () => {
+server.listen(config.port, config.host, _ => {
 
     console.log(`listening on port ${config.port}!`);
 
