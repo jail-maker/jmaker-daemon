@@ -14,7 +14,12 @@ const RuntimeScope = require('../libs/runtime-scope');
 const datasets = require('../libs/datasets-db');
 
 const Layers = require('../libs/layers/layers');
-const CommandInvoker = require('../libs/command-invoker.js');
+const CommandInvoker = require('../libs/command-invoker');
+
+const mountDevfs = require('../libs/mount-devfs');
+const mountFdescfs = require('../libs/mount-fdescfs');
+const mountProcfs = require('../libs/mount-procfs');
+const umount = require('../libs/umount');
 
 async function create(manifest, context = null) {
 
@@ -36,6 +41,30 @@ async function create(manifest, context = null) {
     }
 
     {
+
+        let dev = path.join(layer.path, '/dev');
+        let fd = path.join(layer.path, '/dev/fd');
+        let proc = path.join(layer.path, '/proc');
+
+        await fse.ensureDir(dev);
+        await fse.ensureDir(fd);
+        await fse.ensureDir(proc);
+
+        scope.on('close', _ => {
+
+            umount(dev, true);
+            umount(fd, true);
+            umount(proc, true);
+
+        });
+
+        mountDevfs(dev);
+        mountFdescfs(fd);
+        mountProcfs(proc);
+
+    }
+
+    {
         let name = `${manifest.workdir} ${manifest.from}`;
         await layer.commit(name, async _ => {
 
@@ -46,25 +75,6 @@ async function create(manifest, context = null) {
 
         });
     }
-
-    // for (let index in manifest.building) {
-
-    //     let obj = manifest.building[index];
-    //     let command = Object.keys(obj)[0];
-    //     let args = obj[command];
-
-    //     let handler = handlers[command];
-    //     await handler.do({
-    //         index,
-    //         layer,
-    //         manifest,
-    //         context,
-    //         scope,
-    //         args,
-    //         stage: 'building',
-    //     });
-
-    // }
 
     for (let index in manifest.building) {
 

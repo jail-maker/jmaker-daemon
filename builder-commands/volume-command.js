@@ -43,6 +43,7 @@ class VolumeCommand extends CommandInterface {
             layer,
             manifest,
             args = {},
+            scope,
         } = this._receiver;
 
         let log = logsPool.get(manifest.name);
@@ -65,6 +66,8 @@ class VolumeCommand extends CommandInterface {
         this._mountPath = mountPath;
 
         await ensureDir(mountPath);
+        scope.on('close', _ => umount(this._mountPath, true))
+        scope.on('int', _ => umount(this._mountPath, true))
         mountNullfs(src, mountPath);
 
     }

@@ -44,11 +44,6 @@ class RunCommand extends CommandInterface {
 
         await layer.commit(commitName, async _ => {
 
-            let devfsPath = path.join(layer.path, '/dev');
-
-            await ensureDir(devfsPath);
-            mountDevfs(devfsPath);
-
             let child = spawn(
                 'chroot',
                 [
@@ -81,9 +76,6 @@ class RunCommand extends CommandInterface {
             layer,
             manifest,
         } = this._receiver;
-
-        let devfsPath = path.join(layer.path, '/dev');
-        umount(devfsPath, true);
 
         if (this._commitName) layer.rollback(this._commitName);
 
