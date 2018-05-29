@@ -25,14 +25,9 @@ routes.get('/containers/list/:name/runtime', async (ctx) => {
 
         let jail = dataJails.get(ctx.params.name);
         ret.name = jail.name;
-        ret.working = jail.isWorking();
         ret.info = jail.info;
-        Object.assign(ret, jail.configBody);
-        delete(ret.fileData);
 
-        ret.links = {
-            log: `/jails/${jail.name}/log`,
-        };
+        ret.links = { };
 
         ctx.body = ret;
 

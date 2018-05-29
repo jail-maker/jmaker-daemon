@@ -20,9 +20,16 @@ class ConfigFile {
 
             let value = rules[key];
 
-            this._rules[key] = new Rule(key, value);
+            this.setRule({key, value});
 
         }
+
+    }
+
+    setRule({key, value}) {
+
+        this._rules[key] = new Rule(key, value);
+        return this;
 
     }
 
