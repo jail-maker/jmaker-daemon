@@ -8,10 +8,11 @@ const ExecutionError = require('../errors/execution-error');
 
 const ConfigFile = require('./config-file');
 const logsPool = require('../logs-pool');
+const datasets = require('../datasets-db');
 
 class Jail extends EventEmitter {
 
-    constructor({manifest, path}) {
+    constructor({manifest, path, containerId}) {
 
         super();
 
@@ -19,11 +20,10 @@ class Jail extends EventEmitter {
         rules.path = path;
 
         this.name = manifest.name;
+        this.containerId = containerId;
         this.configFileObj = new ConfigFile(this.name, rules);
-        this.configFilePath = `/tmp/${this.name}-jail.conf`;
+        this.configFilePath = `/tmp/${this.containerId}-jail.conf`;
         this.manifest = manifest;
-
-        this._working = false;
 
     }
 
@@ -32,7 +32,7 @@ class Jail extends EventEmitter {
         this.emit('beforeStart', this);
         this.configFileObj.save(this.configFilePath);
 
-        let log = logsPool.get(this.name);
+        let log = logsPool.get(this.containerId);
         let child = spawn('jail', [
             '-c', '-f', this.configFilePath, this.name,
         ], {
@@ -43,8 +43,6 @@ class Jail extends EventEmitter {
         let msg = 'Error execution jail.';
         if (code !== 0) throw new ExecutionError(msg);
 
-        this._working = true;
-
         this.emit('afterStart', this);
 
     }
@@ -53,7 +51,7 @@ class Jail extends EventEmitter {
 
         this.emit('beforeStop', this);
 
-        let log = logsPool.get(this.name);
+        let log = logsPool.get(this.containerId);
         let child = spawn('jail', [
             '-r', '-f', this.configFilePath, this.name,
         ], {
@@ -65,8 +63,6 @@ class Jail extends EventEmitter {
         await log.fromProcess(child);
 
         fs.unlinkSync(this.configFilePath);
-
-        this._working = false;
 
         this.emit('afterStop', this);
 
@@ -90,8 +86,6 @@ class Jail extends EventEmitter {
         }
 
     }
-
-    isWorking() { return this._working; }
 
 }
 

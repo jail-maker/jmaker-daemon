@@ -2,9 +2,9 @@
 
 const invokersPool = require('../libs/invokers-pool');
 
-async function stop(jailName) {
+async function stop(containerId) {
 
-    let invoker = invokersPool.get(jailName);
+    let invoker = invokersPool.get(containerId);
     await invoker.undoAll();
 
 }

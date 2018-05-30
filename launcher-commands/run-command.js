@@ -28,11 +28,12 @@ class RunCommand extends CommandInterface {
 
         let {
             manifest,
+            containerId,
             args = '',
             layer,
         } = this._receiver;
 
-        let log = logsPool.get(manifest.name);
+        let log = logsPool.get(containerId);
         let env = Object.assign({}, process.env, manifest.env);
         let command = args;
 

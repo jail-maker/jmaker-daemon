@@ -13,51 +13,23 @@ const logsPool = require('../libs/logs-pool');
 const start = require('../actions/start');
 const stop = require('../actions/stop');
 
-const dataJails = require('../libs/data-jails');
+const jailsPool = require('../libs/jails/jails-pool');
 const datasets = require('../libs/datasets-db');
 
 const routes = Router().loadMethods();
 
-routes.post('/containers/started', async (ctx) => {
-
-    console.log('/containers/started');
+routes.post('/containers/started', async (ctx, next) => {
 
     let body = ctx.request.body;
     let name = body.name;
-    let rules = body.rules;
-    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
-
-    if (!datasets) {
-
-        ctx.status = 404;
-        ctx.body = `Container "${name}" not found.`;
-        return;
-
-    }
-
     let layers = new Layers(config.imagesLocation);
-    let layer = {};
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+    let containerId = dataset ? dataset.id : null;
+    let started = jailsPool.has(containerId);
 
-    try {
+    // if started
 
-        layer = layers.get(dataset.id);
-
-    } catch (error) {
-
-        ctx.status = 500;
-        ctx.body = `Files/dataset for container "${name}" not found.`;
-        return;
-
-    }
-
-    let manifestFile = path.join(layer.path, '.manifest');
-    let manifest = ManifestFactory.fromFile(manifestFile);
-    Object.assign(manifest.rules, rules);
-
-    console.log('manifest:');
-    console.dir(manifest);
-
-    if (dataJails.has(name)) {
+    if (started) {
 
         ctx.status = 409;
         ctx.body = `Jail "${name}" already exists.`;
@@ -65,7 +37,39 @@ routes.post('/containers/started', async (ctx) => {
 
     }
 
-    let log = logsPool.create(name);
+    // if database record not exists
+
+    if (!dataset || !layers.has(containerId)) {
+
+        ctx.status = 404;
+        ctx.body = `Container "${name}" not found.`;
+        return;
+
+    }
+
+    setImmediate(_ => next());
+
+    ctx.status = 200;
+    ctx.body = { };
+
+}, async (ctx) => {
+
+    let body = ctx.request.body;
+    let name = body.name;
+    let rules = body.rules;
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+    let containerId = dataset ? dataset.id : null;
+    let containerName = dataset ? dataset.name : null;
+
+    let layers = new Layers(config.imagesLocation);
+    let layer = layers.get(containerId);
+
+    let manifestFile = path.join(layer.path, '.manifest');
+    let manifest = ManifestFactory.fromFile(manifestFile);
+
+    Object.assign(manifest.rules, rules);
+
+    let log = logsPool.create(containerId);
 
     try {
 
@@ -79,50 +83,48 @@ routes.post('/containers/started', async (ctx) => {
 
     } finally {
 
-        await stop(name);
+        await stop(containerId);
         await log.notice('finish.\n', true);
-        logsPool.delete(name);
+        logsPool.delete(containerId);
 
     }
 
 });
 
-routes.delete('/containers/started/:name', async (ctx) => {
+routes.delete('/containers/started/:name', async (ctx, next) => {
 
     let name = ctx.params.name;
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+    let containerId = dataset ? dataset.id : null;
+    let started = jailsPool.has(containerId);
 
-    if (!dataJails.has(name)) {
+    if (!started) {
 
         ctx.status = 404;
-        ctx.body = `Jail "${name}" not found.`;
+        ctx.body = `Jail "${name}" not runing.`;
         return;
 
     }
 
-    let log = {};
+    setImmediate(_ => next());
 
-    try {
+    ctx.status = 200;
+    ctx.body = {};
 
-        log = logsPool.get(name);
+}, async (ctx) => {
 
-    } catch (error) {
-
-        ctx.status = 500;
-        ctx.body = `Log "${name}" not found.`;
-        return;
-
-    }
+    let name = ctx.params.name;
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+    let containerId = dataset ? dataset.id : null;
+    let log = logsPool.get(containerId);
 
     try {
 
         await log.notice('stopping...\n');
-        await stop(name);
+        await stop(containerId);
         await log.notice('finish\n', true);
 
-        logsPool.delete(name);
-
-        ctx.status = 200;
-        ctx.body = `container "${name}" stoped.`;
+        logsPool.delete(containerId);
 
     } catch (error) {
 

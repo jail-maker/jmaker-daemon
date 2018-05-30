@@ -13,17 +13,21 @@ const logsPool = require('../../libs/logs-pool');
 const start = require('../../actions/start');
 const stop = require('../../actions/stop');
 
-const dataJails = require('../../libs/data-jails');
+const jailsPool = require('../../libs/jails/jails-pool');
+const datasets = require('../../libs/datasets-db');
 
 const routes = Router().loadMethods();
 
 routes.get('/containers/list/:name/runtime', async (ctx) => {
 
+    let name = ctx.params.name
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+    let containerId = dataset ? dataset.id : null;
     let ret = {};
 
     try {
 
-        let jail = dataJails.get(ctx.params.name);
+        let jail = jailsPool.get(containerId);
         ret.name = jail.name;
         ret.info = jail.info;
 

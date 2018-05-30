@@ -26,17 +26,19 @@ async function create(manifest, context = null) {
     let clonedManifest = manifest.clone();
     let scope = new RuntimeScope;
     let invoker = new CommandInvoker;
-    let log = logsPool.get(manifest.name);
     let dataset = await datasets.findOne({ name: manifest.name });
     let parent = await datasets.findOne({ name: manifest.from });
-    let datasetId = dataset ? dataset.id : uuid4();
+    let containerId = dataset ? dataset.id : uuid4();
     let parentId = parent ? parent.id : null;
     let layers = new Layers(config.imagesLocation);
-    let layer = layers.createIfNotExists(datasetId, parentId);
+    let layer = layers.createIfNotExists(containerId, parentId);
+    let log = logsPool.create(containerId);
+
+    scope.on('close', _ => logsPool.delete(containerId));
 
     if (!dataset) {
 
-        await datasets.insert({ id: datasetId, name: manifest.name });
+        await datasets.insert({ id: containerId, name: manifest.name });
 
     }
 
@@ -50,7 +52,7 @@ async function create(manifest, context = null) {
         await fse.ensureDir(fd);
         await fse.ensureDir(proc);
 
-        scope.on('close', _ => {
+        scope.on('destroy', _ => {
 
             umount(dev, true);
             umount(fd, true);
@@ -88,6 +90,7 @@ async function create(manifest, context = null) {
             index,
             layer,
             manifest,
+            containerId,
             context,
             scope,
             args,

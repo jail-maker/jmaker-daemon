@@ -26,10 +26,11 @@ class WorkdirCommand extends CommandInterface {
             layer,
             index,
             manifest,
+            containerId,
             args = [],
         } = this._receiver;
 
-        let log = logsPool.get(manifest.name);
+        let log = logsPool.get(containerId);
         let workdir = path.resolve(manifest.workdir, args);
         let name = `${index} ${workdir} ${manifest.from}`;
 

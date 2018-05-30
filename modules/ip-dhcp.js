@@ -6,7 +6,7 @@ const jsonQuery = require('json-query');
 const uniqid = require('uniqid');
 const randomMac = require('random-mac');
 const defaultIface = require('../libs/default-iface.js');
-const dataJails = require('../libs/data-jails.js');
+const jailsPool = require('../libs/jails/jails-pool');
 const Iface = require('../libs/iface.js');
 const Ip4Addr = require('../libs/ip4addr.js');
 

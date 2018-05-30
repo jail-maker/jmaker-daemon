@@ -16,6 +16,7 @@ class RuntimeScope extends EventEmitter {
     int() {
 
         this.emit('int');
+        this.emit('destroy');
 
     }
 
@@ -23,6 +24,8 @@ class RuntimeScope extends EventEmitter {
 
         this.emit('close');
         this.removeAllListeners('close');
+        this.emit('destroy');
+        this.removeAllListeners('destroy');
         intProcessEmitter.removeListener('int', this.int.bind(this));
         this.removeAllListeners('int');
 

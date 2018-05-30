@@ -8,7 +8,7 @@ const body = require('koa-body');
 const Router = require('koa-better-router');
 const api = require('./api');
 const intProcessEmitter = require('./libs/interrupt-process-emitter');
-const dataJails = require('./libs/data-jails');
+const jailsPool = require('./libs/jails/jails-pool');
 
 const config = require('./libs/config');
 const stop = require('./actions/stop');
@@ -20,7 +20,7 @@ intProcessEmitter.prependListener('int', async _ => {
 
     try {
 
-        await Promise.all(dataJails.getNames().map(stop));
+        await Promise.all(jailsPool.ids.map(stop));
 
     } catch (error) {
 

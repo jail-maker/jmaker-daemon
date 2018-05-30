@@ -14,7 +14,6 @@ const Manifest = require('../libs/manifest');
 const mime = require('mime');
 const Context = require('../libs/context');
 const decompress = require('../libs/decompress');
-const logsPool = require('../libs/logs-pool');
 const create = require('../actions/create');
 const uniqid = require('uniqid');
 
@@ -49,24 +48,18 @@ routes.post('/containers/builder', async (ctx, next) => {
     }
 
     let name = manifest.name;
-    let log = logsPool.create(name);
-
     console.dir('manifest:', manifest);
 
     try {
 
-        await log.notice('create...\n');
         await create(manifest, context);
-        await log.notice('finish.\n', true);
 
-    } catch (e) {
+    } catch (error) {
 
-        await log.crit(`\n${e.toString()}\n`, true);
-        console.log(e);
+        console.log(error);
 
     } finally {
 
-        logsPool.delete(name);
         context.destroy();
 
     }

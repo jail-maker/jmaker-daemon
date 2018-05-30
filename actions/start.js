@@ -9,7 +9,7 @@ const sha256 = require('js-sha256').sha256;
 
 const fetch = require('../libs/bsd-fetch');
 const config = require('../libs/config');
-const dataJails = require('../libs/data-jails');
+const jailsPool = require('../libs/jails/jails-pool');
 const Zfs = require('../libs/zfs');
 const Layers = require('../libs/layers');
 const logsPool = require('../libs/logs-pool');
@@ -31,14 +31,15 @@ const CommandInvoker = require('../libs/command-invoker.js');
 
 async function start(manifest) {
 
-    let log = logsPool.get(manifest.name);
     let invoker = new CommandInvoker;
     let jail = {};
-    let dataset = await datasets.findOne({ name: manifest.name });
     let layers = new Layers(config.imagesLocation);
-    let layer = layers.get(dataset.id);
+    let dataset = await datasets.findOne({ name: manifest.name });
+    let containerId = dataset ? dataset.id : null;
+    let log = logsPool.get(containerId);
+    let layer = layers.get(containerId);
 
-    invokersPool.set(manifest.name, invoker);
+    invokersPool.set(containerId, invoker);
 
     if (!layer.hasSnapshot('start')) {
 
@@ -70,13 +71,13 @@ async function start(manifest) {
         let command = {
             exec: async _ => {
 
-                jail = new Jail({ manifest, path: layer.path });
-                dataJails.add(jail);
+                jail = new Jail({ manifest, path: layer.path, containerId });
+                jailsPool.set(containerId, jail);
 
             },
             unExec: async _ => {
 
-                dataJails.unset(manifest.name);
+                jailsPool.unset(containerId);
 
             },
         };
@@ -172,6 +173,7 @@ async function start(manifest) {
         let command = new CommandClass({
             index,
             layer,
+            containerId,
             manifest,
             args,
         });

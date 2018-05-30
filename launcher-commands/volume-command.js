@@ -44,11 +44,12 @@ class VolumeCommand extends CommandInterface {
             manifest,
             args = {},
             recorder,
+            containerId,
         } = this._receiver;
 
         let layers = new Layers(config.imagesLocation);
         let volumes = new Layers(config.volumesLocation);
-        let log = logsPool.get(manifest.name);
+        let log = logsPool.get(containerId);
 
         args = this._normalizeArgs(args);
 
