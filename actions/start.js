@@ -146,7 +146,9 @@ async function start(manifest) {
 
         try {
 
-            let cpuset = new Cpuset(jail.info.jid, manifest.cpuset);
+            let cpuset = new Cpuset({
+                jid: jail.info.jid, value: manifest.cpuset 
+            });
             await invoker.submitOrUndoAll(cpuset);
 
         } catch (error) {
