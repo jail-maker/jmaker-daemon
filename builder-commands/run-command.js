@@ -41,7 +41,8 @@ class RunCommand extends CommandInterface {
         let command = args;
 
         let env = Object.assign({}, process.env, manifest.env);
-        let commitName = `${index} ${command} ${manifest.name}`;
+        let commitName = `${index} ${command} ${containerId}`;
+        // let commitName = `${index} ${command} ${manifest.name}`;
 
         await layer.commit(commitName, async _ => {
 

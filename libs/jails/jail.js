@@ -19,7 +19,8 @@ class Jail extends EventEmitter {
         let rules = Object.assign({}, manifest.rules);
         rules.path = path;
 
-        this.name = manifest.name;
+        // this.name = manifest.name;
+        this.name = containerId;
         this.containerId = containerId;
         this.configFileObj = new ConfigFile(this.name, rules);
         this.configFilePath = `/tmp/${this.containerId}-jail.conf`;

@@ -57,7 +57,8 @@ class VolumeCommand extends CommandInterface {
             throw new Error('volume path is undefined.');
 
         if (args.name === undefined)
-            args.name = uuidv5(`${manifest.name} ${args.path}`, uuidv5.DNS);
+            args.name = uuidv5(`${containerId} ${args.path}`, uuidv5.DNS);
+            // args.name = uuidv5(`${manifest.name} ${args.path}`, uuidv5.DNS);
 
         let dst = args.path;
         dst = path.resolve(manifest.workdir, dst);

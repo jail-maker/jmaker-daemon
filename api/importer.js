@@ -60,17 +60,8 @@ routes.post('/containers/importer', async (ctx) => {
 
         }
 
-        let dataset = await datasets.findOne({ name: manifest.name });
         let parent = await datasets.findOne({ name: manifest.from });
         let parentId = parent ? parent.id : null;
-
-        if (dataset) {
-
-            ctx.status = 409;
-            ctx.body = `Image ${manifest.name} already exists.`;
-            return;
-
-        }
 
         if (manifest.from && !parentId) {
 
@@ -83,7 +74,7 @@ routes.post('/containers/importer', async (ctx) => {
         let id = uuid4();
         await datasets.insert({
             id,
-            name: manifest.name,
+            name: id,
         });
 
         try {

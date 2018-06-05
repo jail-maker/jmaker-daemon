@@ -29,13 +29,13 @@ const handlers = require('../handlers');
 const datasets = require('../libs/datasets-db');
 const CommandInvoker = require('../libs/command-invoker.js');
 
-async function start(manifest) {
+async function start(containerId, manifest) {
 
     let invoker = new CommandInvoker;
     let jail = {};
     let layers = new Layers(config.imagesLocation);
-    let dataset = await datasets.findOne({ name: manifest.name });
-    let containerId = dataset ? dataset.id : null;
+    let dataset = await datasets.findOne({ id: containerId });
+    let containerName = dataset.name;
     let log = logsPool.get(containerId);
     let layer = layers.get(containerId);
 
@@ -110,7 +110,7 @@ async function start(manifest) {
     await log.info('rctl... ');
     let rctlObj = new Rctl({
         rulset: manifest.rctl,
-        jailName: manifest.name
+        jailName: containerId
     });
     await invoker.submitOrUndoAll(rctlObj);
     await log.notice('done\n');

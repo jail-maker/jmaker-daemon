@@ -20,6 +20,12 @@ paths:
         '200':
           description: ''
 
+    patch:
+      description: ''
+      responses:
+        '200':
+          description: ''
+
     delete:
       description: ''
       responses:

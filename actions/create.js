@@ -26,9 +26,10 @@ async function create(manifest, context = null) {
     let clonedManifest = manifest.clone();
     let scope = new RuntimeScope;
     let invoker = new CommandInvoker;
-    let dataset = await datasets.findOne({ name: manifest.name });
+    // let dataset = await datasets.findOne({ name: manifest.name });
     let parent = await datasets.findOne({ name: manifest.from });
-    let containerId = dataset ? dataset.id : uuid4();
+    // let containerId = dataset ? dataset.id : uuid4();
+    let containerId = uuid4();
     let parentId = parent ? parent.id : null;
     let layers = new Layers(config.imagesLocation);
     let layer = layers.createIfNotExists(containerId, parentId);
@@ -36,11 +37,12 @@ async function create(manifest, context = null) {
 
     scope.on('close', _ => logsPool.delete(containerId));
 
-    if (!dataset) {
+    await datasets.insert({ id: containerId, name: containerId });
+    // if (!dataset) {
 
-        await datasets.insert({ id: containerId, name: manifest.name });
+    //     await datasets.insert({ id: containerId, name: manifest.name });
 
-    }
+    // }
 
     {
 

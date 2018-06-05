@@ -51,4 +51,8 @@ routes.get('/containers/list/:name', async (ctx) => {
 
 });
 
+routes.patch('/containers/list/:name', async (ctx) => {
+
+});
+
 module.exports = routes;

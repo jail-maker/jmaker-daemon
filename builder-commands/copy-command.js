@@ -27,12 +27,14 @@ class CopyCommand extends CommandInterface {
             manifest,
             context,
             args,
+            containerId,
         } = this._receiver;
 
         if (typeof(args) === 'string') 
             args = [args, args];
 
-        let name = `${index} ${args.join(' ')} ${manifest.name}`;
+        // let name = `${index} ${args.join(' ')} ${manifest.name}`;
+        let name = `${index} ${args.join(' ')} ${containerId}`;
 
         this._commitName = layer.lastSnapshot;
         await layer.commit(name, async _ => {

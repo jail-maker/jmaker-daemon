@@ -74,7 +74,7 @@ routes.post('/containers/started', async (ctx, next) => {
     try {
 
         await log.notice('starting...\n');
-        await start(manifest);
+        await start(containerId, manifest);
 
     } catch (error) {
 

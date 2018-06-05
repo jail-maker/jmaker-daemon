@@ -40,7 +40,8 @@ class RunCommand extends CommandInterface {
         let child = spawn(
             '/usr/sbin/jexec',
             [
-                manifest.name, "sh", "-c",
+                // manifest.name, "sh", "-c",
+                containerId, "sh", "-c",
                 `cd ${manifest.workdir} && ${command}`
             ],
             {
