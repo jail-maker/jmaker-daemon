@@ -53,6 +53,21 @@ routes.get('/containers/list/:name', async (ctx) => {
 
 routes.patch('/containers/list/:name', async (ctx) => {
 
+    let body = ctx.request.body;
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+
+    if (!dataset) {
+
+        ctx.status = 404;
+        return;
+
+    }
+
+    dataset.name = body.name;
+
+    await datasets.update({ $or: [{name}, {id: name}] }, dataset);
+    ctx.status = 200;
+
 });
 
 module.exports = routes;
