@@ -52,10 +52,14 @@ routes.post('/containers/builder', async (ctx, next) => {
 
     try {
 
-        await create(manifest, context);
+        let id = await create(manifest, context);
+
+        ctx.status = 200;
+        ctx.body = {id};
 
     } catch (error) {
 
+        ctx.status = 500;
         console.log(error);
 
     } finally {
@@ -63,8 +67,6 @@ routes.post('/containers/builder', async (ctx, next) => {
         context.destroy();
 
     }
-
-    ctx.status = 200;
 
 });
 

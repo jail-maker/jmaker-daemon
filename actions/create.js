@@ -111,7 +111,7 @@ async function create(manifest, context = null) {
     layer.snapshot('last');
     scope.close();
 
-    return;
+    return containerId;
 
 }
 

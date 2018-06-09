@@ -14,9 +14,11 @@ const routes = Router().loadMethods();
 
 routes.get('/containers/list/:name', async (ctx) => {
 
+    let name = ctx.params.name;
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
+    let layers = new Layers(config.imagesLocation);
 
-    if (!datasets) {
+    if (!dataset) {
 
         ctx.status = 404;
         ctx.body = `Container "${name}" not found.`;
@@ -24,28 +26,26 @@ routes.get('/containers/list/:name', async (ctx) => {
 
     }
 
-    let layers = new Layers(config.imagesLocation);
-
     try {
 
-        let layer = layers.get(ctx.params.name);
+        let layer = layers.get(dataset.id);
 
         ctx.status = 200;
 
         ctx.body = {
             data: {
                 id: dataset.id,
-                name: layer.name,
+                name: dataset.name,
                 parent: layer.parent,
             },
             links: {
                 parent: layer.parent ? `/containers/list/${layer.parent}` : null,
-            }
+            },
         };
 
     } catch (error) {
 
-        ctx.status = 404;
+        ctx.status = 500;
 
     }
 
@@ -54,6 +54,7 @@ routes.get('/containers/list/:name', async (ctx) => {
 routes.patch('/containers/list/:name', async (ctx) => {
 
     let body = ctx.request.body;
+    let name = ctx.params.name;
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
 
     if (!dataset) {
@@ -63,7 +64,7 @@ routes.patch('/containers/list/:name', async (ctx) => {
 
     }
 
-    dataset.name = body.name;
+    dataset.name = body.name ? body.name : dataset.id;
 
     await datasets.update({ $or: [{name}, {id: name}] }, dataset);
     ctx.status = 200;
