@@ -17,8 +17,7 @@ routes.get('/containers/list/:name/exported', async (ctx) => {
 
     let name = ctx.params.name;
     let layers = new Layers(config.containersLocation);
-
-    let dataset = await datasets.findOne({ name: name });
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
 
     if (!dataset) {
 
