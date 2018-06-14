@@ -14,6 +14,7 @@ class Config {
         this.host = '127.0.0.1';
         this.logLevel = 'info';
         this.zfsPool = 'jmaker';
+        this.containersLocation = '/jmaker/containers/';
         this.imagesLocation = '/jmaker/images/';
         this.volumesLocation = '/jmaker/volumes/';
         this.dbFolder = './';

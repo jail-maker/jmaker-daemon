@@ -15,7 +15,7 @@ const routes = Router().loadMethods();
 routes.delete('/containers/list/:name', async (ctx) => {
 
     let containerName = ctx.params.name;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let dataset = await datasets.findOne({ name: containerName });
 
     if (!dataset) {

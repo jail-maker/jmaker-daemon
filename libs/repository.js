@@ -55,7 +55,7 @@ class Repository {
 
     async push(image) {
 
-        let layers = new Layers(config.imagesLocation);
+        let layers = new Layers(config.containersLocation);
         let layer = layers.get(image);
         let archive = await layer.compress();
 

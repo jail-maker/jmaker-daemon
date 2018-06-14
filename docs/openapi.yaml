@@ -6,6 +6,21 @@ info:
   version: 1.0.0
 
 paths:
+
+  /volumes/list:
+    get:
+      description: ''
+      responses:
+        200:
+          description: ''
+
+  /images/list:
+    get:
+      description: ''
+      responses:
+        200:
+          description: ''
+
   /containers/list:
     get:
       description: ''

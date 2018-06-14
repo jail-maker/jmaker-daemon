@@ -33,7 +33,7 @@ async function start(containerId, manifest) {
 
     let invoker = new CommandInvoker;
     let jail = {};
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let dataset = await datasets.findOne({ id: containerId });
     let containerName = dataset.name;
     let log = logsPool.get(containerId);

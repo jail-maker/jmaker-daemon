@@ -26,7 +26,7 @@ routes.post('/containers/importer', async (ctx) => {
     let tmpDir = undefined;
     let imageFile = undefined;
     let manifestFile = undefined;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let mimeType = ctx.get('content-type');
     let ext = mime.getExtension(mimeType);
 
@@ -75,6 +75,7 @@ routes.post('/containers/importer', async (ctx) => {
         await datasets.insert({
             id,
             name: id,
+            parentId,
         });
 
         try {

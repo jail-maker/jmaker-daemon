@@ -14,7 +14,7 @@ const routes = Router().loadMethods();
 routes.get('/containers/list/:name/manifest', (ctx) => {
 
     let image = ctx.params.name;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 

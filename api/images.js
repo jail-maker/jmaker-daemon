@@ -18,7 +18,7 @@ routes.get('/images', async (ctx) => {
         limit = 10,
     } = ctx.request.query;
 
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let images = layers.list().slice(offset, limit);
 
     let countPages = Math.ceil(images.length / limit);
@@ -51,7 +51,7 @@ routes.get('/images', async (ctx) => {
 
 routes.get('/images/:image', (ctx) => {
 
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     try {
 
@@ -78,7 +78,7 @@ routes.get('/images/:image', (ctx) => {
 routes.get('/images/:image/manifest', (ctx) => {
 
     let image = ctx.params.image;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 
@@ -110,7 +110,7 @@ routes.get('/images/:image/manifest', (ctx) => {
 routes.delete('/images/:image', (ctx) => {
 
     let image = ctx.params.image;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 
@@ -127,7 +127,7 @@ routes.delete('/images/:image', (ctx) => {
 routes.get('/images/:image/exported', async (ctx) => {
 
     let image = ctx.params.image;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 

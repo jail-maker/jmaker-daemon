@@ -113,7 +113,7 @@ class Mount {
             recorder,
         } = data;
 
-        let layers = new Layers(config.imagesLocation);
+        let layers = new Layers(config.containersLocation);
         let volumes = new Layers(config.volumesLocation);
         let log = logsPool.get(manifest.name);
 

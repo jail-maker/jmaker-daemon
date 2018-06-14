@@ -31,13 +31,17 @@ async function create(manifest, context = null) {
     // let containerId = dataset ? dataset.id : uuid4();
     let containerId = uuid4();
     let parentId = parent ? parent.id : null;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let layer = layers.createIfNotExists(containerId, parentId);
     let log = logsPool.create(containerId);
 
     scope.on('close', _ => logsPool.delete(containerId));
 
-    await datasets.insert({ id: containerId, name: containerId });
+    await datasets.insert({
+        id: containerId,
+        name: containerId,
+        parentId,
+    });
     // if (!dataset) {
 
     //     await datasets.insert({ id: containerId, name: manifest.name });

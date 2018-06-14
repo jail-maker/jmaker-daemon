@@ -73,7 +73,7 @@ app.get('/images', async (req, res) => {
         limit = 10,
     } = req.query;
 
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let images = layers.list().slice(offset, limit);
 
     let countPages = Math.ceil(images.length / limit);
@@ -144,7 +144,7 @@ app.post('/image-importer', async (req, res) => {
     let tmpDir = undefined;
     let imageFile = undefined;
     let manifestFile = undefined;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let mimeType = req.get('content-type');
     let ext = mime.getExtension(mimeType);
 
@@ -212,7 +212,7 @@ app.post('/image-importer', async (req, res) => {
 
 app.get('/images/:image', (req, res) => {
 
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     try {
 
@@ -240,7 +240,7 @@ app.get('/images/:image', (req, res) => {
 app.get('/images/:image/manifest', (req, res) => {
 
     let image = req.params.image;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 
@@ -273,7 +273,7 @@ app.get('/images/:image/manifest', (req, res) => {
 app.delete('/images/:image', (req, res) => {
 
     let image = req.params.image;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 
@@ -291,7 +291,7 @@ app.delete('/images/:image', (req, res) => {
 app.get('/images/:image/exported', async (req, res) => {
 
     let image = req.params.image;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!layers.has(image)) {
 
@@ -311,7 +311,7 @@ app.get('/images/:image/exported', async (req, res) => {
 app.post('/jails', async (req, res) => {
 
     let name = req.body.name;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let layer = {};
 
     try {

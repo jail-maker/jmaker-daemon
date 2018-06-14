@@ -36,6 +36,7 @@ routes.get('/containers/list', async (ctx) => {
             return {
                 id: container.id,
                 name: container.name,
+                parentId: container.parentId,
                 links: {
                     self: `/containers/list/${container.name}`,
                 },

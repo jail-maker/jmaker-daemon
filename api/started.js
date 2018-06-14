@@ -22,7 +22,7 @@ routes.post('/containers/started', async (ctx, next) => {
 
     let body = ctx.request.body;
     let name = body.name;
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
     let containerId = dataset ? dataset.id : null;
     let started = jailsPool.has(containerId);
@@ -61,7 +61,7 @@ routes.post('/containers/started', async (ctx, next) => {
     let containerId = dataset ? dataset.id : null;
     let containerName = dataset ? dataset.name : null;
 
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
     let layer = layers.get(containerId);
 
     let manifestFile = path.join(layer.path, '.manifest');

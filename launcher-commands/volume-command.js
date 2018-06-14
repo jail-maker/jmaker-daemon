@@ -47,7 +47,7 @@ class VolumeCommand extends CommandInterface {
             containerId,
         } = this._receiver;
 
-        let layers = new Layers(config.imagesLocation);
+        let layers = new Layers(config.containersLocation);
         let volumes = new Layers(config.volumesLocation);
         let log = logsPool.get(containerId);
 

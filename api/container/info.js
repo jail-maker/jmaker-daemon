@@ -16,7 +16,7 @@ routes.get('/containers/list/:name', async (ctx) => {
 
     let name = ctx.params.name;
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
-    let layers = new Layers(config.imagesLocation);
+    let layers = new Layers(config.containersLocation);
 
     if (!dataset) {
 
@@ -36,10 +36,10 @@ routes.get('/containers/list/:name', async (ctx) => {
             data: {
                 id: dataset.id,
                 name: dataset.name,
-                parent: layer.parent,
+                parentId: dataset.parentId,
             },
             links: {
-                parent: layer.parent ? `/containers/list/${layer.parent}` : null,
+                parent: dataset.parentId ? `/containers/list/${dataset.parentId}` : null,
             },
         };
 
