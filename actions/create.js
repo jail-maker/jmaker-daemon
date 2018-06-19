@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs');
 const fse = require('fs-extra');
 const uuid4 = require('uuid/v4');
 
@@ -113,6 +114,15 @@ async function create(manifest, context = null) {
     }, false);
 
     layer.snapshot('last');
+
+    {
+
+        let file = path.join(config.imagesLocation, `${uuid4()}.tar`);
+        let stream = await layer.compressStream(file);
+        stream.pipe(fs.createWriteStream(config.imagesLocation));
+
+    }
+
     scope.close();
 
     return containerId;
