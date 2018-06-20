@@ -46,33 +46,6 @@ class Dataset {
 
     }
 
-    static async compressStream(dataset) {
-
-        let diffFile = path.join(this.path, '.diff');
-        let files = [];
-
-        if (dataset.parent) {
-
-            let diff = await this.getDiff(dataset, dataset.parentDataset);
-            fs.writeFileSync(diffFile, diff.toString());
-
-            files = diff.files(['A', 'C']);
-
-        }
-
-        files.push('./.diff');
-
-        return compressStream(files, {
-            cd: this.path
-        }, _ => {
-
-            fs.unlinkSync(diffFile);
-
-        });
-
-    }
-
-
     constructor(name) {
 
         if (!zfs.has(name)) throw new Error(`dataset ${name} not exists.`);
@@ -82,11 +55,7 @@ class Dataset {
 
     fork(name) {
 
-        if (!this.hasSnapshot(SPECIAL_SNAP_NAME)) {
-
-            this.snapshot(SPECIAL_SNAP_NAME);
-
-        }
+        this.ensureSpecialSnapshot();
 
         zfs.clone(this.name, SPECIAL_SNAP_NAME, name);
         return new Dataset(name);
@@ -96,6 +65,16 @@ class Dataset {
     setQuota(value) {
 
         zfs.set(this.name, 'quota', value);
+
+    }
+
+    ensureSpecialSnapshot() {
+
+        if (!this.hasSnapshot(SPECIAL_SNAP_NAME)) {
+
+            this.snapshot(SPECIAL_SNAP_NAME);
+
+        }
 
     }
 
@@ -113,7 +92,7 @@ class Dataset {
         else {
 
             let name = this.lastSnapshot;
-            if (!name) throw new NotFoundError('Not found last snapshot.');
+            if (!name) throw new Error('Not found last snapshot.');
 
             zfs.rollback(this.name, name);
 
@@ -163,6 +142,73 @@ class Dataset {
 
     }
 
+    async compressStream() {
+
+        let files = [];
+        let diffFile = path.join(this.path, '.diff');
+        let diffFileContent = '';
+
+        if (this.parent) {
+
+            let parent = new Dataset(this.parent);
+            let diff = await Dataset.getDiff(this, parent);
+
+            files = diff.files(['A', 'C']);
+            diffFileContent = diff.toString();
+
+        }
+
+        fs.writeFileSync(diffFile, diffFileContent);
+        files.push('./.diff');
+
+        return compressStream(files, {
+            cd: this.path
+        }, _ => {
+
+            fs.unlinkSync(diffFile);
+
+        });
+
+    }
+
+    async decompress(archive) {
+
+        await decompress(archive, this.path);
+
+        let diffFile = path.join(this.path, '.diff');
+
+        let buffer = null;
+
+        try {
+
+            buffer = fs.readFileSync(diffFile);
+
+        } catch (error) {
+
+            if (error.code === 'ENOENT') return;
+            else throw error;
+
+        }
+
+        let diff = buffer.toString();
+
+        let lines = diff.split('\n');
+        let exp = /^D\s(.+)$/miu;
+
+        lines.forEach(line => {
+
+            let matches = line.match(exp);
+            if (!matches) return;
+
+            let file = path.join(this.path, matches[1]);
+            fs.unlinkSync(file);
+
+        });
+
+        fs.unlinkSync(diffFile);
+
+    }
+
     get snapDir() {
 
         return path.join(this.path, '/.zfs/snapshot');
@@ -178,6 +224,22 @@ class Dataset {
     get path() {
 
         return zfs.get(this.name, 'mountpoint');
+
+    }
+
+    get firstSnapshot() {
+
+        let snapshots = zfs.list({
+            prefix: this.name,
+            type: ['snapshot'],
+            sortAsc: ['creation'],
+        });
+
+        if (snapshots.length) {
+
+            return snapshots[0].split('@')[1];
+
+        } else return undefined;
 
     }
 
