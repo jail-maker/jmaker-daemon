@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const Router = require('koa-better-router');
-const Layers = require('../../libs/layers');
+const ContainerDataset = require('../../libs/layers/container-dataset');
 const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
 const Manifest = require('../../libs/manifest');
@@ -15,8 +15,8 @@ const routes = Router().loadMethods();
 routes.delete('/containers/list/:name', async (ctx) => {
 
     let containerName = ctx.params.name;
-    let layers = new Layers(config.containersLocation);
     let dataset = await datasets.findOne({ name: containerName });
+    let containerPath = path.join(config.containersLocation, dataset.id);
 
     if (!dataset) {
 
@@ -24,19 +24,17 @@ routes.delete('/containers/list/:name', async (ctx) => {
         ctx.body = `Container "${containerName}" not found.`;
         return;
 
-    } else if (!layers.has(dataset.id)) {
+    } else if (ContainerDataset.existsDataset(containerPath)) {
 
-        ctx.status = 500;
-        ctx.body = `Dataset "${dataset.id}" not found.`;
-        return;
+        let containerDataset = ContainerDataset.getDataset(containerPath);
+        containerDataset.destroy();
 
     }
 
-    layers.destroy(dataset.id);
-    await datasets.remove({ name: containerName }, {});
+    await datasets.remove({ name: dataset.id }, {});
 
     ctx.status = 200;
-    ctx.body = `Dataset "${dataset.id}" was removed.`;
+    ctx.body = `Container "${dataset.id}" was removed.`;
 
 });
 

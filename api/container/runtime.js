@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const Router = require('koa-better-router');
-const Layers = require('../../libs/layers');
 const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
 const Manifest = require('../../libs/manifest');

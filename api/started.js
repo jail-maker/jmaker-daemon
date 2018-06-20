@@ -4,7 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const Router = require('koa-better-router');
-const Layers = require('../libs/layers');
+const ContainerDataset = require('../libs/layers/containers-dataset');
 const config = require('../libs/config');
 const ManifestFactory = require('../libs/manifest-factory');
 const Manifest = require('../libs/manifest');
@@ -22,7 +22,6 @@ routes.post('/containers/started', async (ctx, next) => {
 
     let body = ctx.request.body;
     let name = body.name;
-    let layers = new Layers(config.containersLocation);
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
     let containerId = dataset ? dataset.id : null;
     let started = jailsPool.has(containerId);
@@ -39,7 +38,7 @@ routes.post('/containers/started', async (ctx, next) => {
 
     // if database record not exists
 
-    if (!dataset || !layers.has(containerId)) {
+    if (!dataset) {
 
         ctx.status = 404;
         ctx.body = `Container "${name}" not found.`;
@@ -61,10 +60,10 @@ routes.post('/containers/started', async (ctx, next) => {
     let containerId = dataset ? dataset.id : null;
     let containerName = dataset ? dataset.name : null;
 
-    let layers = new Layers(config.containersLocation);
-    let layer = layers.get(containerId);
+    let containerPath = path.join(config.containersLocation, containerId);
+    let containerDataset = ContainerDataset.getDataset(containerPath);
 
-    let manifestFile = path.join(layer.path, '.manifest');
+    let manifestFile = path.join(containerDataset.path, '.manifest');
     let manifest = ManifestFactory.fromFile(manifestFile);
 
     Object.assign(manifest.rules, rules);

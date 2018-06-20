@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const Router = require('koa-better-router');
-const Layers = require('../../libs/layers');
 const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
 const Manifest = require('../../libs/manifest');
@@ -16,7 +15,6 @@ routes.get('/containers/list/:name', async (ctx) => {
 
     let name = ctx.params.name;
     let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
-    let layers = new Layers(config.containersLocation);
 
     if (!dataset) {
 
@@ -27,8 +25,6 @@ routes.get('/containers/list/:name', async (ctx) => {
     }
 
     try {
-
-        let layer = layers.get(dataset.id);
 
         ctx.status = 200;
 

@@ -7,8 +7,7 @@ const sha256 = require('js-sha256').sha256;
 const uuidv5 = require("uuid/v5");
 const config = require('../libs/config');
 const logsPool = require('../libs/logs-pool');
-const Layers = require('../libs/layers');
-const chains = require('../libs/layers/chains');
+const Dataset = require('../libs/layers/dataset');
 const mountNullfs = require('../libs/mount-nullfs');
 const umount = require('../libs/umount');
 const CommandInterface = require('../libs/command-interface');
@@ -40,7 +39,7 @@ class VolumeCommand extends CommandInterface {
     async exec() {
 
         let {
-            layer,
+            dataset,
             manifest,
             containerId,
             args = {},
@@ -48,7 +47,7 @@ class VolumeCommand extends CommandInterface {
         } = this._receiver;
 
         let log = logsPool.get(containerId);
-        let volumes = new Layers(config.volumesLocation);
+        let volumes = Dataset.createIfNotExists(config.volumesLocation);
 
         args = this._normalizeArgs(args);
 
@@ -62,9 +61,10 @@ class VolumeCommand extends CommandInterface {
         let dst = args.path;
         dst = path.resolve(manifest.workdir, dst);
 
-        let volume = volumes.createIfNotExists(args.name);
+        let volumePath = path.join(config.volumesLocation, args.name);
+        let volume = Dataset.createIfNotExists(volumePath);
         let src = volume.path;
-        let mountPath = path.join(layer.path, dst);
+        let mountPath = path.join(dataset.path, dst);
         this._mountPath = mountPath;
 
         await ensureDir(mountPath);

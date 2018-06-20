@@ -8,8 +8,6 @@ const ExecutionError = require('../libs/errors/execution-error');
 const ExecAbstract = require('../libs/exec-abstract');
 const mountDevfs = require('../libs/mount-devfs');
 const umount = require('../libs/umount');
-const chains = require('../libs/layers/chains');
-const Layers = require('../libs/layers/layers');
 const config = require('../libs/config');
 const RuntimeScope = require('../libs/runtime-scope');
 const CommandInterface = require('../libs/command-interface');
@@ -30,7 +28,7 @@ class RunCommand extends CommandInterface {
             manifest,
             containerId,
             args = '',
-            layer,
+            dataset,
         } = this._receiver;
 
         let log = logsPool.get(containerId);

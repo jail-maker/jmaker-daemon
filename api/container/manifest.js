@@ -5,6 +5,7 @@ const fs = require('fs');
 const fse = require('fs-extra');
 const Router = require('koa-better-router');
 const Layers = require('../../libs/layers');
+const ContainerDataset = require('../../libs/layers/container-dataset');
 const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
 const Manifest = require('../../libs/manifest');

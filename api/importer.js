@@ -9,9 +9,10 @@ const tempdir = require('tempdir');
 const getRawBody = require('raw-body');
 const Router = require('koa-better-router');
 const uuid4 = require('uuid/v4');
-const mime = require('mime')
+const mime = require('mime');
 const uniqid = require('uniqid');
-const Layers = require('../libs/layers');
+const Dataset = require('../libs/layers/dataset');
+const ContainerDataset = require('../libs/layers/containers-dataset');
 const config = require('../libs/config');
 const ManifestFactory = require('../libs/manifest-factory');
 const Manifest = require('../libs/manifest');
@@ -26,9 +27,9 @@ routes.post('/containers/importer', async (ctx) => {
     let tmpDir = undefined;
     let imageFile = undefined;
     let manifestFile = undefined;
-    let layers = new Layers(config.containersLocation);
     let mimeType = ctx.get('content-type');
     let ext = mime.getExtension(mimeType);
+    let imageName = `${uuid4()}.${ext}`;
 
     if (!rawBody.length) {
 
@@ -40,7 +41,7 @@ routes.post('/containers/importer', async (ctx) => {
 
     try {
 
-        imageFile = await tempWrite(rawBody, `jmaker-image-${uniqid()}.${ext}`);
+        imageFile = await tempWrite(rawBody, imageName);
         tmpDir = await tempdir();
         manifestFile = path.join(tmpDir, '.manifest');
 
@@ -76,14 +77,31 @@ routes.post('/containers/importer', async (ctx) => {
             id,
             name: id,
             parentId,
+            imageName,
         });
+
+        let containerPath = path.join(config.containersLocation, id);
+        let containerDataset = null;
 
         try {
 
-            let layer = layers.create(id, parentId);
-            await layer.decompress(imageFile);
+            if (parentId) {
+
+                let parentPath = path.join(config.containersLocation, parentId);
+                let parentDataset = ContainerDataset.getDataset(parentPath);
+                containerDataset = parentDataset.fork(containerPath);
+
+            } else {
+
+                containerDataset = ContainerDataset.create(containerPath);
+
+            }
+
+            await containerDataset.decompress(imageFile);
 
         } catch (error) {
+
+            if (imageFile) fse.removeSync(imageFile);
 
             console.log(error);
             ctx.status = 500;
@@ -91,9 +109,16 @@ routes.post('/containers/importer', async (ctx) => {
 
         }
 
+        {
+
+            let imagesDataset = Dataset.createIfNotExists(config.imagesLocation);
+            let file = path.join(imagesDataset.path, imageName);
+            await fse.move(imageFile, file);
+
+        }
+
     } finally {
 
-        if (imageFile) fse.removeSync(imageFile);
         if (tmpDir) fse.removeSync(tmpDir);
 
     }

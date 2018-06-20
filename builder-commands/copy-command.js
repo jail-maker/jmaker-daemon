@@ -4,7 +4,6 @@ const path = require('path');
 const { copy, copySync } = require('fs-extra');
 const logsPool = require('../libs/logs-pool');
 const chains = require('../libs/layers/chains');
-const Layers = require('../libs/layers/layers');
 const config = require('../libs/config');
 const CommandInterface = require('../libs/command-interface');
 
@@ -22,7 +21,7 @@ class CopyCommand extends CommandInterface {
     async exec() {
 
         let {
-            layer,
+            dataset,
             index,
             manifest,
             context,
@@ -36,13 +35,13 @@ class CopyCommand extends CommandInterface {
         // let name = `${index} ${args.join(' ')} ${manifest.name}`;
         let name = `${index} ${args.join(' ')} ${containerId}`;
 
-        this._commitName = layer.lastSnapshot;
-        await layer.commit(name, async _ => {
+        this._commitName = dataset.lastSnapshot;
+        await dataset.commit(name, async _ => {
 
             let [src, dst] = args;
 
             src = path.join(context.path, path.resolve('/', src));
-            dst = path.join(layer.path, path.resolve(manifest.workdir, dst));
+            dst = path.join(dataset.path, path.resolve(manifest.workdir, dst));
 
             copySync(src, dst);
 
@@ -52,9 +51,9 @@ class CopyCommand extends CommandInterface {
 
     async unExec() {
 
-        let { layer } = this._receiver;
+        let { dataset } = this._receiver;
 
-        if (this._commitName) layer.rollback(this._commitName);
+        if (this._commitName) dataset.rollback(this._commitName);
 
     }
 

@@ -9,7 +9,6 @@ const ExecAbstract = require('../libs/exec-abstract');
 const mountDevfs = require('../libs/mount-devfs');
 const umount = require('../libs/umount');
 const chains = require('../libs/layers/chains');
-const Layers = require('../libs/layers/layers');
 const config = require('../libs/config');
 const RuntimeScope = require('../libs/runtime-scope');
 const CommandInterface = require('../libs/command-interface');
@@ -28,14 +27,14 @@ class RunCommand extends CommandInterface {
     async exec() {
 
         let {
-            layer,
+            dataset,
             index,
             manifest,
             containerId,
             args = '',
         } = this._receiver;
 
-        this._commitName = layer.lastSnapshot;
+        this._commitName = dataset.lastSnapshot;
 
         let log = logsPool.get(containerId);
         let command = args;
@@ -44,12 +43,12 @@ class RunCommand extends CommandInterface {
         let commitName = `${index} ${command} ${containerId}`;
         // let commitName = `${index} ${command} ${manifest.name}`;
 
-        await layer.commit(commitName, async _ => {
+        await dataset.commit(commitName, async _ => {
 
             let child = spawn(
                 'chroot',
                 [
-                    layer.path, "sh", "-c",
+                    dataset.path, "sh", "-c",
                     `cd ${manifest.workdir} && ${command}`,
                 ],
                 {
@@ -75,11 +74,11 @@ class RunCommand extends CommandInterface {
     async unExec() {
 
         let {
-            layer,
+            dataset,
             manifest,
         } = this._receiver;
 
-        if (this._commitName) layer.rollback(this._commitName);
+        if (this._commitName) dataset.rollback(this._commitName);
 
     }
 

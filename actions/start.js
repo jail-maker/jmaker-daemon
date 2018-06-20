@@ -11,7 +11,7 @@ const fetch = require('../libs/bsd-fetch');
 const config = require('../libs/config');
 const jailsPool = require('../libs/jails/jails-pool');
 const Zfs = require('../libs/zfs');
-const Layers = require('../libs/layers');
+const ContainerDataset = require('../libs/layers/containers-dataset');
 const logsPool = require('../libs/logs-pool');
 const Rctl = require('../libs/rctl');
 const Jail = require('../libs/jails/jail');
@@ -33,23 +33,17 @@ async function start(containerId, manifest) {
 
     let invoker = new CommandInvoker;
     let jail = {};
-    let layers = new Layers(config.containersLocation);
     let dataset = await datasets.findOne({ id: containerId });
     let containerName = dataset.name;
     let log = logsPool.get(containerId);
-    let layer = layers.get(containerId);
+    let containerPath = path.join(config.containersLocation, containerId);
+    let containerDataset = ContainerDataset.getDataset(containerPath);
+
+    let snapshot = ContainerDataset.constants.SPECIAL_SNAP_NAME;
+    containerDataset.ensureSpecialSnapshot();
+    containerDataset.rollback(snapshot);
 
     invokersPool.set(containerId, invoker);
-
-    if (!layer.hasSnapshot('start')) {
-
-        layer.snapshot('start');
-
-    } else {
-
-        layer.rollback('start');
-
-    }
 
     if (manifest['resolv-sync']) {
 
@@ -57,21 +51,25 @@ async function start(containerId, manifest) {
 
         fs.copyFileSync(
             '/etc/resolv.conf',
-            `${layer.path}/etc/resolv.conf`
+            `${containerDataset.path}/etc/resolv.conf`
         );
 
         await log.notice('done\n');
 
     }
 
-    if (manifest.quota) layer.setQuota(manifest.quota);
+    if (manifest.quota) containerDataset.setQuota(manifest.quota);
 
     {
 
         let command = {
             exec: async _ => {
 
-                jail = new Jail({ manifest, path: layer.path, containerId });
+                jail = new Jail({
+                    manifest,
+                    path: containerDataset.path,
+                    containerId 
+                });
                 jailsPool.set(containerId, jail);
 
             },
@@ -174,7 +172,7 @@ async function start(containerId, manifest) {
         let CommandClass = require(commandPath);
         let command = new CommandClass({
             index,
-            layer,
+            dataset: containerDataset,
             containerId,
             manifest,
             args,

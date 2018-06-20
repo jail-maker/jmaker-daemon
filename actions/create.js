@@ -9,12 +9,13 @@ const config = require('../libs/config');
 const logsPool = require('../libs/logs-pool');
 const RawArgument = require('../libs/raw-argument');
 
-const chains = require('../libs/layers/chains');
+const ContainerDataset = require('../libs/layers/containers-dataset');
+const Dataset = require('../libs/layers/dataset');
+
 const handlers = require('../handlers');
 const RuntimeScope = require('../libs/runtime-scope');
 const datasets = require('../libs/datasets-db');
 
-const Layers = require('../libs/layers/layers');
 const CommandInvoker = require('../libs/command-invoker');
 
 const mountDevfs = require('../libs/mount-devfs');
@@ -27,13 +28,27 @@ async function create(manifest, context = null) {
     let clonedManifest = manifest.clone();
     let scope = new RuntimeScope;
     let invoker = new CommandInvoker;
-    // let dataset = await datasets.findOne({ name: manifest.name });
     let parent = await datasets.findOne({ name: manifest.from });
-    // let containerId = dataset ? dataset.id : uuid4();
     let containerId = uuid4();
     let parentId = parent ? parent.id : null;
-    let layers = new Layers(config.containersLocation);
-    let layer = layers.createIfNotExists(containerId, parentId);
+    let imagesDataset = Dataset.createIfNotExists(config.imagesLocation);
+
+    let containerPath = path.join(config.containersLocation, containerId);
+    let containerDataset = null;
+
+    if (parentId) {
+
+        let parentPath = path.join(config.containersLocation, parentId);
+        let parentDataset = ContainerDataset.getDataset(parentPath);
+        containerDataset = parentDataset.fork(containerPath);
+
+    } else {
+
+        containerDataset = ContainerDataset.create();
+
+    }
+
+
     let log = logsPool.create(containerId);
 
     scope.on('close', _ => logsPool.delete(containerId));
@@ -42,18 +57,14 @@ async function create(manifest, context = null) {
         id: containerId,
         name: containerId,
         parentId,
+        imageName: null,
     });
-    // if (!dataset) {
-
-    //     await datasets.insert({ id: containerId, name: manifest.name });
-
-    // }
 
     {
 
-        let dev = path.join(layer.path, '/dev');
-        let fd = path.join(layer.path, '/dev/fd');
-        let proc = path.join(layer.path, '/proc');
+        let dev = path.join(containerDataset.path, '/dev');
+        let fd = path.join(containerDataset.path, '/dev/fd');
+        let proc = path.join(containerDataset.path, '/proc');
 
         await fse.ensureDir(dev);
         await fse.ensureDir(fd);
@@ -75,10 +86,10 @@ async function create(manifest, context = null) {
 
     {
         let name = `${manifest.workdir} ${manifest.from}`;
-        await layer.commit(name, async _ => {
+        await containerDataset.commit(name, async _ => {
 
             let dir = path.resolve(manifest.workdir);
-            dir = path.join(layer.path, dir);
+            dir = path.join(containerDataset.path, dir);
             console.log('ensure workdir:', dir);
             await fse.ensureDir(dir);
 
@@ -95,7 +106,7 @@ async function create(manifest, context = null) {
         let CommandClass = require(commandPath);
         let command = new CommandClass({
             index,
-            layer,
+            dataset: containerDataset,
             manifest,
             containerId,
             context,
@@ -107,19 +118,22 @@ async function create(manifest, context = null) {
 
     }
 
-    await layer.commit('create manifest', async _ => {
+    await containerDataset.commit('create manifest', async _ => {
 
-        clonedManifest.toFile(path.join(layer.path, '.manifest'));
+        clonedManifest.toFile(path.join(containerDataset.path, '.manifest'));
 
     }, false);
 
-    layer.snapshot('last');
+    containerDataset.ensureSpecialSnapshot();
 
     {
 
-        let file = path.join(config.imagesLocation, `${uuid4()}.tar`);
-        let stream = await layer.compressStream(file);
-        stream.pipe(fs.createWriteStream(config.imagesLocation));
+        let imageName = `${uuid4()}.tar`;
+        let file = path.join(imagesDataset.path, imageName);
+        let stream = await containerDataset.compressStream();
+
+        stream.pipe(fs.createWriteStream(file));
+        await datasets.update({ id: containerId }, { imageName });
 
     }
 

@@ -3,8 +3,6 @@
 const fse = require('fs-extra');
 const path = require('path');
 const logsPool = require('../libs/logs-pool');
-const chains = require('../libs/layers/chains');
-const Layers = require('../libs/layers/layers');
 const config = require('../libs/config');
 const CommandInterface = require('../libs/command-interface');
 
@@ -23,7 +21,7 @@ class WorkdirCommand extends CommandInterface {
     async exec() {
 
         let {
-            layer,
+            dataset,
             index,
             manifest,
             containerId,
@@ -34,9 +32,9 @@ class WorkdirCommand extends CommandInterface {
         let workdir = path.resolve(manifest.workdir, args);
         let name = `${index} ${workdir} ${manifest.from}`;
 
-        await layer.commit(name, async _ => {
+        await dataset.commit(name, async _ => {
 
-            let dir = path.join(layer.path, workdir);
+            let dir = path.join(dataset.path, workdir);
             console.log('workdir:', dir);
             await fse.ensureDir(dir);
 
