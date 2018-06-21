@@ -9,7 +9,7 @@ const config = require('../libs/config');
 const logsPool = require('../libs/logs-pool');
 const RawArgument = require('../libs/raw-argument');
 
-const ContainerDataset = require('../libs/layers/containers-dataset');
+const ContainerDataset = require('../libs/layers/container-dataset');
 const Dataset = require('../libs/layers/dataset');
 
 const handlers = require('../handlers');
@@ -133,7 +133,7 @@ async function create(manifest, context = null) {
         let stream = await containerDataset.compressStream();
 
         stream.pipe(fs.createWriteStream(file));
-        await datasets.update({ id: containerId }, { imageName });
+        await datasets.update({ id: containerId }, { $set: { imageName } });
 
     }
 

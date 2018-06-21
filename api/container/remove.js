@@ -14,14 +14,14 @@ const routes = Router().loadMethods();
 
 routes.delete('/containers/list/:name', async (ctx) => {
 
-    let containerName = ctx.params.name;
-    let dataset = await datasets.findOne({ name: containerName });
+    let name = ctx.params.name;
+    let dataset = await datasets.findOne({ $or: [{name}, {id: name}] });
     let containerPath = path.join(config.containersLocation, dataset.id);
 
     if (!dataset) {
 
         ctx.status = 404;
-        ctx.body = `Container "${containerName}" not found.`;
+        ctx.body = `Container "${name}" not found.`;
         return;
 
     } else if (ContainerDataset.existsDataset(containerPath)) {
@@ -31,7 +31,7 @@ routes.delete('/containers/list/:name', async (ctx) => {
 
     }
 
-    await datasets.remove({ name: dataset.id }, {});
+    await datasets.remove({ id: dataset.id }, {});
 
     ctx.status = 200;
     ctx.body = `Container "${dataset.id}" was removed.`;

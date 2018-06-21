@@ -4,7 +4,6 @@ const path = require('path');
 const fs = require('fs');
 const fse = require('fs-extra');
 const Router = require('koa-better-router');
-const Layers = require('../../libs/layers');
 const ContainerDataset = require('../../libs/layers/container-dataset');
 const config = require('../../libs/config');
 const ManifestFactory = require('../../libs/manifest-factory');
@@ -14,33 +13,32 @@ const routes = Router().loadMethods();
 
 routes.get('/containers/list/:name/manifest', (ctx) => {
 
-    let image = ctx.params.name;
-    let layers = new Layers(config.containersLocation);
+    let name = ctx.params.name;
 
-    if (!layers.has(image)) {
+    let containerPath = path.join(config.containersLocation, name);
+    if (!ContainerDataset.existsDataset(name)) {
 
         ctx.status = 404;
         return;
 
     }
 
-    let layer = layers.get(image);
-    let manifestFile = path.join(layer.path, '.manifest');
-    let manifest = {};
+    let containerDataset = ContainerDataset.getDataset(containerPath);
+    let manifestFile = path.join(containerDataset.path, '.manifest');
 
     try {
 
-        manifest = ManifestFactory.fromFile(manifestFile);
+        let manifest = ManifestFactory.fromFile(manifestFile);
+        ctx.status = 200;
+        ctx.body = manifest;
 
     } catch (error) {
 
-        manifest = new Manifest;
-        manifest.name = image;
-        manifest.from = layer.parent;
+        ctx.status = 500;
+        ctx.body = 'Error reading manifest file';
+        return;
 
     }
-
-    ctx.body = manifest;
 
 });
 
